@@ -45,10 +45,12 @@ class Solver():
         T = np.arange(0, t, h)
 
         for _ in range(n):
+            old_vals = {agent:{var: np.copy(self.vals[agent][var]) for var in self.vars} for agent in self.agents}
+
             for agent in self.agents:
                 for var in self.vars:
 
-                    y = self.vals[agent][var]
+                    y = old_vals[agent][var]
                     args = self.ddt_args[agent][var]
                     ddt = self.diffeqs[var]
 
@@ -59,6 +61,7 @@ class Solver():
                     Y[var][agent].append(np.copy(step))
 
             t0 = t0 + h
+            old_vals = self.vals
 
         #currently only plots x
         plot(T, Y['x'], self.agents)
@@ -66,7 +69,8 @@ class Solver():
 
 
 # Running the solver
-# Right now this just solves gravity for position, with ODEs that do nothing for v and L. 
+# Right now this just solves gravity for position, with ODEs that do nothing for v and L.
+# ----------- NEXT STEP: Make sure that old values are saved so future agents arent affected by already updated agent's values
 if __name__ == "__main__":
     t0 = 0
     t = 2
