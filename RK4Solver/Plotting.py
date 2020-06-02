@@ -7,9 +7,9 @@ def plot(T, Y, agents):
         plt.plot(T, [row[0] for row in Y[i]])
         plt.plot(T, [row[1] for row in Y[i]])
         plt.plot(T, [row[2] for row in Y[i]])
-        x = "Bird {}: x".format(i)
-        y = "Bird {}: y".format(i)
-        z = "Bird {}: z".format(i)
+        x = "{}: x".format(i)
+        y = "{}: y".format(i)
+        z = "{}: z".format(i)
         legend += [x,y,z]
     plt.xlabel('Time')
     plt.ylabel('Position')
