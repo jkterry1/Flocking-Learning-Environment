@@ -1,0 +1,25 @@
+
+Bird shapes and actions:
+
+1. Full bird shapes where their motion comes from flapping their wings.
+  -In this case the actions a bird takes could be wing movements.
+  -The birds would have to learn to fly as well as learn the behavior we're looking for
+  -difficult to make the force/torque equations
+  -difficult to simulate if the air around a bird is affected by the birds near them
+  -most physically accurate
+
+2. Full bird shape with no wing flapping
+  -assume birds don't change their shape, they always have wings outstretched
+  -assume the birds already know how to push themselves in some direction and rotate themselves
+  -actions could be a 3D force and torque
+  -loses a lot of physical accuracy compared to the wing flapping birds
+  -doesn't seem to add much more than the no wings version, unless we also
+    simulate how birds affect the air near other birds
+
+3. No wings
+  -assume birds know how to move themselves in any direction and assume they take
+    aerodynamics into account when they move
+  -Actions are just a 3D force
+  -torque equation wouldn't be needed anymore
+  -not a very physically accurate simulation
+  -super simple and still lets us see bird decision making based on motion of other birds
