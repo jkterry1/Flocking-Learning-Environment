@@ -1,29 +1,49 @@
 import numpy as np
 
 #sample diffeq used for testing purposes
-def dydt_grav(t, y, agent, args):
-    v0 = args['v0']
-    a = args['a']
-    return np.array([v0[j] + a[j] * t for j in range(0,3)])
+def dudt(u, t, bird):
+    X = Fx()
+    grav = bird.m * bird.g * np.sin(bird.theta)
+    udot = X - grav
+    udot += bird.m * bird.r * bird.v - bird.m * bird.q * bird.w
+    udot = udot/bird.m
 
-#position
-def dxdt(t, x, agent, args):
-    return args['v']
+    return udot
 
-#velocity
-def dvdt(t, v, agent, args):
-    F = args['F'](v)
-    return F/args['m']
+def dvdt(v, t, bird):
+    Y = Fy()
+    grav = bird.m * bird.g * np.cos(bird.theta) * np.sin(bird.phi)
+    vdot = Y + grav
+    vdot += bird.m * bird.p * bird.w - bird.m * bird.r * bird.u
+    vdot = vdot/bird.m
 
-#angular momentum
-def dLdt(t, L, agent, args):
-    T = args['T'](L)
-    return T - np.cross(args['w'], L)
+    return vdot
 
-#torque
-def T(L):
-    return np.array([0,0,0])
 
-#force
-def F(v):
-    return np.array([0,0,0])
+def dwdt(w, t, bird):
+    Z = Fz()
+    grav = bird.m * bird.g * np.cos(bird.theta) * np.cos(bird.phi)
+    wdot = Z + grav
+    wdot += bird.m * bird.q * bird.u - bird.m * bird.p * bird.v
+    wdot = wdot/bird.m
+
+    return wdot
+
+def dxdt(vx, t, bird):
+    return vx
+
+def dydt(vy, t, bird):
+    return vy
+
+def dzdt(vz, t, bird):
+    return vz
+
+
+def Fx():
+    return 0.0
+
+def Fy():
+    return 0.0
+
+def Fz():
+    return 0.0
