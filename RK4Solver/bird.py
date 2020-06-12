@@ -7,7 +7,6 @@ class Bird():
                 u = 0.0, v = 0.0, w = 0.0,
                 p = 0.0, q = 0.0, r = 0.0,
                 theta = 0.0, phi = 0.0, psi = 0.0,
-                vx = 0.0, vy = 0.0, vz = 0.0,
                 x = 0.0, y = 0.0, z = 0.0):
 
         '''
@@ -62,16 +61,6 @@ class Bird():
         self.theta = theta
         self.phi = phi
         self.psi = psi
-
-        '''
-        velocity:
-            vx is the velocity in the intertial x direction
-            vy is the velocity in the inertial y direction
-            vz is the velocity in the intertial z direction
-        '''
-        self.vx = vx
-        self.vy = vy
-        self.vz = vz
 
         '''
         position
