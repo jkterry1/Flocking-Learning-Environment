@@ -18,4 +18,3 @@ for _ in range(n):
     for agent in env.agent_order:
         env.step(action = 0)
 env.plot()
-#plot(env.T, env.Y['x'], env.agents)

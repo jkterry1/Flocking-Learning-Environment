@@ -13,9 +13,23 @@ class Bird():
         '''
         properties:
             m, mass
+            g, gravity
+            Cl, lift coefficient
+            Cd, drag coefficient
+            rho, air density
+            Au, area looking down u axis
+            Av, area looking down v axis
+            Aw, area looking down w axis
         '''
         self.m = 1.0
         self.g = -9.8
+        self.Cl = 1.2
+        self.Cd = 0.3
+        self.S = 0.62
+        self.rho = 1.225
+        self.Au = 0.1
+        self.Av = 0.2
+        self.Aw = 0.6
 
         # fixed body frame variables:
         '''
@@ -80,9 +94,9 @@ class Bird():
 
     def update(self, t, h):
         # update u, v, w from forces, old angles, and old p,q,r
-        u = self.take_time_step(de.dudt, self.u, t, h)
-        v = self.take_time_step(de.dvdt, self.v, t, h)
-        w = self.take_time_step(de.dwdt, self.w, t, h)
+        u = self.take_time_step(de.dudt, self.u, h)
+        v = self.take_time_step(de.dvdt, self.v, h)
+        w = self.take_time_step(de.dwdt, self.w, h)
 
         self.u = u
         self.v = v
@@ -95,13 +109,10 @@ class Bird():
 
         #calculate new angles from new p,q,r and old angles
 
-        #calculate vx, vy, vz from new u,v,w and new angles
-        self.vx, self.vy, self.vz = self.calculate_vel()
-
-        #update position from vx, vy, vz
-        x = self.take_time_step(de.dxdt, self.vx, t, h)
-        y = self.take_time_step(de.dydt, self.vy, t, h)
-        z = self.take_time_step(de.dzdt, self.vz, t, h)
+        #update x,y,z
+        x = self.take_time_step(de.dxdt, self.x, h)
+        y = self.take_time_step(de.dydt, self.y, h)
+        z = self.take_time_step(de.dzdt, self.z, h)
 
         self.x = x
         self.y = y
@@ -111,37 +122,14 @@ class Bird():
         self.Z.append(z)
 
         print("u, v, w: ", (self.u, self.v, self.w))
-        #print("x, y, z: ", (self.x, self.y, self.z))
+        print("x, y, z: ", (self.x, self.y, self.z))
 
 
 
-    def take_time_step(self, ddt, y, t, h):
-        k1 = h * ddt(t, y, self)
-        k2 = h * ddt(t + 0.5 * h, y + 0.5 * k1, self)
-        k3 = h * ddt(t + 0.5 * h, y + 0.5 * k2, self)
-        k4 = h * ddt(t + h, y + k3, self)
+    def take_time_step(self, ddt, y, h):
+        k1 = h * ddt(y, self)
+        k2 = h * ddt(y + 0.5 * k1, self)
+        k3 = h * ddt(y + 0.5 * k2, self)
+        k4 = h * ddt(y + k3, self)
 
-        return y + (1.0 / 6.0)*(k1 + (2 * k2) + (2 * k3) + k4)
-
-
-    def calculate_vel(self):
-        vec = np.array([self.u, self.v, self.w]).T
-        mat = np.ones((3,3))
-        theta = self.theta
-        phi = self.phi
-        psi = self.psi
-        mat[0, 0] = np.cos(theta) * np.cos(psi)
-        mat[0, 1] = np.sin(phi) * np.sin(theta) * np.cos(psi) - np.cos(phi) * np.sin(psi)
-        mat[0, 2] = np.cos(phi) * np.sin(theta) * np.cos(psi) + np.sin(phi) * np.sin(psi)
-
-        mat[1, 0] = np.cos(theta) * np.sin(psi)
-        mat[1, 1] = np.sin(phi) * np.sin(theta) * np.sin(psi) + np.cos(phi) * np.cos(psi)
-        mat[1, 2] = np.cos(phi) * np.sin(theta) * np.sin(psi) - np.sin(phi) * np.cos(psi)
-
-        mat[2, 0] = -np.sin(theta)
-        mat[2, 1] = np.sin(phi) * np.cos(theta)
-        mat[2, 2] = np.cos(phi) * np.cos(theta)
-
-        v = np.matmul(mat, vec)
-        #print("v: ", v)
-        return v
+        return y + (1.0 / 6.0)*(k1 + (2.0 * k2) + (2.0 * k3) + k4)

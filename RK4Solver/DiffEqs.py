@@ -1,49 +1,74 @@
 import numpy as np
 
-#sample diffeq used for testing purposes
-def dudt(u, t, bird):
-    X = Fx()
-    grav = bird.m * bird.g * np.sin(bird.theta)
-    udot = X - grav
-    udot += bird.m * bird.r * bird.v - bird.m * bird.q * bird.w
-    udot = udot/bird.m
+def dudt(u, bird):
+    X = Fu(bird)/bird.m
+    grav = -bird.g * np.sin(bird.theta)
+    udot = X + grav
+    udot += bird.r * bird.v - bird.q * bird.w
 
     return udot
 
-def dvdt(v, t, bird):
-    Y = Fy()
-    grav = bird.m * bird.g * np.cos(bird.theta) * np.sin(bird.phi)
+def dvdt(v, bird):
+    Y = Fv(bird)/bird.m
+    grav = bird.g * np.cos(bird.theta) * np.sin(bird.phi)
     vdot = Y + grav
-    vdot += bird.m * bird.p * bird.w - bird.m * bird.r * bird.u
-    vdot = vdot/bird.m
+    vdot += bird.p * bird.w - bird.r * bird.u
 
     return vdot
 
 
-def dwdt(w, t, bird):
-    Z = Fz()
-    grav = bird.m * bird.g * np.cos(bird.theta) * np.cos(bird.phi)
+def dwdt(w, bird):
+    Z = Fw(bird)
+    grav = bird.g * np.cos(bird.theta) * np.cos(bird.phi)
     wdot = Z + grav
-    wdot += bird.m * bird.q * bird.u - bird.m * bird.p * bird.v
-    wdot = wdot/bird.m
+    wdot += bird.q * bird.u - bird.p * bird.v
 
     return wdot
 
-def dxdt(vx, t, bird):
-    return vx
+def dxdt(x, bird):
+    theta = bird.theta
+    phi = bird.phi
+    psi = bird.psi
+    return np.cos(theta) * np.cos(psi) * bird.u + (-np.cos(phi)*np.sin(psi) +\
+            np.sin(phi) * np.sin(theta) * np.cos(psi)) * bird.v + \
+            (np.sin(phi) * np.sin(psi) + np.cos(phi) * np.sin(theta) * \
+            np.cos(psi)) * bird.w
 
-def dydt(vy, t, bird):
-    return vy
+def dydt(y, bird):
+    theta = bird.theta
+    phi = bird.phi
+    psi = bird.psi
+    return np.cos(theta) * np.sin(psi) * bird.u + (np.cos(phi) * np.cos(psi) + \
+            np.sin(phi) * np.sin(theta) * np.sin(psi)) * bird.v + \
+            (-np.sin(phi) * np.cos(psi) + np.cos(phi) * np.sin(theta) * \
+            np.sin(psi)) * bird.w
 
-def dzdt(vz, t, bird):
-    return vz
+def dzdt(z, bird):
+    theta = bird.theta
+    phi = bird.phi
+    psi = bird.psi
+    return (-np.sin(theta) * bird.u + np.sin(phi) * np.cos(theta) * \
+            bird.v + np.cos(phi) * np.cos(theta) * bird.w)
 
 
-def Fx():
-    return 0.0
+def Fu(bird):
+    #Drag = Cd * (rho * v^2)/2 * A
+    D = bird.Cd * bird.Au * (bird.rho * bird.u ** 2)/2
+    L = 0.0
+    F = L - D
+    return F
 
-def Fy():
-    return 0.0
+def Fv(bird):
+    #Drag = Cd * (rho * v^2)/2 * A
+    D = bird.Cd * bird.Av * (bird.rho * bird.v ** 2)/2
+    L = 0.0
+    F = L - D
+    return F
 
-def Fz():
-    return 0.0
+def Fw(bird):
+    #Lift = Cl * (rho * v^2)/2 * S
+    #Drag = Cd * (rho * v^2)/2 * A
+    D = bird.Cd * bird.Aw * (bird.rho * bird.w ** 2)/2
+    L = bird.Cl * (bird.rho * bird.u**2)/2.0 * bird.S
+    F = L - D
+    return F
