@@ -8,27 +8,45 @@ class Bird():
                 p = 0.0, q = 0.0, r = 0.0,
                 theta = 0.0, phi = 0.0, psi = 0.0,
                 x = 0.0, y = 0.0, z = 0.0):
+        '''
+        Earth Properties:
+            g, gravity
+            rho, air density
+        '''
+        self.g = 0.0#-9.8
+        self.rho = 1.225
 
         '''
-        properties:
+        bird properties:
             m, mass
-            g, gravity
             Cl, lift coefficient
             Cd, drag coefficient
-            rho, air density
             Au, area looking down u axis
             Av, area looking down v axis
             Aw, area looking down w axis
+            Xl, wing length
+            Yl, wing width
+            Zl, wing height
+
         '''
         self.m = 1.0
-        self.g = -9.8
         self.Cl = 1.2
         self.Cd = 0.3
         self.S = 0.62
-        self.rho = 1.225
         self.Au = 0.1
         self.Av = 0.2
         self.Aw = 0.6
+        self.Xl = 0.75
+        self.Yl = 0.35
+        self.Zl = 0.15
+
+        '''
+        Moments of Inertia
+        '''
+        self.Ixx = self.m * self.Xl**2
+        self.Iyy = self.m * self.Yl**2
+        self.Izz = self.m * self.Zl**2
+        self.Ixz = 0.0
 
         # fixed body frame variables:
         '''
@@ -81,6 +99,14 @@ class Bird():
         self.Y = [y]
         self.Z = [z]
 
+        self.P = [p]
+        self.Q = [q]
+        self.R = [r]
+
+        self.THETA = [theta]
+        self.PHI = [phi]
+        self.PSI = [psi]
+
     def update(self, t, h):
         # update u, v, w from forces, old angles, and old p,q,r
         u = self.take_time_step(de.dudt, self.u, h)
@@ -95,8 +121,26 @@ class Bird():
         self.W.append(w)
 
         #update p, q, r from torque
+        p = self.take_time_step(de.dpdt, self.p, h)
+        q = self.take_time_step(de.dqdt, self.q, h)
+        r = self.take_time_step(de.drdt, self.r, h)
+        self.p = p
+        self.q = q
+        self.r = r
+        self.P.append(p)
+        self.Q.append(q)
+        self.R.append(r)
 
         #calculate new angles from new p,q,r and old angles
+        theta = self.take_time_step(de.dthetadt, self.theta, h)
+        phi = self.take_time_step(de.dphidt, self.phi, h)
+        psi = self.take_time_step(de.dpsidt, self.psi, h)
+        self.theta = theta
+        self.phi = phi
+        self.psi = psi
+        self.THETA.append(theta)
+        self.PHI.append(phi)
+        self.PSI.append(psi)
 
         #update x,y,z
         x = self.take_time_step(de.dxdt, self.x, h)
@@ -110,8 +154,8 @@ class Bird():
         self.Y.append(y)
         self.Z.append(z)
 
-        print("u, v, w: ", (self.u, self.v, self.w))
-        print("x, y, z: ", (self.x, self.y, self.z))
+        #print("u, v, w: ", (self.u, self.v, self.w))
+        #print("x, y, z: ", (self.x, self.y, self.z))
 
 
 

@@ -4,7 +4,6 @@ from pettingzoo.utils import wrappers
 from pettingzoo.utils.env import AECEnv
 from gym import spaces
 import numpy as np
-from Plotting import plot
 import DiffEqs as de
 import bird
 from bird import Bird
@@ -23,7 +22,7 @@ class raw_env(AECEnv):
 
     def __init__(self,
                  N = 1,
-                 h = 1.0,
+                 h = 0.1,
                  t = 0.0
                  ):
         self.h = h
@@ -31,7 +30,7 @@ class raw_env(AECEnv):
         self.N = N
 
         self.agents = ["bird_{}".format(i) for i in range(N)]
-        self.birds = {agent: Bird(u = 2.0, w = 10.0) for agent in self.agents}
+        self.birds = {agent: Bird(p = 3.0, u = 5.0) for agent in self.agents}
         self.agent_order = list(self.agents)
         self._agent_selector = agent_selector(self.agent_order)
 
@@ -54,22 +53,28 @@ class raw_env(AECEnv):
     def plot(self):
         for bird in self.birds:
             bird = self.birds[bird]
-            t = np.arange(0, self.t + self.h, self.h)
+            t = np.arange(0, self.t, self.h)
 
-            plt.figure(0)
+            plt.subplot(311)
             plt.title('Position')
             plt.plot(t, bird.X)
             plt.plot(t, bird.Y)
             plt.plot(t, bird.Z)
             plt.legend(['x', 'y', 'z'])
-            plt.show()
 
-            plt.figure(1)
+            plt.subplot(312)
             plt.title('Velocity')
             plt.plot(t, bird.U)
             plt.plot(t, bird.V)
             plt.plot(t, bird.W)
-            plt.legend(['x', 'y', 'z'])
+            plt.legend(['u', 'v', 'w'])
+
+            plt.subplot(313)
+            plt.title('Angle')
+            plt.plot(t, bird.THETA)
+            plt.plot(t, bird.PHI)
+            plt.plot(t, bird.PSI)
+            plt.legend(['theta', 'phi', 'psi'])
             plt.show()
 
 

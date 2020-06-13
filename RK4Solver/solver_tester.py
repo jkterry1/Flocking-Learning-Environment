@@ -1,13 +1,11 @@
 import numpy as np
 import solver_env as solver
-from Plotting import plot
-import DiffEqs as de
 
 
 
 t0 = 0.0
 t = 2.0
-h = 0.2
+h = 0.01
 n = (int)((t - t0)/h)
 N = 1
 
