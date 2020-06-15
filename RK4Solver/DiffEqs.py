@@ -38,8 +38,8 @@ def dydt(y, bird):
     theta = bird.theta
     phi = bird.phi
     psi = bird.psi
-    return np.cos(theta) * np.sin(psi) * bird.u + (np.cos(phi) * np.cos(psi) + \
-            np.sin(phi) * np.sin(theta) * np.sin(psi)) * bird.v + \
+    return np.cos(theta) * np.sin(psi) * bird.v + \
+            (np.cos(phi) * np.cos(psi) + np.sin(phi) * np.sin(theta) * np.sin(psi)) * bird.v + \
             (-np.sin(phi) * np.cos(psi) + np.cos(phi) * np.sin(theta) * \
             np.sin(psi)) * bird.w
 
@@ -51,7 +51,6 @@ def dzdt(z, bird):
             bird.v + np.cos(phi) * np.cos(theta) * bird.w)
 
 def dpdt(p, bird):
-    # 1/Ixx * (L + (Iyy - Izz) * q * r)  # = pdot
     Ix = bird.Ixx
     Iy = bird.Iyy
     Iz = bird.Izz
@@ -61,12 +60,11 @@ def dpdt(p, bird):
     N = TN(bird)
     L = TL(bird)
     pdot = 1.0/(Ix - (Ixz/Iz)**2)
-    pdot *= (L + q * r * (Iy - Iz) - Ixz * p * q + \
+    pdot *= (L + (q * r * (Iy - Iz)) - Ixz * p * q + \
             (Ixz/Iz) * (N - p * q * (Iy - Ix) - Ixz * q * r) )
     return pdot
 
 def dqdt(q, bird):
-    # 1/Iyy * (M + (Izz - Ixx) * p * r)  # = qdot
     Ix = bird.Ixx
     Iy = bird.Iyy
     Iz = bird.Izz
@@ -80,7 +78,6 @@ def dqdt(q, bird):
 
 
 def drdt(r, bird):
-    # 1/Izz * (N + (Ixx - Iyy) * p * q)  # = rdot
     Ix = bird.Ixx
     Iy = bird.Iyy
     Iz = bird.Izz
@@ -98,48 +95,64 @@ def dthetadt(theta, bird):
     return bird.q * np.cos(bird.phi) - bird.r * np.sin(bird.phi)
 
 def dphidt(phi, bird):
-    return bird.p + bird.q * np.sin(bird.phi) * np.tan(bird.theta) + \
-            bird.r * np.cos(bird.phi) * np.tan(bird.theta)
+    return bird.p + (bird.q * np.sin(bird.phi) + \
+            bird.r * np.cos(bird.phi)) * (np.sin(bird.theta)/np.cos(bird.theta))
 
 def dpsidt(psi, bird):
     return (bird.q * np.sin(bird.phi) + \
             bird.r * np.cos(bird.phi)) * (1.0/np.cos(bird.theta))
 
 def TL(bird):
-    # Drag = Cd * (rho * v^2)/2 * A
-    '''
-    v = (bird.p * bird.r)/2.0
-    A = (bird.Xl * bird.Yl)
+    # v = rw
+    # T = F * L
     r = bird.Xl/2.0
-    T = -r * bird.Cd * A * (bird.rho * v**2)/2.0
+    v = (bird.p * r)/2.0
+    A = (bird.Xl * bird.Yl)/2.0
+    T = -np.sign(v) * r * bird.Cd * A * (bird.rho * v**2)/2.0
+    T = 2.0 * T + bird.Tp
+    bird.T[0] = T
     return T
-    '''
-    return 0.0
-
 
 def TM(bird):
-    return 0.0
+    r = bird.Yl/2.0
+    v = (bird.q * r)/2.0
+    A = (bird.Xl * bird.Yl)/2.0
+    T = -np.sign(v) * r * bird.Cd * A * (bird.rho * v**2)/2.0
+    T = 2.0 * T + bird.Tq
+    bird.T[1] = T
+    return T
 
 def TN(bird):
-    return 0.0
+    r = bird.Xl/2.0
+    v = (bird.r * r)/2.0
+    A = (bird.Xl * bird.Zl)/2.0
+    T = -np.sign(v) * r * bird.Cd * A * (bird.rho * v**2)/2.0
+    T = 2.0 * T + bird.Tr
+    bird.T[2] = T
+    return T
 
 def Fu(u, bird):
     #Drag = Cd * (rho * v^2)/2 * A
-    A = bird.Xl * bird.Yl
-    D = bird.Cd * A * (bird.rho * u**2)/2.0
+    A = bird.Xl * bird.Zl
+    D = np.sign(u) * bird.Cd * A * (bird.rho * u**2)/2.0
     F = -D
-    return F
+    bird.F[0] = F
+    return F + bird.thrust
 
 def Fv(v, bird):
     #Drag = Cd * (rho * v^2)/2 * A
-    D = bird.Cd * bird.Av * (bird.rho * v ** 2)/2.0
+    A = bird.Yl * bird.Zl
+    D = np.sign(v) * bird.Cd * A * (bird.rho * v ** 2)/2.0
     F = -D
+    bird.F[1] = F
     return F
 
 def Fw(w, bird):
     #Lift = Cl * (rho * v^2)/2 * S
     #Drag = Cd * (rho * v^2)/2 * A
-    D = bird.Cd * bird.Aw * (bird.rho * w ** 2)/2.0
-    L = bird.Cl * (bird.rho * bird.u**2)/2.0 * bird.S
+    A = bird.Xl * bird.Yl
+    D = np.sign(w) * bird.Cd * A * (bird.rho * w ** 2)/2.0
+    L = bird.Cl * A * (bird.rho * bird.u**2)/2.0
     F = L - D
+    bird.F[2] = F
     return F
