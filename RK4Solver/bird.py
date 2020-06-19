@@ -172,9 +172,9 @@ class Bird():
         self.PSI.append(psi)
 
         # Shed a vortex
-        self.VORTICES.append(Vortex(self, 1))
-        self.VORTICES.append(Vortex(self, -1))
-
+        if u > 0 or v > 0 or w > 0:
+            self.VORTICES.append(Vortex(self, 1))
+            self.VORTICES.append(Vortex(self, -1))
         #print("u, v, w: ", (self.u, self.v, self.w))
         #print("x, y, z: ", (self.x, self.y, self.z))
 

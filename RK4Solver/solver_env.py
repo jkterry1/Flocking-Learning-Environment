@@ -8,8 +8,6 @@ import DiffEqs as de
 import bird
 from bird import Bird
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
-
 
 def env(**kwargs):
     env = raw_env(**kwargs)
@@ -84,8 +82,31 @@ class raw_env(AECEnv):
             ax.scatter([v.pos[0] for v in bird.VORTICES],
                         [v.pos[1] for v in bird.VORTICES],
                         [v.pos[2] for v in bird.VORTICES],
-                        color = 'pink', s = .1)
+                        color = 'red', s = .5)
             ax.scatter([bird.X[0]], [bird.Y[0]], [bird.Z[0]], 'blue')
+
+            x = []; y = []; z = []
+            u = []; v = []; w = []
+            r = 0.25
+            for vort in bird.VORTICES:
+                x.append(vort.x);y.append(vort.y + r);z.append(vort.z + r)
+                a,b,c = vort.earth_vel(vort.x, vort.y + r, vort.z + r)
+                u.append(a); v.append(b); w.append(c)
+
+                x.append(vort.x);y.append(vort.y - r);z.append(vort.z - r)
+                a,b,c = vort.earth_vel(vort.x, vort.y - r, vort.z - r)
+                u.append(a);v.append(b);w.append(c)
+
+                x.append(vort.x);y.append(vort.y);z.append(vort.z + r)
+                a,b,c = vort.earth_vel(vort.x, vort.y, vort.z + r)
+                u.append(a); v.append(b); w.append(c)
+
+                x.append(vort.x);y.append(vort.y);z.append(vort.z - r)
+                a,b,c = vort.earth_vel(vort.x, vort.y, vort.z - r)
+                u.append(a); v.append(b); w.append(c)
+
+
+            ax.quiver(x,y,z,u,v,w, length = .1, normalize = True)
 
 
             # plt.subplot(212)
