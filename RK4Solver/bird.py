@@ -1,5 +1,6 @@
 import numpy as np
 import DiffEqs as de
+from vortex import Vortex
 
 class Bird():
 
@@ -13,7 +14,7 @@ class Bird():
             g, gravity
             rho, air density
         '''
-        self.g = 0
+        self.g = -9.8
         self.rho = 1.225
 
         '''
@@ -108,6 +109,8 @@ class Bird():
         self.PHI = [phi]
         self.PSI = [psi]
 
+        self.VORTICES = [Vortex(self, 1), Vortex(self, -1)]
+
     def update(self, thrust, torque, h):
         self.Tp, self.Tq, self.Tr = torque
         self.thrust = thrust
@@ -168,8 +171,9 @@ class Bird():
         self.PHI.append(phi)
         self.PSI.append(psi)
 
-
-
+        # Shed a vortex
+        self.VORTICES.append(Vortex(self, 1))
+        self.VORTICES.append(Vortex(self, -1))
 
         #print("u, v, w: ", (self.u, self.v, self.w))
         #print("x, y, z: ", (self.x, self.y, self.z))

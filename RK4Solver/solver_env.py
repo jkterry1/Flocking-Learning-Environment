@@ -8,6 +8,8 @@ import DiffEqs as de
 import bird
 from bird import Bird
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+
 
 def env(**kwargs):
     env = raw_env(**kwargs)
@@ -64,23 +66,36 @@ class raw_env(AECEnv):
             bird = self.birds[bird]
             t = np.arange(0, self.t+0*self.h, self.h)
 
-            plt.subplot(211)
-            plt.title('Position')
-            plt.xlabel('Time (s)')
-            plt.ylabel('(m)')
-            plt.plot(t, bird.X)
-            plt.plot(t, bird.Y)
-            plt.plot(t, bird.Z)
-            plt.legend(['x', 'y', 'z'])
+            # plt.subplot(211)
+            # plt.title('Position')
+            # plt.xlabel('Time (s)')
+            # plt.ylabel('(m)')
+            # plt.plot(t, bird.X)
+            # plt.plot(t, bird.Y)
+            # plt.plot(t, bird.Z)
+            # plt.legend(['x', 'y', 'z'])
 
-            plt.subplot(212)
-            plt.title('Velocity')
-            plt.xlabel('Time (s)')
-            plt.ylabel('(m/s)')
-            plt.plot(t, bird.U)
-            plt.plot(t, bird.V)
-            plt.plot(t, bird.W)
-            plt.legend(['u', 'v', 'w'])
+            fig = plt.figure()
+            ax = fig.add_subplot(111, projection='3d')
+            ax.set_xlabel('x')
+            ax.set_ylabel('y')
+            ax.set_zlabel('z')
+            ax.plot(xs = bird.X, ys = bird.Y, zs = bird.Z, zdir = 'z', color = 'orange')
+            ax.scatter([v.pos[0] for v in bird.VORTICES],
+                        [v.pos[1] for v in bird.VORTICES],
+                        [v.pos[2] for v in bird.VORTICES],
+                        color = 'pink', s = .1)
+            ax.scatter([bird.X[0]], [bird.Y[0]], [bird.Z[0]], 'blue')
+
+
+            # plt.subplot(212)
+            # plt.title('Velocity')
+            # plt.xlabel('Time (s)')
+            # plt.ylabel('(m/s)')
+            # plt.plot(t, bird.U)
+            # plt.plot(t, bird.V)
+            # plt.plot(t, bird.W)
+            # plt.legend(['u', 'v', 'w'])
 
             plt.show()
 
