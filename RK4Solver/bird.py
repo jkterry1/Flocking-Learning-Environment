@@ -109,11 +109,23 @@ class Bird():
         self.PHI = [phi]
         self.PSI = [psi]
 
-        self.VORTICES = [Vortex(self, 1), Vortex(self, -1)]
+        self.VORTICES_RIGHT = [Vortex(self, 1)]
+        self.VORTICES_LEFT = [Vortex(self, -1)]
+        self.vortex_force_u, self.vortex_force_v, self.vortex_force_w = [0.0, 0.0, 0.0]
+        self.vortex_torque_u, self.vortex_torque_v, self.vortex_torque_w = [0.0, 0.0, 0.0]
 
-    def update(self, thrust, torque, h):
+    def update(self, thrust, torque, h, vortices):
         self.Tp, self.Tq, self.Tr = torque
         self.thrust = thrust
+
+        a = self.vortex_forces(vortices)
+        print(a)
+        self.vortex_force_u = a[0]
+        self.vortex_force_v = a[1]
+        self.vortex_force_w = a[2]
+        self.vortex_torque_u = a[3]
+        self.vortex_torque_v = a[4]
+        self.vortex_torque_w = a[5]
 
         # update u, v, w from forces, old angles, and old p,q,r
         u = self.take_time_step(de.dudt, self.u, h)
@@ -173,10 +185,36 @@ class Bird():
 
         # Shed a vortex
         if u > 0 or v > 0 or w > 0:
-            self.VORTICES.append(Vortex(self, 1))
-            self.VORTICES.append(Vortex(self, -1))
-        #print("u, v, w: ", (self.u, self.v, self.w))
-        #print("x, y, z: ", (self.x, self.y, self.z))
+            #right, left
+            self.vortex_buffer = (Vortex(self, 1), Vortex(self, -1))
+
+    def shed_vortices(self):
+        self.VORTICES_RIGHT.append(self.vortex_buffer[0])
+        self.VORTICES_LEFT.append(self.vortex_buffer[1])
+
+    #returns fu, fv, fw, tu, tv, tw
+    def vortex_forces(self, vortices):
+        fu, fv, fw = [0.0, 0.0, 0.0]
+        tu, tv, tw = [0.0, 0.0, 0.0]
+        for vortex in vortices:
+            #returns velocities on left and right wing
+            L, R = vortex.bird_vel(self)
+            #print("L ", L)
+            #calculate up and down forces
+            #left
+            u, v, w = L
+            Aw = self.Xl * self.Yl
+            D = np.sign(w) * self.Cd * Aw * (self.rho * w ** 2)/2.0
+            fw += D
+            tu -= D * self.Xl/2.0
+
+            #right
+            u, v, w = R
+            A = self.Xl * self.Yl
+            D = np.sign(w) * self.Cd * A * (self.rho * w ** 2)/2.0
+            fw += D
+            tu += D * self.Xl/2.0
+        return fu, fv, fw, tu, tv, tw
 
 
 

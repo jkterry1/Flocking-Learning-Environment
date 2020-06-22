@@ -8,6 +8,7 @@ import DiffEqs as de
 import bird
 from bird import Bird
 import matplotlib.pyplot as plt
+import copy
 
 def env(**kwargs):
     env = raw_env(**kwargs)
@@ -30,9 +31,12 @@ class raw_env(AECEnv):
         self.t = t
         self.N = N
 
+        self.max_r = 1.0
+
         self.agents = ["bird_{}".format(i) for i in range(N)]
         if birds is None:
             birds = [Bird(z = 100.0) for agent in self.agents]
+        self.starting_conditions = [copy.deepcopy(bird) for bird in birds]
         self.birds = {agent: birds[i] for i, agent in enumerate(self.agents)}
         self.agent_order = list(self.agents)
         self._agent_selector = agent_selector(self.agent_order)
@@ -43,52 +47,105 @@ class raw_env(AECEnv):
         bird = self.birds[self.agent_selection]
         thrust, torque = action
 
-        bird.update(thrust, torque, self.h)
+        vortices = self.get_vortices(bird)
+        print(self.agent_selection)
+        print(vortices)
+        print()
+
+        bird.update(thrust, torque, self.h, vortices)
+
+        if bird.z <= 0 or bird.z > 50:
+            self.rewards[self.agent_selection] = -10
 
         # if we have moved through one complete timestep
         if self.agent_selection == self.agents[-1]:
+            for b in self.birds:
+                bird = self.birds[b]
+                bird.shed_vortices()
             self.positions = self.get_positions()
             self.t = self.t + self.h
 
         self.agent_selection = self._agent_selector.next()
         if observe:
-            return self.observe()
+            return self.observe(), self.rewards, self.dones, self.agent_selection
 
     def observe(self):
         force = self.birds[self.agent_selection].F
         torque = self.birds[self.agent_selection].T
         return [force, torque, self.positions]
 
-    def plot(self):
+    def plot_values(self):
+        plt1 = plt.subplot(311)
+        plt2 = plt.subplot(312)
+        plt3 = plt.subplot(313)
         for bird in self.birds:
             bird = self.birds[bird]
-            t = np.arange(0, self.t+0*self.h, self.h)
+            t = np.arange(len(bird.U))
 
-            # plt.subplot(211)
-            # plt.title('Position')
-            # plt.xlabel('Time (s)')
-            # plt.ylabel('(m)')
-            # plt.plot(t, bird.X)
-            # plt.plot(t, bird.Y)
-            # plt.plot(t, bird.Z)
-            # plt.legend(['x', 'y', 'z'])
+            plt1.title.set_text('position')
+            plt1.set_xlabel('Time (s)')
+            plt1.set_ylabel('m')
+            plt1.plot(t, bird.X)
+            plt1.plot(t, bird.Y)
+            plt1.plot(t, bird.Z)
+            leg = []
+            for _ in self.birds:
+                leg += ['x', 'y', 'z']
+            plt1.legend(leg)
 
-            fig = plt.figure()
-            ax = fig.add_subplot(111, projection='3d')
-            ax.set_xlabel('x')
-            ax.set_ylabel('y')
-            ax.set_zlabel('z')
+            plt2.title.set_text('angular vel')
+            plt2.set_xlabel('Time (s)')
+            plt2.set_ylabel('rad/s')
+            plt2.plot(t, bird.P)
+            plt2.plot(t, bird.Q)
+            plt2.plot(t, bird.R)
+            leg = []
+            for _ in self.birds:
+                leg += ['phi', 'theta', 'psi']
+            plt2.legend(leg)
+
+            plt3.title.set_text('velocity')
+            plt3.set_xlabel('Time (s)')
+            plt3.set_ylabel('(m/s)')
+            plt3.plot(t, bird.U)
+            plt3.plot(t, bird.V)
+            plt3.plot(t, bird.W)
+            leg = []
+            for _ in self.birds:
+                leg += ['u', 'v', 'w']
+            plt3.legend(leg)
+        plt.show()
+
+    def plot_birds(self, plot_vortices = False):
+        first = plot_vortices
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+
+        ax.set_xlabel('x')
+        ax.set_ylabel('y')
+        ax.set_zlabel('z')
+        ax.set_xlim3d(0,5)
+        ax.set_ylim3d(-2.5,2.5)
+        ax.set_zlim3d(0,5)
+        for b in self.birds:
+            bird = self.birds[b]
             ax.plot(xs = bird.X, ys = bird.Y, zs = bird.Z, zdir = 'z', color = 'orange')
-            ax.scatter([v.pos[0] for v in bird.VORTICES],
-                        [v.pos[1] for v in bird.VORTICES],
-                        [v.pos[2] for v in bird.VORTICES],
+            ax.scatter([v.pos[0] for v in bird.VORTICES_LEFT],
+                        [v.pos[1] for v in bird.VORTICES_LEFT],
+                        [v.pos[2] for v in bird.VORTICES_LEFT],
+                        color = 'red', s = .5)
+            ax.scatter([v.pos[0] for v in bird.VORTICES_RIGHT],
+                        [v.pos[1] for v in bird.VORTICES_RIGHT],
+                        [v.pos[2] for v in bird.VORTICES_RIGHT],
                         color = 'red', s = .5)
             ax.scatter([bird.X[0]], [bird.Y[0]], [bird.Z[0]], 'blue')
 
-            x = []; y = []; z = []
-            u = []; v = []; w = []
-            r = 0.25
-            for vort in bird.VORTICES:
+        x = []; y = []; z = []
+        u = []; v = []; w = []
+        r = 0.25
+        if first:
+            first = False
+            for vort in bird.VORTICES_LEFT:
                 x.append(vort.x);y.append(vort.y + r);z.append(vort.z + r)
                 a,b,c = vort.earth_vel(vort.x, vort.y + r, vort.z + r)
                 u.append(a); v.append(b); w.append(c)
@@ -105,20 +162,41 @@ class raw_env(AECEnv):
                 a,b,c = vort.earth_vel(vort.x, vort.y, vort.z - r)
                 u.append(a); v.append(b); w.append(c)
 
+                x.append(vort.x);y.append(vort.y - r);z.append(vort.z + r)
+                a,b,c = vort.earth_vel(vort.x, vort.y - r, vort.z + r)
+                u.append(a); v.append(b); w.append(c)
 
-            ax.quiver(x,y,z,u,v,w, length = .1, normalize = True)
+                x.append(vort.x);y.append(vort.y + r);z.append(vort.z - r)
+                a,b,c = vort.earth_vel(vort.x, vort.y + r, vort.z - r)
+                u.append(a);v.append(b);w.append(c)
+            for vort in bird.VORTICES_RIGHT:
+                x.append(vort.x);y.append(vort.y + r);z.append(vort.z + r)
+                a,b,c = vort.earth_vel(vort.x, vort.y + r, vort.z + r)
+                u.append(a); v.append(b); w.append(c)
+
+                x.append(vort.x);y.append(vort.y - r);z.append(vort.z - r)
+                a,b,c = vort.earth_vel(vort.x, vort.y - r, vort.z - r)
+                u.append(a);v.append(b);w.append(c)
+
+                x.append(vort.x);y.append(vort.y);z.append(vort.z + r)
+                a,b,c = vort.earth_vel(vort.x, vort.y, vort.z + r)
+                u.append(a); v.append(b); w.append(c)
+
+                x.append(vort.x);y.append(vort.y);z.append(vort.z - r)
+                a,b,c = vort.earth_vel(vort.x, vort.y, vort.z - r)
+                u.append(a); v.append(b); w.append(c)
+
+                x.append(vort.x);y.append(vort.y - r);z.append(vort.z + r)
+                a,b,c = vort.earth_vel(vort.x, vort.y - r, vort.z + r)
+                u.append(a); v.append(b); w.append(c)
+
+                x.append(vort.x);y.append(vort.y + r);z.append(vort.z - r)
+                a,b,c = vort.earth_vel(vort.x, vort.y + r, vort.z - r)
+                u.append(a);v.append(b);w.append(c)
 
 
-            # plt.subplot(212)
-            # plt.title('Velocity')
-            # plt.xlabel('Time (s)')
-            # plt.ylabel('(m/s)')
-            # plt.plot(t, bird.U)
-            # plt.plot(t, bird.V)
-            # plt.plot(t, bird.W)
-            # plt.legend(['u', 'v', 'w'])
-
-            plt.show()
+        ax.quiver(x,y,z,u,v,w, length = .1, normalize = True)
+        plt.show()
 
 
 
@@ -129,6 +207,8 @@ class raw_env(AECEnv):
         self._agent_selector.reinit(self.agent_order)
         self.agent_selection = self._agent_selector.reset()
 
+        birds = [copy.deepcopy(bird) for bird in self.starting_conditions]
+        self.birds = {agent: birds[i] for i, agent in enumerate(self.agents)}
         self.positions = self.get_positions()
 
         self.rewards = {i: 0 for i in self.agents}
@@ -139,3 +219,21 @@ class raw_env(AECEnv):
             bird = self.birds[agent]
             pos.append([bird.x, bird.y, bird.z])
         return pos
+
+    def get_vortices(self, curr):
+        vortices = []
+        for b in self.birds:
+            bird = self.birds[b]
+            if bird is not curr:
+                for vorts in [bird.VORTICES_LEFT, bird.VORTICES_RIGHT]:
+                    i = 0
+                    v = vorts[i]
+                    #want first vortex ahead of it
+                    while i < len(vorts) and v.x < curr.x:
+                        v = vorts[i]
+                        i = i+1
+                    if v.x >= curr.x:
+                        r = np.sqrt((curr.y - v.y)**2 + (curr.z - v.z)**2)
+                        if i < len(vorts) and r < self.max_r:
+                            vortices.append(v)
+        return vortices
