@@ -8,6 +8,7 @@ class Bird():
                 u = 0.0, v = 0.0, w = 0.0,
                 p = 0.0, q = 0.0, r = 0.0,
                 theta = 0.0, phi = 0.0, psi = 0.0,
+                alpha_l = 0.0, beta_l = 0.0, alpha_r = 0.0, beta_r = 0.0,
                 x = 0.0, y = 0.0, z = 0.0):
         '''
         Earth Properties:
@@ -29,7 +30,7 @@ class Bird():
         '''
         self.m = 1.0
         self.Cl = 1.2
-        self.Cd = 0.3
+        self.Cd = 1.0
         self.S = 0.62
         self.Xl = 0.75
         self.Yl = 0.35
@@ -84,6 +85,14 @@ class Bird():
         self.z = z
 
         '''
+        wing orientation
+        '''
+        self.alpha_l = alpha_l
+        self.beta_l = beta_l
+        self.alpha_r = alpha_r
+        self.beta_r = beta_r
+
+        '''
         Observation variables:
             F, net force
             T, net torque
@@ -109,17 +118,20 @@ class Bird():
         self.PHI = [phi]
         self.PSI = [psi]
 
+        self.ALPHA_L = [alpha_l]
+        self.ALPHA_R = [alpha_r]
+        self.BETA_L = [beta_l]
+        self.BETA_R = [beta_r]
+
         self.VORTICES_RIGHT = [Vortex(self, 1)]
         self.VORTICES_LEFT = [Vortex(self, -1)]
         self.vortex_force_u, self.vortex_force_v, self.vortex_force_w = [0.0, 0.0, 0.0]
         self.vortex_torque_u, self.vortex_torque_v, self.vortex_torque_w = [0.0, 0.0, 0.0]
 
-    def update(self, thrust, torque, h, vortices):
-        self.Tp, self.Tq, self.Tr = torque
+    def update(self, thrust, h, vortices):
         self.thrust = thrust
 
         a = self.vortex_forces(vortices)
-        print(a)
         self.vortex_force_u = a[0]
         self.vortex_force_v = a[1]
         self.vortex_force_w = a[2]
@@ -184,9 +196,10 @@ class Bird():
         self.PSI.append(psi)
 
         # Shed a vortex
-        if u > 0 or v > 0 or w > 0:
-            #right, left
-            self.vortex_buffer = (Vortex(self, 1), Vortex(self, -1))
+        # if u > 0 or v > 0 or w > 0:
+        #     #right, left
+        #     self.vortex_buffer = (Vortex(self, 1), Vortex(self, -1))
+        self.vortex_buffer = (Vortex(self, 1), Vortex(self, -1))
 
     def shed_vortices(self):
         self.VORTICES_RIGHT.append(self.vortex_buffer[0])
@@ -201,14 +214,14 @@ class Bird():
             L, R = vortex.bird_vel(self)
             #print("L ", L)
             #calculate up and down forces
-            #left
+            #left wing
             u, v, w = L
             Aw = self.Xl * self.Yl
             D = np.sign(w) * self.Cd * Aw * (self.rho * w ** 2)/2.0
             fw += D
             tu -= D * self.Xl/2.0
 
-            #right
+            #right wing
             u, v, w = R
             A = self.Xl * self.Yl
             D = np.sign(w) * self.Cd * A * (self.rho * w ** 2)/2.0

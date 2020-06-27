@@ -23,7 +23,7 @@ class raw_env(AECEnv):
 
     def __init__(self,
                  N = 1,
-                 h = 0.1,
+                 h = 0.01,
                  t = 0.0,
                  birds = None
                  ):
@@ -32,6 +32,7 @@ class raw_env(AECEnv):
         self.N = N
 
         self.max_r = 1.0
+        self.max_steps = 1000000
 
         self.agents = ["bird_{}".format(i) for i in range(N)]
         if birds is None:
@@ -41,21 +42,30 @@ class raw_env(AECEnv):
         self.agent_order = list(self.agents)
         self._agent_selector = agent_selector(self.agent_order)
 
-
+        self.action_spaces = {bird: spaces.Box(low = 0.0* np.zeros(4), high = 5.0 * np.ones(4)) for bird in self.birds}
+        #self.action_space = spaces.Box(np.array([0.0, -5.0, -5.0, -5.0]), high = 1000.0 * np.ones(4))
+        #self.action_space = self.observation_space = spaces.Box(low=0.0, high=50.0,
+                                        #shape=(1,), dtype = np.float32)
+        self.observation_space = spaces.Box(low = -1000.0*np.ones(9), high = 1000.0 * np.ones(9))
+        self.metadata = []
 
     def step(self, action, observe = True):
         bird = self.birds[self.agent_selection]
-        thrust, torque = action
+        thrust = action[0]
+        #torque = [0.0, 0.0, 0.0]
+        #print("thrust ", thrust)
+        bird.alpha_l += action[1]
+        bird.beta_l += action[2]
+        bird.alpha_r += action[3]
+        bird.beta_r += action[4]
 
         vortices = self.get_vortices(bird)
-        print(self.agent_selection)
-        print(vortices)
-        print()
+        bird.update(thrust, self.h, vortices)
 
-        bird.update(thrust, torque, self.h, vortices)
 
-        if bird.z <= 0 or bird.z > 50:
-            self.rewards[self.agent_selection] = -10
+        if bird.z <= 0 or bird.z > 200:
+            self.reward = -100.0
+            self.done = True
 
         # if we have moved through one complete timestep
         if self.agent_selection == self.agents[-1]:
@@ -66,13 +76,35 @@ class raw_env(AECEnv):
             self.t = self.t + self.h
 
         self.agent_selection = self._agent_selector.next()
+        #self.info['episode'] += 1
+
+        self.steps += 1
+        if self.steps > self.max_steps:
+            self.done = True
+
+        obs = self.observe()
+        for i in range(len(obs)):
+            if obs[i] > 1000:
+                self.rewards[self.agent_selection] = -100.0
+                #self.done = True
+                #print("{} was large, {}", i, obs[i])
+
+        print("x, y, z: ", [bird.x, bird.y, bird.z])
+        print("u, v, w: ", [bird.u, bird.v, bird.w])
+        print("alpha, beta (left): ", [bird.alpha_l, bird.beta_l])
+        print("alpha, beta (right): ", [bird.alpha_r, bird.beta_r])
+        print("Fu, Fv, Fw: ", bird.F)
+        print("Tu, Tv, Tw: ", bird.T)
         if observe:
-            return self.observe(), self.rewards, self.dones, self.agent_selection
+            return obs, self.reward, self.done, self.info
 
     def observe(self):
         force = self.birds[self.agent_selection].F
         torque = self.birds[self.agent_selection].T
-        return [force, torque, self.positions]
+        bird = self.agent_selection
+        pos = [self.birds[bird].x, self.birds[bird].y, self.birds[bird].z]
+        obs = force+torque + pos
+        return obs
 
     def plot_values(self):
         plt1 = plt.subplot(311)
@@ -124,9 +156,9 @@ class raw_env(AECEnv):
         ax.set_xlabel('x')
         ax.set_ylabel('y')
         ax.set_zlabel('z')
-        ax.set_xlim3d(0,5)
-        ax.set_ylim3d(-2.5,2.5)
-        ax.set_zlim3d(0,5)
+        # ax.set_xlim3d(0,5)
+        # ax.set_ylim3d(-2.5,2.5)
+        # ax.set_zlim3d(0,5)
         for b in self.birds:
             bird = self.birds[b]
             ax.plot(xs = bird.X, ys = bird.Y, zs = bird.Z, zdir = 'z', color = 'orange')
@@ -199,7 +231,6 @@ class raw_env(AECEnv):
         plt.show()
 
 
-
     def reset(self, observe = True):
         self.dones = {i: False for i in self.agents}
 
@@ -208,10 +239,20 @@ class raw_env(AECEnv):
         self.agent_selection = self._agent_selector.reset()
 
         birds = [copy.deepcopy(bird) for bird in self.starting_conditions]
+        #print("bird ", birds[0].z)
         self.birds = {agent: birds[i] for i, agent in enumerate(self.agents)}
         self.positions = self.get_positions()
 
         self.rewards = {i: 0 for i in self.agents}
+
+        self.info = {'episode': None}
+
+        self.steps = 0
+        self.reward = 0.0
+
+        self.done = False
+
+        return self.observe()
 
     def get_positions(self):
         pos = []

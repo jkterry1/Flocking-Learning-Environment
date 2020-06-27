@@ -5,7 +5,8 @@ class Vortex():
     def __init__(self, bird, sign):
         self.bird = bird
         self.sign = sign
-        self.C = 100.0
+        self.C = 25.0
+        self.min_vel = 1.0
 
         '''
         orientation
@@ -17,19 +18,26 @@ class Vortex():
         '''
         position
         '''
+        if sign == 1: # right wing
+            self.phi += bird.beta_r
+        else:
+            self.phi -= bird.beta_l
         mat = self.get_transform(self.phi, self.theta, self.psi)
         a = np.array([0.0, bird.Xl, 0.0])
         if sign == 1: # right wing
-            self.pos = np.array([bird.x, bird.y, bird.z]) +  np.matmul(mat, a)
-        else: #left wing
             self.pos = np.array([bird.x, bird.y, bird.z]) -  np.matmul(mat, a)
+        else: #left wing
+            self.pos = np.array([bird.x, bird.y, bird.z]) +  np.matmul(mat, a)
         self.x, self.y, self.z = self.pos
 
         '''
         properties
         '''
         vel = np.sqrt(bird.u**2 + bird.v**2 + bird.w**2)
-        self.gamma = self.C * bird.m/(bird.Xl * vel)
+        if abs(vel) > self.min_vel:
+            self.gamma = self.C * bird.m/(bird.Xl * vel)
+        else:
+            self.gamma = 0.0
         #print("Gamma: ", self.gamma)
         self.core = 0.05 * bird.Xl
         self.max_r = 0.5

@@ -18,7 +18,7 @@ def dvdt(v, bird):
 
 
 def dwdt(w, bird):
-    Z = Fw(w, bird)
+    Z = Fw(w, bird)/bird.m
     grav = bird.g * np.cos(bird.theta) * np.cos(bird.phi)
     wdot = Z + grav
     wdot += bird.q * bird.u - bird.p * bird.v
@@ -103,56 +103,109 @@ def dpsidt(psi, bird):
             bird.r * np.cos(bird.phi)) * (1.0/np.cos(bird.theta))
 
 def TL(bird):
+    T = 0
+    r = bird.Xl/2.0
+    #lift
+    A = bird.Xl * bird.Yl
+    L = bird.Cl * A * (bird.rho * bird.u**2)/2.0
+    #left wing lift
+    Fl = L * np.cos(bird.alpha_l) * np.cos(bird.beta_l)
+    #right wing lift
+    Fr = -L * np.cos(bird.alpha_r) * np.cos(bird.beta_r)
+
+    T += Fl * r
+    T += Fr * r
+
     # v = rw
     # T = F * L
-    r = bird.Xl/2.0
     v = (bird.p * r)/2.0
-    A = (bird.Xl * bird.Yl)/2.0
-    T = -np.sign(v) * r * bird.Cd * A * (bird.rho * v**2)/2.0
-    T = 2.0 * T + bird.Tp + bird.vortex_torque_u
+    A = (bird.Xl * bird.Yl)
+    #drag torque from rotation
+    D = -np.sign(v) * r * bird.Cd * A * (bird.rho * v**2)/2.0
+    T += 2.0 * D
+    T += bird.vortex_torque_u
     bird.T[0] = T
     return T
 
 def TM(bird):
-    r = bird.Yl/2.0
+    T = 0
+    r = bird.Yl/4.0
     v = (bird.q * r)/2.0
-    A = (bird.Xl * bird.Yl)/2.0
-    T = -np.sign(v) * r * bird.Cd * A * (bird.rho * v**2)/2.0
-    T = 2.0 * T + bird.Tq + bird.vortex_torque_v
+    A = (bird.Xl * bird.Yl)
+    D = -np.sign(v) * r * bird.Cd * A * (bird.rho * v**2)/2.0
+    T += 2.0 * D + bird.vortex_torque_v
     bird.T[1] = T
     return T
 
 def TN(bird):
+    T = 0
     r = bird.Xl/2.0
+    #lift
+    A = bird.Xl * bird.Yl
+    L = bird.Cl * A * (bird.rho * bird.u**2)/2.0
+    #left wing lift in u direction
+    Fl = L * np.sin(bird.alpha_l)
+    #right wing lift in u direction
+    Fr = L * np.sin(bird.alpha_r)
+
+    T += -Fl * r
+    T += Fr * r
+
     v = (bird.r * r)/2.0
-    A = (bird.Xl * bird.Zl)/2.0
-    T = -np.sign(v) * r * bird.Cd * A * (bird.rho * v**2)/2.0
-    T = 2.0 * T + bird.Tr + bird.vortex_torque_w
+    A = (bird.Yl * bird.Zl)
+    #drag from rotation
+    D = -np.sign(v) * r * bird.Cd * A * (bird.rho * v**2)/2.0
+    T += 2.0 * D
+    T += bird.vortex_torque_w
     bird.T[2] = T
     return T
 
 def Fu(u, bird):
+    F = 0
+    #lift
+    A = bird.Xl * bird.Yl
+    L = bird.Cl * A * (bird.rho * bird.u**2)/2.0
     #Drag = Cd * (rho * v^2)/2 * A
     A = bird.Xl * bird.Zl
-    D = np.sign(u) * bird.Cd * A * (bird.rho * u**2)/2.0
-    F = -D + bird.vortex_force_u
+    D = -np.sign(u) * bird.Cd * A * (bird.rho * u**2)/2.0
+    F += -L * np.sin(bird.alpha_l)
+    F += -L * np.sin(bird.alpha_r)
+    F += D
+    F += bird.vortex_force_u
     bird.F[0] = F
     return F + bird.thrust
 
 def Fv(v, bird):
+    F = 0
+    #lift
+    A = bird.Xl * bird.Yl
+    L = bird.Cl * A * (bird.rho * bird.u**2)/2.0
     #Drag = Cd * (rho * v^2)/2 * A
     A = bird.Yl * bird.Zl
     D = np.sign(v) * bird.Cd * A * (bird.rho * v ** 2)/2.0
-    F = -D + bird.vortex_force_v
+    F += L * np.sin(bird.beta_l)
+    F += -L * np.sin(bird.beta_r)
+    F += -D
+    F += bird.vortex_force_v
     bird.F[1] = F
     return F
 
 def Fw(w, bird):
+    F = 0
     #Lift = Cl * (rho * v^2)/2 * S
     #Drag = Cd * (rho * v^2)/2 * A
+    alpha_l = bird.alpha_l
+    alpha_r = bird.alpha_r
+    beta_l = bird.beta_l
+    beta_r = bird.beta_r
     A = bird.Xl * bird.Yl
-    D = np.sign(w) * bird.Cd * A * (bird.rho * w ** 2)/2.0
     L = bird.Cl * A * (bird.rho * bird.u**2)/2.0
-    F = L - D + bird.vortex_force_w
+    D = -np.sign(w) * bird.Cd * A * (bird.rho * w ** 2)/2.0
+    #left wing lift
+    F += L * abs(np.cos(alpha_l) * np.cos(beta_l))
+    #right wing lift
+    F += L * abs(np.cos(alpha_r) * np.cos(beta_r))
+    F += D
+    F += bird.vortex_force_w
     bird.F[2] = F
     return F
