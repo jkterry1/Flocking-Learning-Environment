@@ -52,17 +52,38 @@ class raw_env(AECEnv):
     def step(self, action, observe = True):
         bird = self.birds[self.agent_selection]
 
-        self.print_bird(bird)
+        self.print_bird(bird, action)
 
         thrust = action[0]
         #torque = [0.0, 0.0, 0.0]
         #print("thrust ", thrust)
+        limit = np.pi/4.0
         bird.alpha_l += action[1]
+        if bird.alpha_l > limit:
+            bird.alpha_l = limit
+        if bird.alpha_l < -limit:
+            bird.alpha_l = -limit
+
         bird.beta_l += action[2]
+        if bird.beta_l > limit:
+            bird.beta_l = limit
+        if bird.beta_l < -limit:
+            bird.beta_l = -limit
+
         bird.alpha_r += action[3]
+        if bird.alpha_r > limit:
+            bird.alpha_r = limit
+        if bird.alpha_r < -limit:
+            bird.alpha_r = -limit
+
         bird.beta_r += action[4]
+        if bird.beta_r > limit:
+            bird.beta_r = limit
+        if bird.beta_r < -limit:
+            bird.beta_r = -limit
 
         vortices = self.get_vortices(bird)
+        print("vortices: ", vortices)
         bird.update(thrust, self.h, vortices)
 
 
@@ -275,9 +296,10 @@ class raw_env(AECEnv):
                             vortices.append(v)
         return vortices
 
-    def print_bird(self, bird):
+    def print_bird(self, bird, action):
         print('-----------------------------------------------------------------------')
         print(self.agent_selection)
+        print("thrust, al, ar, bl, br \n", action)
         print("x, y, z: \t\t", [bird.x, bird.y, bird.z])
         print("u, v, w: \t\t", [bird.u, bird.v, bird.w])
         print("phi, theta, psi: \t", [bird.phi, bird.theta, bird.psi])

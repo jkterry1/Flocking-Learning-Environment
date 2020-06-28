@@ -163,7 +163,7 @@ def TN(bird):
     Fr = L * np.sin(bird.alpha_r)
     #drag contribution from u direction motion
     A = bird.Yl * bird.Xl * np.sin(bird.alpha_r)
-    Fr + = -np.sign(bird.u) * bird.Cl * A * (bird.rho * bird.u**2)/2.0
+    Fr += -np.sign(bird.u) * bird.Cl * A * (bird.rho * bird.u**2)/2.0
 
     #add wing orientation contributions to the torque
     T += Fl * r
