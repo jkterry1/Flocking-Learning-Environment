@@ -13,7 +13,7 @@ games = 1
 tik = time.time()
 
 birds = [Bird(z = 50.0, x = 1.0, u = 7.1271 , p = 0.0)]#, Bird(z = 5.0, y = .75, u = 5.0, p = 0.0),  Bird(z = 5.0, y = -.75, u = 5.0, p = 0.0)]
-birds = [Bird(z = 50.0, y = -3.0, u = 5.0, alpha_l = np.pi/4.0, alpha_r = np.pi/4.0)]#,Bird(z = 50.0, y = 3.0, u = 5.0)]
+birds = [Bird(z = 50.0, y = -3.0, u = 10.0, alpha_r = np.pi/4.0)]#,Bird(z = 50.0, y = 3.0, u = 5.0)]
 env = solver.raw_env(N = len(birds), h = h, birds = birds)
 env.reset()
 

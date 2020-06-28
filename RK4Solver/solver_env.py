@@ -51,6 +51,9 @@ class raw_env(AECEnv):
 
     def step(self, action, observe = True):
         bird = self.birds[self.agent_selection]
+
+        self.print_bird(bird)
+
         thrust = action[0]
         #torque = [0.0, 0.0, 0.0]
         #print("thrust ", thrust)
@@ -88,13 +91,6 @@ class raw_env(AECEnv):
                 self.rewards[self.agent_selection] = -100.0
                 #self.done = True
                 #print("{} was large, {}", i, obs[i])
-
-        print("x, y, z: ", [bird.x, bird.y, bird.z])
-        print("u, v, w: ", [bird.u, bird.v, bird.w])
-        print("alpha, beta (left): ", [bird.alpha_l, bird.beta_l])
-        print("alpha, beta (right): ", [bird.alpha_r, bird.beta_r])
-        print("Fu, Fv, Fw: ", bird.F)
-        print("Tu, Tv, Tw: ", bird.T)
         if observe:
             return obs, self.reward, self.done, self.info
 
@@ -133,7 +129,7 @@ class raw_env(AECEnv):
             plt2.plot(t, bird.R)
             leg = []
             for _ in self.birds:
-                leg += ['phi', 'theta', 'psi']
+                leg += ['p', 'q', 'r']
             plt2.legend(leg)
 
             plt3.title.set_text('velocity')
@@ -278,3 +274,16 @@ class raw_env(AECEnv):
                         if i < len(vorts) and r < self.max_r:
                             vortices.append(v)
         return vortices
+
+    def print_bird(self, bird):
+        print('-----------------------------------------------------------------------')
+        print(self.agent_selection)
+        print("x, y, z: \t\t", [bird.x, bird.y, bird.z])
+        print("u, v, w: \t\t", [bird.u, bird.v, bird.w])
+        print("phi, theta, psi: \t", [bird.phi, bird.theta, bird.psi])
+        print("p, q, r: \t\t", [bird.p, bird.q, bird.r])
+        print("alpha, beta (left): \t", [bird.alpha_l, bird.beta_l])
+        print("alpha, beta (right): \t", [bird.alpha_r, bird.beta_r])
+        print("Fu, Fv, Fw: \t\t", bird.F)
+        print("Tu, Tv, Tw: \t\t", bird.T)
+        print()
