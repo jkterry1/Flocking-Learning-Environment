@@ -308,4 +308,6 @@ class raw_env(AECEnv):
         print("alpha, beta (right): \t", [bird.alpha_r, bird.beta_r])
         print("Fu, Fv, Fw: \t\t", bird.F)
         print("Tu, Tv, Tw: \t\t", bird.T)
+        print("VFu, VFv, VFw: \t\t", bird.vortex_force_u, bird.vortex_force_v, bird.vortex_force_w)
+        print("VTu, VTv, VTw: \t\t", bird.vortex_torque_u, bird.vortex_torque_v, bird.vortex_torque_w)
         print()

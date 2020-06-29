@@ -7,6 +7,7 @@ class Vortex():
         self.sign = sign
         self.C = 25.0
         self.min_vel = 1.0
+        self.max_r = 1.0
 
         '''
         orientation
@@ -40,7 +41,6 @@ class Vortex():
             self.gamma = 0.0
         #print("Gamma: ", self.gamma)
         self.core = 0.05 * bird.Xl
-        self.max_r = 0.5
 
     # vlocity of the vortex in the earth's frame
     def earth_vel(self, x, y, z):
@@ -58,7 +58,7 @@ class Vortex():
         mat = self.get_transform(phi, theta, psi)
 
         a = np.matmul(mat, tan_vec)
-        return self.sign * a
+        return -self.sign * a
 
     # velocity in the bird's frame
     def bird_vel(self, bird):
@@ -93,7 +93,7 @@ class Vortex():
         if r_right < self.core or r_right > self.max_r:
             right = np.array([0.0, 0.0, 0.0])
 
-        ret = [self.sign * left, self.sign * right]
+        ret = [-self.sign * left, -self.sign * right]
         return ret
 
     def get_transform(self, phi, theta, psi):
