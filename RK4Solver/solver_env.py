@@ -57,37 +57,38 @@ class raw_env(AECEnv):
         thrust = action[0]
         #torque = [0.0, 0.0, 0.0]
         #print("thrust ", thrust)
-        limit = np.pi/4.0
+        limit_alpha = np.pi/6.0
+        limit_beta = np.pi/4.0
         bird.alpha_l += action[1]
-        if bird.alpha_l > limit:
-            bird.alpha_l = limit
-        if bird.alpha_l < -limit:
-            bird.alpha_l = -limit
+        if bird.alpha_l > limit_alpha:
+            bird.alpha_l = limit_alpha
+        if bird.alpha_l < -limit_alpha:
+            bird.alpha_l = -limit_alpha
 
         bird.beta_l += action[2]
-        if bird.beta_l > limit:
-            bird.beta_l = limit
-        if bird.beta_l < -limit:
-            bird.beta_l = -limit
+        if bird.beta_l > limit_beta:
+            bird.beta_l = limit_beta
+        if bird.beta_l < -limit_beta:
+            bird.beta_l = -limit_beta
 
         bird.alpha_r += action[3]
-        if bird.alpha_r > limit:
-            bird.alpha_r = limit
-        if bird.alpha_r < -limit:
-            bird.alpha_r = -limit
+        if bird.alpha_r > limit_alpha:
+            bird.alpha_r = limit_alpha
+        if bird.alpha_r < -limit_alpha:
+            bird.alpha_r = -limit_alpha
 
         bird.beta_r += action[4]
-        if bird.beta_r > limit:
-            bird.beta_r = limit
-        if bird.beta_r < -limit:
-            bird.beta_r = -limit
+        if bird.beta_r > limit_beta:
+            bird.beta_r = limit_beta
+        if bird.beta_r < -limit_beta:
+            bird.beta_r = -limit_beta
 
         vortices = self.get_vortices(bird)
         print("vortices: ", vortices)
         bird.update(thrust, self.h, vortices)
 
 
-        if bird.z <= 0 or bird.z > 200:
+        if bird.z <= 0 or bird.z > 100:
             self.reward = -100.0
             self.done = True
 
@@ -124,9 +125,10 @@ class raw_env(AECEnv):
         return obs
 
     def plot_values(self):
-        plt1 = plt.subplot(311)
-        plt2 = plt.subplot(312)
-        plt3 = plt.subplot(313)
+        plt1 = plt.subplot(411)
+        plt2 = plt.subplot(412)
+        plt3 = plt.subplot(413)
+        plt4 = plt.subplot(414)
         for bird in self.birds:
             bird = self.birds[bird]
             t = np.arange(len(bird.U))
@@ -153,16 +155,27 @@ class raw_env(AECEnv):
                 leg += ['p', 'q', 'r']
             plt2.legend(leg)
 
-            plt3.title.set_text('velocity')
+            plt3.title.set_text('angle')
             plt3.set_xlabel('Time (s)')
-            plt3.set_ylabel('(m/s)')
-            plt3.plot(t, bird.U)
-            plt3.plot(t, bird.V)
-            plt3.plot(t, bird.W)
+            plt3.set_ylabel('rad')
+            plt3.plot(t, bird.PHI)
+            plt3.plot(t, bird.THETA)
+            plt3.plot(t, bird.PSI)
+            leg = []
+            for _ in self.birds:
+                leg += ['phi', 'theta', 'psi']
+            plt3.legend(leg)
+
+            plt4.title.set_text('velocity')
+            plt4.set_xlabel('Time (s)')
+            plt4.set_ylabel('(m/s)')
+            plt4.plot(t, bird.U)
+            plt4.plot(t, bird.V)
+            plt4.plot(t, bird.W)
             leg = []
             for _ in self.birds:
                 leg += ['u', 'v', 'w']
-            plt3.legend(leg)
+            plt4.legend(leg)
         plt.show()
 
     def plot_birds(self, plot_vortices = False):

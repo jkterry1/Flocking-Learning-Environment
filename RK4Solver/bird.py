@@ -29,8 +29,8 @@ class Bird():
 
         '''
         self.m = 1.0
-        self.Cl = 1.2
-        self.Cd = 1.0
+        self.Cl = 1.5
+        self.Cd = 0.6
         self.S = 0.62
         self.Xl = 0.75
         self.Yl = 0.35

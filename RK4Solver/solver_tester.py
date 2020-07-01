@@ -4,19 +4,17 @@ from bird import Bird
 import time
 
 
-t = 5.0
+t = 20.0
 h = 0.01
 n = (int)(t/h)
 N = 1
-games = 1
 
 tik = time.time()
 
-birds = [Bird(z = 50.0, x = 0.5, y = 1.0, alpha_l = np.pi/4.0, u = 10.0)]
+birds = [Bird(z = 50.0, x = 0.5, y = 1.0, alpha_l = -np.pi/50.0, u = 10.0)]
 env = solver.raw_env(N = len(birds), h = h, birds = birds)
 env.reset()
 
-env.reset()
 for i in range(n):
     if not env.done:
         for agent in env.agent_order:
@@ -33,8 +31,9 @@ for i in range(n):
         break
 print("timesteps ", i)
 print("reward ", env.reward)
-env.plot_values()
-env.plot_birds(False)
 tok = time.time()
 print("Time: ", tok - tik)
 print("Steps: ", n)
+
+env.plot_values()
+env.plot_birds(False)
