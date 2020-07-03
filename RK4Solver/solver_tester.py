@@ -5,13 +5,13 @@ import time
 
 
 t = 20.0
-h = 0.01
+h = 0.001
 n = (int)(t/h)
 N = 1
 
 tik = time.time()
 
-birds = [Bird(z = 50.0, x = 0.5, y = 1.0, alpha_l = -np.pi/50.0, u = 10.0)]
+birds = [Bird(z = 50.0, x = 0.0, y = 0.0, u = 10.0)]
 env = solver.raw_env(N = len(birds), h = h, birds = birds)
 env.reset()
 

@@ -17,7 +17,6 @@ def dvdt(v, bird):
 
     return vdot
 
-
 def dwdt(w, bird):
     Z = Fw(w, bird)/bird.m
     grav = bird.g * np.cos(bird.theta) * np.cos(bird.phi)
@@ -79,7 +78,6 @@ def dqdt(q, bird):
     qdot *= (M + r * p * (Iz - Ix) - Ixz * (p**2 - r**2))
     return qdot
 
-
 def drdt(r, bird):
     #xdot[5] = 1/Izz * (N + (Ixx - Iyy) * p * q)  # = rdot
     Ix = bird.Ixx
@@ -112,7 +110,77 @@ def dpsidt(psi, bird):
 def TL(bird, P):
     T = 0
 
+    #torque due to upward lift on left wing
+    #Lift = Cl * (rho * v^2)/2 * A
+    if bird.u > 0:
+        v = bird.u
+        A = bird.Xl * bird.Yl * np.cos(bird.alpha_l)
+        assert A >= 0
+        r = bird.Xl/2.0
+        Tl = np.cos(bird.beta_l) * r * bird.Cl * A * (bird.rho * v**2)/2.0
+        assert Tl >= 0
+
+        T += Tl
+
+    #torque due to upward lift on right wing
+    if bird.u > 0:
+        v = bird.u
+        A = bird.Xl * bird.Yl * np.cos(bird.alpha_r)
+        assert A > 0
+        r = bird.Xl/2.0
+        Tr = -np.cos(bird.beta_r) * r * bird.Cl * A * (bird.rho * v**2)/2.0
+        assert Tr <= 0
+
+        T += Tr
+
+    #torque due to lift in v direction from left wing
+    if bird.u > 0:
+        v = bird.u
+        A = bird.Xl * bird.Yl * np.cos(bird.alpha_l)
+        assert A > 0
+        r = abs(np.sin(bird.beta_l)) * bird.Xl/2.0
+        Tl = abs(np.sin(bird.beta_l)) * r * bird.Cl * A * (bird.rho * v**2)/2.0
+        assert Tl >= 0
+
+        T += Tl
+
+    #torque due to lift in v direction from right wing
+    if bird.u > 0:
+        v = bird.u
+        A = bird.Xl * bird.Yl * np.cos(bird.alpha_r)
+        assert A > 0
+        r = abs(np.sin(bird.beta_r)) * bird.Xl/2.0
+        Tr = -abs(np.sin(bird.beta_r)) * r * bird.Cl * A * (bird.rho * v**2)/2.0
+        assert Tr <= 0
+        assert np.sign(Tl) == 0 or np.sign(Tl) != np.sign(Tr)
+
+        T += Tr
+
+    #drag torque due to rotation on left wing
+    #Td = cd * A * (rho * v^2)/2 * r
+    #v = wr
+    v = P * bird.Xl/2.0
+    r = bird.Xl/2.0
+    A = bird.Xl * bird.Yl
+    assert A >= 0
+    Tl = -np.sign(bird.p) * r * A * bird.Cd * (bird.rho * v**2)/2.0
+    assert np.sign(Tl) == 0 or np.sign(Tl) != np.sign(bird.p)
+
+    T += Tl
+
+    #drag due to rotation on right wing
+    v = P * bird.Xl/2.0
+    r = bird.Xl/2.0
+    A = bird.Xl * bird.Yl
+    assert A >= 0
+    Tr = -np.sign(bird.p) * r * A * bird.Cd * (bird.rho * v**2)/2.0
+    assert np.sign(Tr) == 0 or np.sign(Tr) != np.sign(bird.p)
+
+    T += Tr
+
+    #torque due to vortices
     T += bird.vortex_torque_u
+
     bird.T[0] = T
     return T
 
@@ -147,14 +215,33 @@ def TN(bird, R):
     r = bird.Xl/2.0
     A = bird.Xl * abs(np.sin(bird.alpha_r)) * bird.Yl
     assert A >= 0
-    Tdr = np.sign(bird.u) * r * bird.Cd * A * (bird.rho * bird.u**2)/2.0
+    Tdr = -np.sign(bird.u) * r * bird.Cd * A * (bird.rho * v**2)/2.0
 
     T += Tdr
 
     #drag from rotation on left wing
+    #Td = cd * A * (rho * v^2)/2 * r
+    #v = wr
+    v = R * bird.Xl/2.0
+    r = bird.Xl/2.0
+    A = bird.Xl * bird.Yl * abs(np.sin(bird.alpha_l)) + bird.Yl * bird.Zl * np.cos(bird.alpha_r)
+    assert A >= 0
+    Tdl = -np.sign(bird.r) * r * bird.Cd * (bird.rho * v**2)/2.0
+    assert np.sign(Tdl) == 0 or np.sign(Tdl) != np.sign(bird.r)
+
+    T += Tdl
 
     #drag from rotation on right wing
+    #Td = cd * A * (rho * v^2)/2 * r
+    #v = wr
+    v = R * bird.Xl/2.0
+    r = bird.Xl/2.0
+    A = bird.Xl * bird.Yl * abs(np.sin(bird.alpha_r)) + bird.Yl * bird.Zl * np.cos(bird.alpha_r)
+    assert A >= 0
+    Tdr = -np.sign(bird.r) * r * bird.Cd * (bird.rho * v**2)/2.0
+    assert np.sign(Tdr) == 0 or np.sign(Tdl) != np.sign(bird.r)
 
+    T += Tdr
 
     #drag from vortices
     T += bird.vortex_torque_w

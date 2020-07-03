@@ -12,10 +12,6 @@ import copy
 
 def env(**kwargs):
     env = raw_env(**kwargs)
-    env = wrappers.TerminateIllegalWrapper(env, illegal_reward=-1)
-    env = wrappers.AssertOutOfBoundsWrapper(env)
-    env = wrappers.NanNoOpWrapper(env, 0, "executing the 'do nothing' action.")
-    env = wrappers.OrderEnforcingWrapper(env)
     return env
 
 
@@ -23,40 +19,46 @@ class raw_env(AECEnv):
 
     def __init__(self,
                  N = 1,
-                 h = 0.01,
+                 h = 0.001,
                  t = 0.0,
                  birds = None
                  ):
         self.h = h
         self.t = t
         self.N = N
+        self.num_agents = N
 
         self.max_r = 1.0
-        self.max_steps = 1000000
+        self.max_steps = 100.0/h
 
         self.agents = ["bird_{}".format(i) for i in range(N)]
         if birds is None:
-            birds = [Bird(z = 100.0) for agent in self.agents]
+            birds = [Bird(z = 50.0) for agent in self.agents]
         self.starting_conditions = [copy.deepcopy(bird) for bird in birds]
         self.birds = {agent: birds[i] for i, agent in enumerate(self.agents)}
         self.agent_order = list(self.agents)
         self._agent_selector = agent_selector(self.agent_order)
 
         self.action_spaces = {bird: spaces.Box(low = 0.0* np.zeros(4), high = 5.0 * np.ones(4)) for bird in self.birds}
-        #self.action_space = spaces.Box(np.array([0.0, -5.0, -5.0, -5.0]), high = 1000.0 * np.ones(4))
-        #self.action_space = self.observation_space = spaces.Box(low=0.0, high=50.0,
-                                        #shape=(1,), dtype = np.float32)
-        self.observation_space = spaces.Box(low = -1000.0*np.ones(9), high = 1000.0 * np.ones(9))
+        self.action_space = spaces.Box(low = np.array([0.0, -0.1, -0.1, -0.1, -0.1]),
+                                        high = np.array([5.0, 0.1, 0.1, 0.1, 0.1]))
+
+        low = -10000.0 * np.ones(9,)
+        high = 10000.0 * np.ones(9,)
+        self.observation_space = spaces.Box(low = low, high = high)
+
+        self.observation_spaces = {bird: self.observation_space for bird in self.agents}
         self.metadata = []
+
+        self.reward_range = [-100.0, 10**5]
 
     def step(self, action, observe = True):
         bird = self.birds[self.agent_selection]
 
-        self.print_bird(bird, action)
+        #self.print_bird(bird, action)
 
         thrust = action[0]
-        #torque = [0.0, 0.0, 0.0]
-        #print("thrust ", thrust)
+
         limit_alpha = np.pi/6.0
         limit_beta = np.pi/4.0
         bird.alpha_l += action[1]
@@ -84,9 +86,10 @@ class raw_env(AECEnv):
             bird.beta_r = -limit_beta
 
         vortices = self.get_vortices(bird)
-        print("vortices: ", vortices)
+        #print("vortices: ", vortices)
         bird.update(thrust, self.h, vortices)
 
+        self.reward = 1.0
 
         if bird.z <= 0 or bird.z > 100:
             self.reward = -100.0
@@ -104,15 +107,12 @@ class raw_env(AECEnv):
         #self.info['episode'] += 1
 
         self.steps += 1
-        if self.steps > self.max_steps:
+        if bird.x > 100.0:
+            self.reward = 100.0
             self.done = True
 
         obs = self.observe()
-        for i in range(len(obs)):
-            if obs[i] > 1000:
-                self.rewards[self.agent_selection] = -100.0
-                #self.done = True
-                #print("{} was large, {}", i, obs[i])
+
         if observe:
             return obs, self.reward, self.done, self.info
 
@@ -121,14 +121,19 @@ class raw_env(AECEnv):
         torque = self.birds[self.agent_selection].T
         bird = self.agent_selection
         pos = [self.birds[bird].x, self.birds[bird].y, self.birds[bird].z]
-        obs = force+torque + pos
+        obs = np.array(force + torque + pos)
         return obs
 
+    def render(self, mode, **kwargs):
+        plt.show()
+
     def plot_values(self):
-        plt1 = plt.subplot(411)
-        plt2 = plt.subplot(412)
-        plt3 = plt.subplot(413)
-        plt4 = plt.subplot(414)
+        fig = plt.figure(0)
+        plt.clf()
+        plt1 = fig.add_subplot(411)
+        plt2 = fig.add_subplot(412)
+        plt3 = fig.add_subplot(413)
+        plt4 = fig.add_subplot(414)
         for bird in self.birds:
             bird = self.birds[bird]
             t = np.arange(len(bird.U))
@@ -176,11 +181,11 @@ class raw_env(AECEnv):
             for _ in self.birds:
                 leg += ['u', 'v', 'w']
             plt4.legend(leg)
-        plt.show()
 
     def plot_birds(self, plot_vortices = False):
         first = plot_vortices
-        fig = plt.figure()
+        fig = plt.figure(1)
+        plt.clf()
         ax = fig.add_subplot(111, projection='3d')
 
         ax.set_xlabel('x')
@@ -191,6 +196,7 @@ class raw_env(AECEnv):
         # ax.set_zlim3d(0,5)
         for b in self.birds:
             bird = self.birds[b]
+            print("printing bird")
             ax.plot(xs = bird.X, ys = bird.Y, zs = bird.Z, zdir = 'z', color = 'orange')
             ax.scatter([v.pos[0] for v in bird.VORTICES_LEFT],
                         [v.pos[1] for v in bird.VORTICES_LEFT],
@@ -258,10 +264,17 @@ class raw_env(AECEnv):
 
 
         ax.quiver(x,y,z,u,v,w, length = .1, normalize = True)
-        plt.show()
-
 
     def reset(self, observe = True):
+        plt.figure(0)
+        plt.clf()
+        plt.figure(1)
+        plt.clf()
+        self.plot_birds()
+        self.plot_values()
+
+        self.old_birds = {bird: copy.deepcopy(self.birds[bird]) for bird in self.birds}
+
         self.dones = {i: False for i in self.agents}
 
         self.agent_order = list(self.agents)
