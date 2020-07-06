@@ -115,10 +115,10 @@ def TL(bird, P):
     if bird.u > 0:
         v = bird.u
         A = bird.Xl * bird.Yl * np.cos(bird.alpha_l)
-        assert A >= 0
+        check_A(bird, A, bird.alpha_r)
         r = bird.Xl/2.0
         Tl = np.cos(bird.beta_l) * r * bird.Cl * A * (bird.rho * v**2)/2.0
-        assert Tl >= 0
+        #assert Tl >= 0
 
         T += Tl
 
@@ -126,10 +126,10 @@ def TL(bird, P):
     if bird.u > 0:
         v = bird.u
         A = bird.Xl * bird.Yl * np.cos(bird.alpha_r)
-        assert A > 0
+        check_A(bird, A, bird.alpha_r)
         r = bird.Xl/2.0
         Tr = -np.cos(bird.beta_r) * r * bird.Cl * A * (bird.rho * v**2)/2.0
-        assert Tr <= 0
+        #assert Tr <= 0
 
         T += Tr
 
@@ -137,10 +137,10 @@ def TL(bird, P):
     if bird.u > 0:
         v = bird.u
         A = bird.Xl * bird.Yl * np.cos(bird.alpha_l)
-        assert A > 0
+        check_A(bird, A, bird.alpha_l)
         r = abs(np.sin(bird.beta_l)) * bird.Xl/2.0
         Tl = abs(np.sin(bird.beta_l)) * r * bird.Cl * A * (bird.rho * v**2)/2.0
-        assert Tl >= 0
+        #assert Tl >= 0
 
         T += Tl
 
@@ -148,11 +148,11 @@ def TL(bird, P):
     if bird.u > 0:
         v = bird.u
         A = bird.Xl * bird.Yl * np.cos(bird.alpha_r)
-        assert A > 0
+        check_A(bird, A, bird.alpha_r)
         r = abs(np.sin(bird.beta_r)) * bird.Xl/2.0
         Tr = -abs(np.sin(bird.beta_r)) * r * bird.Cl * A * (bird.rho * v**2)/2.0
-        assert Tr <= 0
-        assert np.sign(Tl) == 0 or np.sign(Tl) != np.sign(Tr)
+        #assert Tr <= 0
+        #assert np.sign(Tl) == 0 or np.sign(Tl) != np.sign(Tr)
 
         T += Tr
 
@@ -162,9 +162,9 @@ def TL(bird, P):
     v = P * bird.Xl/2.0
     r = bird.Xl/2.0
     A = bird.Xl * bird.Yl
-    assert A >= 0
+    check_A(bird, A, 0.0)
     Tl = -np.sign(bird.p) * r * A * bird.Cd * (bird.rho * v**2)/2.0
-    assert np.sign(Tl) == 0 or np.sign(Tl) != np.sign(bird.p)
+    #assert np.sign(Tl) == 0 or np.sign(Tl) != np.sign(bird.p)
 
     T += Tl
 
@@ -172,9 +172,9 @@ def TL(bird, P):
     v = P * bird.Xl/2.0
     r = bird.Xl/2.0
     A = bird.Xl * bird.Yl
-    assert A >= 0
+    #assert A >= 0
     Tr = -np.sign(bird.p) * r * A * bird.Cd * (bird.rho * v**2)/2.0
-    assert np.sign(Tr) == 0 or np.sign(Tr) != np.sign(bird.p)
+    #assert np.sign(Tr) == 0 or np.sign(Tr) != np.sign(bird.p)
 
     T += Tr
 
@@ -204,7 +204,7 @@ def TN(bird, R):
     v = bird.u
     r = bird.Xl/2.0
     A = bird.Xl * abs(np.sin(bird.alpha_l)) * bird.Yl
-    assert A >= 0
+    check_A(bird, A, bird.alpha_l)
     Tdl = np.sign(bird.u) * r * bird.Cd * A * (bird.rho * bird.u**2)/2.0
 
     T += Tdl
@@ -214,7 +214,7 @@ def TN(bird, R):
     v = bird.u
     r = bird.Xl/2.0
     A = bird.Xl * abs(np.sin(bird.alpha_r)) * bird.Yl
-    assert A >= 0
+    check_A(bird, A, bird.alpha_r)
     Tdr = -np.sign(bird.u) * r * bird.Cd * A * (bird.rho * v**2)/2.0
 
     T += Tdr
@@ -225,9 +225,9 @@ def TN(bird, R):
     v = R * bird.Xl/2.0
     r = bird.Xl/2.0
     A = bird.Xl * bird.Yl * abs(np.sin(bird.alpha_l)) + bird.Yl * bird.Zl * np.cos(bird.alpha_r)
-    assert A >= 0
+    check_A(bird, A, bird.alpha_r)
     Tdl = -np.sign(bird.r) * r * bird.Cd * (bird.rho * v**2)/2.0
-    assert np.sign(Tdl) == 0 or np.sign(Tdl) != np.sign(bird.r)
+    #assert np.sign(Tdl) == 0 or np.sign(Tdl) != np.sign(bird.r)
 
     T += Tdl
 
@@ -237,9 +237,9 @@ def TN(bird, R):
     v = R * bird.Xl/2.0
     r = bird.Xl/2.0
     A = bird.Xl * bird.Yl * abs(np.sin(bird.alpha_r)) + bird.Yl * bird.Zl * np.cos(bird.alpha_r)
-    assert A >= 0
+    check_A(bird, A, bird.alpha_r)
     Tdr = -np.sign(bird.r) * r * bird.Cd * (bird.rho * v**2)/2.0
-    assert np.sign(Tdr) == 0 or np.sign(Tdl) != np.sign(bird.r)
+    #assert np.sign(Tdr) == 0 or np.sign(Tdl) != np.sign(bird.r)
 
     T += Tdr
 
@@ -297,3 +297,11 @@ def Fw(w, bird):
     F += bird.vortex_force_w
     bird.F[2] = F
     return F
+
+def check_A(bird, A, angle):
+    if A < 0:
+        bird.print_bird(bird)
+        file = open('A_errors.txt', 'w')
+        file = sys.stderr
+        print("Angle: ", angle, file = file)
+        bird.broken = True

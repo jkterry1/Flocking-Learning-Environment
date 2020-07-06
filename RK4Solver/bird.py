@@ -1,6 +1,7 @@
 import numpy as np
 import DiffEqs as de
 from vortex import Vortex
+import sys
 
 class Bird():
 
@@ -42,7 +43,7 @@ class Bird():
         self.Ixx = self.m * self.Xl**2
         self.Iyy = self.m * self.Yl**2
         self.Izz = self.m * self.Zl**2
-        self.Ixz = 0.0
+        self.Ixz = self.m * self.Zl**2
 
         # fixed body frame variables:
         '''
@@ -128,6 +129,8 @@ class Bird():
         self.vortex_force_u, self.vortex_force_v, self.vortex_force_w = [0.0, 0.0, 0.0]
         self.vortex_torque_u, self.vortex_torque_v, self.vortex_torque_w = [0.0, 0.0, 0.0]
 
+        self.broken = False
+
     def update(self, thrust, h, vortices):
         self.thrust = thrust
 
@@ -201,6 +204,8 @@ class Bird():
         #     self.vortex_buffer = (Vortex(self, 1), Vortex(self, -1))
         self.vortex_buffer = (Vortex(self, 1), Vortex(self, -1))
 
+        return self.broken
+
     def shed_vortices(self):
         self.VORTICES_RIGHT.append(self.vortex_buffer[0])
         self.VORTICES_LEFT.append(self.vortex_buffer[1])
@@ -238,3 +243,20 @@ class Bird():
         k4 = h * ddt(y + k3, self)
 
         return y + (1.0 / 6.0)*(k1 + (2.0 * k2) + (2.0 * k3) + k4)
+
+    def print_bird(self, bird, action = []):
+        file = open('A_errors.txt', 'w')
+        file = sys.stderr
+        print('-----------------------------------------------------------------------', file = file)
+        print("thrust, al, ar, bl, br \n", action, file = file)
+        print("x, y, z: \t\t", [bird.x, bird.y, bird.z], file = file)
+        print("u, v, w: \t\t", [bird.u, bird.v, bird.w], file = file)
+        print("phi, theta, psi: \t", [bird.phi, bird.theta, bird.psi], file = file)
+        print("p, q, r: \t\t", [bird.p, bird.q, bird.r], file = file)
+        print("alpha, beta (left): \t", [bird.alpha_l, bird.beta_l], file = file)
+        print("alpha, beta (right): \t", [bird.alpha_r, bird.beta_r], file = file)
+        print("Fu, Fv, Fw: \t\t", bird.F, file = file)
+        print("Tu, Tv, Tw: \t\t", bird.T, file = file)
+        print("VFu, VFv, VFw: \t\t", bird.vortex_force_u, bird.vortex_force_v, bird.vortex_force_w, file = file)
+        print("VTu, VTv, VTw: \t\t", bird.vortex_torque_u, bird.vortex_torque_v, bird.vortex_torque_w, file = file)
+        print(file = file)

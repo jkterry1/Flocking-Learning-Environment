@@ -9,6 +9,7 @@ import bird
 from bird import Bird
 import matplotlib.pyplot as plt
 import copy
+import csv
 
 def env(**kwargs):
     env = raw_env(**kwargs)
@@ -31,6 +32,8 @@ class raw_env(AECEnv):
         self.max_r = 1.0
         self.max_steps = 100.0/h
 
+        self.episodes = 0
+
         self.agents = ["bird_{}".format(i) for i in range(N)]
         if birds is None:
             birds = [Bird(z = 50.0) for agent in self.agents]
@@ -40,8 +43,9 @@ class raw_env(AECEnv):
         self._agent_selector = agent_selector(self.agent_order)
 
         self.action_spaces = {bird: spaces.Box(low = 0.0* np.zeros(4), high = 5.0 * np.ones(4)) for bird in self.birds}
-        self.action_space = spaces.Box(low = np.array([0.0, -0.1, -0.1, -0.1, -0.1]),
-                                        high = np.array([5.0, 0.1, 0.1, 0.1, 0.1]))
+        limit = 0.01
+        self.action_space = spaces.Box(low = np.array([0.0, -limit, -limit, -limit, -limit]),
+                                        high = np.array([10.0, limit, limit, limit, limit]))
 
         low = -10000.0 * np.ones(9,)
         high = 10000.0 * np.ones(9,)
@@ -50,7 +54,10 @@ class raw_env(AECEnv):
         self.observation_spaces = {bird: self.observation_space for bird in self.agents}
         self.metadata = []
 
-        self.reward_range = [-100.0, 10**5]
+        self.reward_range = [0, 1.0]
+
+        self.file = open('episode_2.csv', 'a+', newline ='')
+        self.data = []
 
     def step(self, action, observe = True):
         bird = self.birds[self.agent_selection]
@@ -61,38 +68,41 @@ class raw_env(AECEnv):
 
         limit_alpha = np.pi/6.0
         limit_beta = np.pi/4.0
-        bird.alpha_l += action[1]
-        if bird.alpha_l > limit_alpha:
-            bird.alpha_l = limit_alpha
-        if bird.alpha_l < -limit_alpha:
-            bird.alpha_l = -limit_alpha
+        new_al = bird.alpha_l + action[1]
+        if new_al > limit_alpha:
+            new_al = limit_alpha
+        if new_al < -limit_alpha:
+            new_al = -limit_alpha
+        bird.alpha_l = new_al
 
-        bird.beta_l += action[2]
-        if bird.beta_l > limit_beta:
-            bird.beta_l = limit_beta
-        if bird.beta_l < -limit_beta:
-            bird.beta_l = -limit_beta
+        new_bl = bird.beta_l + action[2]
+        if new_bl > limit_beta:
+            new_bl = limit_beta
+        if new_bl < -limit_beta:
+            new_bl = -limit_beta
+        bird.beta_l = new_bl
 
-        bird.alpha_r += action[3]
-        if bird.alpha_r > limit_alpha:
-            bird.alpha_r = limit_alpha
-        if bird.alpha_r < -limit_alpha:
-            bird.alpha_r = -limit_alpha
+        new_ar = bird.alpha_r + action[3]
+        if new_ar > limit_alpha:
+            new_ar = limit_alpha
+        if new_ar < -limit_alpha:
+            new_ar = -limit_alpha
+        bird.alpha_r = new_ar
 
-        bird.beta_r += action[4]
-        if bird.beta_r > limit_beta:
-            bird.beta_r = limit_beta
-        if bird.beta_r < -limit_beta:
-            bird.beta_r = -limit_beta
+        new_br = bird.beta_r + action[4]
+        if new_br > limit_beta:
+            new_br = limit_beta
+        if new_br < -limit_beta:
+            new_br = -limit_beta
+        bird.beta_r = new_br
 
         vortices = self.get_vortices(bird)
         #print("vortices: ", vortices)
-        bird.update(thrust, self.h, vortices)
+        self.done = bird.update(thrust, self.h, vortices)
 
         self.reward = 1.0
 
-        if bird.z <= 0 or bird.z > 100:
-            self.reward = -100.0
+        if self.crashed(bird):
             self.done = True
 
         # if we have moved through one complete timestep
@@ -108,10 +118,16 @@ class raw_env(AECEnv):
 
         self.steps += 1
         if bird.x > 100.0:
-            self.reward = 100.0
             self.done = True
 
         obs = self.observe()
+
+        self.log(bird)
+
+        if self.done:
+            with self.file:
+                write = csv.writer(self.file)
+                write.writerows(self.data)
 
         if observe:
             return obs, self.reward, self.done, self.info
@@ -127,7 +143,15 @@ class raw_env(AECEnv):
     def render(self, mode, **kwargs):
         plt.show()
 
-    def plot_values(self):
+    def crashed(self, bird):
+        if bird.z <= 0 or bird.z >= 100:
+            return True
+
+        lim = 2*np.pi
+        if abs(bird.p) > lim or abs(bird.q) > lim or  abs(bird.r) > lim:
+            return True
+
+    def plot_values(self, show = False):
         fig = plt.figure(0)
         plt.clf()
         plt1 = fig.add_subplot(411)
@@ -182,7 +206,10 @@ class raw_env(AECEnv):
                 leg += ['u', 'v', 'w']
             plt4.legend(leg)
 
-    def plot_birds(self, plot_vortices = False):
+            if show:
+                plt.show()
+
+    def plot_birds(self, plot_vortices = False, show = False):
         first = plot_vortices
         fig = plt.figure(1)
         plt.clf()
@@ -196,7 +223,6 @@ class raw_env(AECEnv):
         # ax.set_zlim3d(0,5)
         for b in self.birds:
             bird = self.birds[b]
-            print("printing bird")
             ax.plot(xs = bird.X, ys = bird.Y, zs = bird.Z, zdir = 'z', color = 'orange')
             ax.scatter([v.pos[0] for v in bird.VORTICES_LEFT],
                         [v.pos[1] for v in bird.VORTICES_LEFT],
@@ -264,6 +290,8 @@ class raw_env(AECEnv):
 
 
         ax.quiver(x,y,z,u,v,w, length = .1, normalize = True)
+        if show:
+            plt.show()
 
     def reset(self, observe = True):
         plt.figure(0)
@@ -272,6 +300,11 @@ class raw_env(AECEnv):
         plt.clf()
         self.plot_birds()
         self.plot_values()
+
+        if self.episodes % 10 == 0:
+            plt.show()
+
+        self.episodes +=1
 
         self.old_birds = {bird: copy.deepcopy(self.birds[bird]) for bird in self.birds}
 
@@ -322,7 +355,7 @@ class raw_env(AECEnv):
                             vortices.append(v)
         return vortices
 
-    def print_bird(self, bird, action):
+    def print_bird(self, bird, action = []):
         print('-----------------------------------------------------------------------')
         print(self.agent_selection)
         print("thrust, al, ar, bl, br \n", action)
@@ -337,3 +370,12 @@ class raw_env(AECEnv):
         print("VFu, VFv, VFw: \t\t", bird.vortex_force_u, bird.vortex_force_v, bird.vortex_force_w)
         print("VTu, VTv, VTw: \t\t", bird.vortex_torque_u, bird.vortex_torque_v, bird.vortex_torque_w)
         print()
+
+    def log(self, bird):
+        state = []
+        #[ID, x, y, z, phi, theta, psi, aleft, aright, bleft, bright]
+        ID = self.agents.index(self.agent_selection)
+        time = self.steps * self.h
+        state = [ID, time, bird.x, bird.y, bird.z, bird.phi, bird.theta, bird.psi, bird.alpha_l, bird.alpha_r, bird.beta_l, bird.beta_r]
+        self.data.append(state)
+        # writing the data into the file
