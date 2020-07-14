@@ -115,9 +115,10 @@ def TL(bird, P):
     if bird.u > 0:
         v = bird.u
         A = bird.Xl * bird.Yl * np.cos(bird.alpha_l)
+        cl, cr = C_lift(bird)
         check_A(bird, A, bird.alpha_r)
         r = bird.Xl/2.0
-        Tl = np.cos(bird.beta_l) * r * bird.Cl * A * (bird.rho * v**2)/2.0
+        Tl = np.cos(bird.beta_l) * r * cl * A * (bird.rho * v**2)/2.0
         #assert Tl >= 0
 
         T += Tl
@@ -126,9 +127,10 @@ def TL(bird, P):
     if bird.u > 0:
         v = bird.u
         A = bird.Xl * bird.Yl * np.cos(bird.alpha_r)
+        cl, cr = C_lift(bird)
         check_A(bird, A, bird.alpha_r)
         r = bird.Xl/2.0
-        Tr = -np.cos(bird.beta_r) * r * bird.Cl * A * (bird.rho * v**2)/2.0
+        Tr = -np.cos(bird.beta_r) * r * cr * A * (bird.rho * v**2)/2.0
         #assert Tr <= 0
 
         T += Tr
@@ -137,9 +139,10 @@ def TL(bird, P):
     if bird.u > 0:
         v = bird.u
         A = bird.Xl * bird.Yl * np.cos(bird.alpha_l)
+        cl, cr = C_lift(bird)
         check_A(bird, A, bird.alpha_l)
         r = abs(np.sin(bird.beta_l)) * bird.Xl/2.0
-        Tl = abs(np.sin(bird.beta_l)) * r * bird.Cl * A * (bird.rho * v**2)/2.0
+        Tl = abs(np.sin(bird.beta_l)) * r * cl * A * (bird.rho * v**2)/2.0
         #assert Tl >= 0
 
         T += Tl
@@ -148,9 +151,10 @@ def TL(bird, P):
     if bird.u > 0:
         v = bird.u
         A = bird.Xl * bird.Yl * np.cos(bird.alpha_r)
+        cl, cr = C_lift(bird)
         check_A(bird, A, bird.alpha_r)
         r = abs(np.sin(bird.beta_r)) * bird.Xl/2.0
-        Tr = -abs(np.sin(bird.beta_r)) * r * bird.Cl * A * (bird.rho * v**2)/2.0
+        Tr = -abs(np.sin(bird.beta_r)) * r * cr * A * (bird.rho * v**2)/2.0
         #assert Tr <= 0
         #assert np.sign(Tl) == 0 or np.sign(Tl) != np.sign(Tr)
 
@@ -163,7 +167,8 @@ def TL(bird, P):
     r = bird.Xl/2.0
     A = bird.Xl * bird.Yl
     check_A(bird, A, 0.0)
-    Tl = -np.sign(bird.p) * r * A * bird.Cd * (bird.rho * v**2)/2.0
+    cl, cr = C_lift(bird)
+    Tl = -np.sign(bird.p) * r * A * cl * (bird.rho * v**2)/2.0
     #assert np.sign(Tl) == 0 or np.sign(Tl) != np.sign(bird.p)
 
     T += Tl
@@ -172,8 +177,9 @@ def TL(bird, P):
     v = P * bird.Xl/2.0
     r = bird.Xl/2.0
     A = bird.Xl * bird.Yl
+    cl, cr = C_lift(bird)
     #assert A >= 0
-    Tr = -np.sign(bird.p) * r * A * bird.Cd * (bird.rho * v**2)/2.0
+    Tr = -np.sign(bird.p) * r * A * cr* (bird.rho * v**2)/2.0
     #assert np.sign(Tr) == 0 or np.sign(Tr) != np.sign(bird.p)
 
     T += Tr
@@ -269,13 +275,15 @@ def Fv(v, bird):
     F = 0
     #lift
     A = bird.Xl * bird.Yl
-    L = bird.Cl * A * (bird.rho * bird.u**2)/2.0
+    cl, cr = C_lift(bird)
+    L_left = cl * A * (bird.rho * bird.u**2)/2.0
+    L_right = cr * A * (bird.rho * bird.u**2)/2.0
     #Drag = Cd * (rho * v^2)/2 * A
     A = bird.Yl * bird.Zl
     D = -np.sign(v) * bird.Cd * A * (bird.rho * v ** 2)/2.0
     if bird.u > 0.0:
-        F += L * np.sin(bird.beta_l)
-        F += -L * np.sin(bird.beta_r)
+        F += L_left * np.sin(bird.beta_l)
+        F += -L_right * np.sin(bird.beta_r)
     F += D
     F += bird.vortex_force_v
     bird.F[1] = F
@@ -286,13 +294,15 @@ def Fw(w, bird):
     #Lift = Cl * (rho * v^2)/2 * S
     #Drag = Cd * (rho * v^2)/2 * A
     A = bird.Xl * bird.Yl
-    L = bird.Cl * A * (bird.rho * bird.u**2)/2.0
+    cl, cr = C_lift(bird)
+    L_left = cl * A * (bird.rho * bird.u**2)/2.0
+    L_right = cr * A * (bird.rho * bird.u**2)/2.0
     D = -np.sign(w) * bird.Cd * A * (bird.rho * w ** 2)/2.0
     if bird.u > 0.0:
         #left wing lift
-        F += L * np.cos(bird.beta_l)
+        F += L_left * np.cos(bird.beta_l)
         #right wing lift
-        F += L * np.cos(bird.beta_r)
+        F += L_right * np.cos(bird.beta_r)
     F += D
     F += bird.vortex_force_w
     bird.F[2] = F
@@ -305,3 +315,31 @@ def check_A(bird, A, angle):
         file = sys.stderr
         print("Angle: ", angle, file = file)
         bird.broken = True
+
+def C_lift(bird):
+    if bird.u == 0:
+        d = np.pi/2
+    else:
+        d = np.arctan(bird.w/bird.u)
+    aoa_l = np.degrees(bird.alpha_l + d)
+    aoa_r = np.degrees(bird.alpha_r + d)
+    c_max = bird.Cl_max
+    if aoa_l < -10 or aoa_l > 25:
+        cl = 0
+    elif aoa_l < 15:
+        cl = ((c_max/25.0) * aoa_l) + (10.0 * c_max / 25.0)
+    elif aoa_l < 20:
+        cl = c_max
+    else:
+        cl = ((-c_max/25.0) * aoa_l) + (c_max + (20.0 * c_max / 25.0))
+
+    if aoa_r < -10 or aoa_r > 25:
+        cr = 0
+    elif aoa_r < 15:
+        cr = ((c_max/25.0) * aoa_r) + (10.0 * c_max / 25.0)
+    elif aoa_r < 20:
+        cr = c_max
+    else:
+        cr = ((-c_max/25.0) * aoa_r) + (c_max + (20.0 * c_max / 25.0))
+
+    return cl, cr

@@ -13,6 +13,7 @@ import csv
 
 def env(**kwargs):
     env = raw_env(**kwargs)
+    #env =  env = wrappers.NanNoOpWrapper(env, np.zeros(5), "executing the 'do nothing' action.")
     return env
 
 
@@ -61,6 +62,9 @@ class raw_env(AECEnv):
 
     def step(self, action, observe = True):
         bird = self.birds[self.agent_selection]
+
+        if np.isnan(action).any():
+            action = np.zeros(5)
 
         #self.print_bird(bird, action)
 
@@ -117,17 +121,17 @@ class raw_env(AECEnv):
         #self.info['episode'] += 1
 
         self.steps += 1
-        if bird.x > 100.0:
+        if bird.x > 500.0:
             self.done = True
 
         obs = self.observe()
 
         self.log(bird)
 
-        if self.done:
-            with self.file:
-                write = csv.writer(self.file)
-                write.writerows(self.data)
+        # if self.done:
+        #     with self.file:
+        #         write = csv.writer(self.file)
+        #         write.writerows(self.data)
 
         if observe:
             return obs, self.reward, self.done, self.info
@@ -301,7 +305,7 @@ class raw_env(AECEnv):
         self.plot_birds()
         self.plot_values()
 
-        if self.episodes % 10 == 0:
+        if self.episodes % 50 == 0:
             plt.show()
 
         self.episodes +=1

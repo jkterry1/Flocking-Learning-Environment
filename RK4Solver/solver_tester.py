@@ -23,7 +23,7 @@ for i in range(n):
             a = [  30.0, \
                  np.random.uniform(-0.05, 0.05), np.random.uniform(-0.1, 0.1), \
                 np.random.uniform(-0.05, 0.05), np.random.uniform(-0.1, 0.1)]
-            a = np.zeros(5)
+            #a = np.zeros(5)
             # if env.birds[agent].u < 7.1271:
             #     a[0] = 2.0
             obs = env.step(action = a)

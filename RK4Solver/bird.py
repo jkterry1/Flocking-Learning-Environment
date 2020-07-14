@@ -29,11 +29,11 @@ class Bird():
             Zl, wing height
 
         '''
-        self.m = 1.0
-        self.Cl = 1.5
-        self.Cd = 0.6
+        self.m = 5.0        #goose is ~5kg
+        self.Cl_max = 1.6   #experimental value
+        self.Cd = 0.3       #experimental value
         self.S = 0.62
-        self.Xl = 0.75
+        self.Xl = 0.75      #approximate dimensions
         self.Yl = 0.35
         self.Zl = 0.15
 
@@ -43,7 +43,7 @@ class Bird():
         self.Ixx = self.m * self.Xl**2
         self.Iyy = self.m * self.Yl**2
         self.Izz = self.m * self.Zl**2
-        self.Ixz = self.m * self.Zl**2
+        self.Ixz = 0.5 * self.m * self.Zl**2    #approximation
 
         # fixed body frame variables:
         '''

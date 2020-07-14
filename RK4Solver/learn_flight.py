@@ -1,19 +1,19 @@
 from stable_baselines.common.env_checker import check_env
 import solver_env
-from stable_baselines import A2C
+from stable_baselines import PPO2, A2C
 from stable_baselines.common.cmd_util import make_vec_env
 from stable_baselines.common.vec_env import DummyVecEnv, VecCheckNan
 from stable_baselines.common.callbacks import CheckpointCallback, EveryNTimesteps
 
 env = solver_env.env()
 env = DummyVecEnv([lambda: env])
-#env = VecCheckNan(env, raise_exception=True)
+env = VecCheckNan(env, raise_exception=False)
 
 checkpoint_on_event = CheckpointCallback(save_freq=1, save_path='./logs/')
 event_callback = EveryNTimesteps(n_steps=1000000, callback=checkpoint_on_event)
 
 model = A2C('MlpPolicy', env, verbose=1, tensorboard_log="./birds_tensorboard/")
-model.learn(total_timesteps=int(2e6), tb_log_name="first_run")
+model.learn(total_timesteps=int(1e6), tb_log_name="first_run")
 model.save("a2c_birds")
 
 print("Done learning!")
