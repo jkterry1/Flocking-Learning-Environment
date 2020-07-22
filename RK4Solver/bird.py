@@ -1,6 +1,7 @@
 import numpy as np
 import DiffEqs as de
 from vortex import Vortex
+from queue import PriorityQueue
 import sys
 
 class Bird():
@@ -33,7 +34,7 @@ class Bird():
         self.Cl_max = 1.6   #experimental value
         self.Cd = 0.3       #experimental value
         self.S = 0.62
-        self.Xl = 0.75      #approximate dimensions
+        self.Xl = 0.80     #approximate dimensions
         self.Yl = 0.35
         self.Zl = 0.15
 
@@ -129,7 +130,6 @@ class Bird():
         self.vortex_force_u, self.vortex_force_v, self.vortex_force_w = [0.0, 0.0, 0.0]
         self.vortex_torque_u, self.vortex_torque_v, self.vortex_torque_w = [0.0, 0.0, 0.0]
 
-        self.broken = False
 
     def update(self, thrust, h, vortices):
         self.thrust = thrust
@@ -204,8 +204,6 @@ class Bird():
         #     self.vortex_buffer = (Vortex(self, 1), Vortex(self, -1))
         self.vortex_buffer = (Vortex(self, 1), Vortex(self, -1))
 
-        return self.broken
-
     def shed_vortices(self):
         self.VORTICES_RIGHT.append(self.vortex_buffer[0])
         self.VORTICES_LEFT.append(self.vortex_buffer[1])
@@ -234,6 +232,24 @@ class Bird():
             tu += D * self.Xl/2.0
         return fu, fv, fw, tu, tv, tw
 
+    def seven_nearest(self, birds):
+        q = PriorityQueue()
+        output = []
+
+        import sys
+        for b in birds:
+            other = birds[b]
+            if other is not self:
+                d = np.sqrt((self.x - other.x)**2 + (self.y - other.y)**2 + (self.z - other.z)**2)
+                q.put((d, other))
+
+        for i in range(7):
+            if not q.empty():
+                a, b = q.get()
+                output.append(b)
+
+        return output
+
 
 
     def take_time_step(self, ddt, y, h):
@@ -244,6 +260,10 @@ class Bird():
 
         return y + (1.0 / 6.0)*(k1 + (2.0 * k2) + (2.0 * k3) + k4)
 
+    def __lt__(self, other):
+        return self.x < other.x
+
+    '''
     def print_bird(self, bird, action = []):
         file = open('A_errors.txt', 'w')
         file = sys.stderr
@@ -260,3 +280,4 @@ class Bird():
         print("VFu, VFv, VFw: \t\t", bird.vortex_force_u, bird.vortex_force_v, bird.vortex_force_w, file = file)
         print("VTu, VTv, VTw: \t\t", bird.vortex_torque_u, bird.vortex_torque_v, bird.vortex_torque_w, file = file)
         print(file = file)
+    '''
