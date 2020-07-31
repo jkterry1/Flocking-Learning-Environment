@@ -21,7 +21,7 @@ def env(**kwargs):
 class raw_env(AECEnv):
 
     def __init__(self,
-                 N = 1,
+                 N = 7,
                  h = 0.001,
                  t = 0.0,
                  birds = None,
@@ -32,10 +32,16 @@ class raw_env(AECEnv):
         self.N = N
         self.num_agents = N
 
+        self.act_dims = [5 for i in range(self.N)]
+
         self.max_r = 1.0
         self.max_steps = 100.0/h
 
         self.episodes = 0
+
+        self.energy_punishment = 2.0
+        self.forward_reward = 5.0
+        self.crash_reward = -100.0
 
         self.agents = ["bird_{}".format(i) for i in range(N)]
         if birds is None:
@@ -46,22 +52,24 @@ class raw_env(AECEnv):
         self._agent_selector = agent_selector(self.agent_order)
 
         limit = 0.01
-        self.action_space = spaces.Box(low = np.array([0.0, -limit, -limit, -limit, -limit]),
+        action_space = spaces.Box(low = np.array([0.0, -limit, -limit, -limit, -limit]),
                                         high = np.array([10.0, limit, limit, limit, limit]))
-        self.action_spaces = {bird: self.action_space for bird in self.birds}
+        self.action_spaces = {bird: action_space for bird in self.birds}
+        self.action_space = [action_space for _ in range(self.N)]
 
-        low = -10000.0 * np.ones(9,)
-        high = 10000.0 * np.ones(9,)
-        self.observation_space = spaces.Box(low = low, high = high)
-
-        self.observation_spaces = {bird: self.observation_space for bird in self.agents}
+        low = -10000.0 * np.ones(6 + min(self.N-1, 7),)
+        high = 10000.0 * np.ones(6 + min(self.N-1, 7),)
+        observation_space = spaces.Box(low = low, high = high)
+        self.observation_spaces = {bird: observation_space for bird in self.agents}
+        self.observation_space = [observation_space for _ in range(self.N)]
 
         self.file = open(filename, 'a+', newline ='')
         self.data = []
-        self.infos = {bird:{} for bird in self.birds}
+        self.infos = {i:{} for i in range(self.N)}
 
     def step(self, action, observe = True):
         bird = self.birds[self.agent_selection]
+
 
         if np.isnan(action).any():
             action = np.zeros(5)
@@ -81,11 +89,11 @@ class raw_env(AECEnv):
         if bird.x > bird.X[-2]:
             reward += self.forward_reward
         reward -= self.energy_punishment * action[0]
-        self.rewards[self.agent_selection] = reward
+        self.rewards[self.agents.index(self.agent_selection)] = reward
 
         if self.crashed(bird):
-            self.dones = {bird: True for bird in self.birds}
-            self.rewards[self.agent_selection] = self.crash_reward
+            self.dones = {i: True for i in range(self.N)}
+            self.rewards[self.agents.index(self.agent_selection)] = self.crash_reward
 
         # if we have moved through one complete timestep
         if self.agent_selection == self.agents[-1]:
@@ -105,27 +113,33 @@ class raw_env(AECEnv):
         self.agent_selection = self._agent_selector.next()
 
         if bird.x > 500.0:
-            self.dones = {bird: True for bird in birds}
+            #self.dones = {bird: True for bird in birds}
+            self.dones = {i: True for i in range(self.N)}
 
-        obs = self.observe()
-
-        self.log(bird)
+        #self.log(bird)
 
         if observe:
+            obs = self.observe()
             return obs, self.rewards, self.dones, self.infos
 
     def observe(self):
         force = self.birds[self.agent_selection].F
         torque = self.birds[self.agent_selection].T
         bird = self.agent_selection
-        pos = [self.birds[bird].x, self.birds[bird].y, self.birds[bird].z]
+        pos = []
 
         bird = self.birds[bird]
         nearest = bird.seven_nearest(self.birds)
         for other in nearest:
             pos += [other.x - bird.x, other.y - bird.y, other.z - bird.z]
+            # print("pos1 ", pos)
             pos += [other.u - bird.u, other.v - bird.v, other.z - bird.z]
+            # print("pos2 ", pos)
         obs = np.array(force + torque + pos)
+        # print("pos ", pos)
+        # print("obs length: ", len(obs))
+        # print("ideal length: ", 6 + min(self.N - 1, 7))
+        # assert len(obs) == 6 + min(self.N - 1, 7)
         return obs
 
     def reset(self, observe = True):
@@ -134,7 +148,6 @@ class raw_env(AECEnv):
 
         self.old_birds = {bird: copy.deepcopy(self.birds[bird]) for bird in self.birds}
 
-        self.dones = {i: False for i in self.agents}
 
         self.agent_order = list(self.agents)
         self._agent_selector.reinit(self.agent_order)
@@ -144,13 +157,15 @@ class raw_env(AECEnv):
         self.birds = {agent: birds[i] for i, agent in enumerate(self.agents)}
         self.positions = self.get_positions()
 
-        self.rewards = {i: 0 for i in self.agents}
+        self.rewards = {i: 0 for i in range(self.N)}
 
         self.steps = 0
 
-        self.dones = {bird:False for bird in self.birds}
+        self.dones = {i:False for i in range(self.N)}
 
-        return self.observe()
+        obs = self.observe()
+
+        return obs
 
     def update_angles(self, action):
         bird = self.birds[self.agent_selection]
@@ -217,11 +232,11 @@ class raw_env(AECEnv):
         if abs(bird.p) > lim or abs(bird.q) > lim or  abs(bird.r) > lim:
             return True
 
-        for b in self.birds:
-            other = self.birds[b]
-            if other is not bird:
-                dist = np.sqrt((bird.x - other.x)**2 + (bird.y - other.y)**2 + (bird.z - other.z)**2)
-                return dist < bird.Xl/2.0
+        # for b in self.birds:
+        #     other = self.birds[b]
+        #     if other is not bird:
+        #         dist = np.sqrt((bird.x - other.x)**2 + (bird.y - other.y)**2 + (bird.z - other.z)**2)
+        #         return dist < bird.Xl/2.0
 
     def plot_values(self, show = False):
         plotting.plot_values(self.birds, show)
@@ -253,6 +268,6 @@ class raw_env(AECEnv):
         state = [ID, time, bird.x, bird.y, bird.z, bird.phi, bird.theta, bird.psi, bird.alpha_l, bird.alpha_r, bird.beta_l, bird.beta_r]
         self.data.append(state)
         # writing the data into the file
-        if self.dones[self.agent_selection]:
+        if np.any(self.dones):
             wr = csv.writer(self.file)
             wr.writerows(self.data)
