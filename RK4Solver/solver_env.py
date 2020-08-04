@@ -2,6 +2,7 @@ from pettingzoo import AECEnv
 from pettingzoo.utils import agent_selector
 from pettingzoo.utils import wrappers
 from pettingzoo.utils.env import AECEnv
+from supersuit import gym_vec_env
 from gym import spaces
 import numpy as np
 import DiffEqs as de
@@ -14,6 +15,7 @@ import plotting
 
 def env(**kwargs):
     env = raw_env(**kwargs)
+    #env = gym_vec_env(env, 4, multiprocessing=False)
     #env = wrappers.NanNoOpWrapper(env, np.zeros(5), "executing the 'do nothing' action.")
     return env
 
@@ -45,7 +47,7 @@ class raw_env(AECEnv):
 
         self.agents = ["bird_{}".format(i) for i in range(N)]
         if birds is None:
-            birds = [Bird(z = 50.0) for agent in self.agents]
+            birds = [Bird(z = 50.0, y = 3.0*i) for i in range(self.N)]
         self.starting_conditions = [copy.deepcopy(bird) for bird in birds]
         self.birds = {agent: birds[i] for i, agent in enumerate(self.agents)}
         self.agent_order = list(self.agents)
@@ -55,21 +57,22 @@ class raw_env(AECEnv):
         action_space = spaces.Box(low = np.array([0.0, -limit, -limit, -limit, -limit]),
                                         high = np.array([10.0, limit, limit, limit, limit]))
         self.action_spaces = {bird: action_space for bird in self.birds}
-        self.action_space = [action_space for _ in range(self.N)]
+        # self.action_space = [action_space for _ in range(self.N)]
+        self.action_space = action_space
 
-        low = -10000.0 * np.ones(6 + min(self.N-1, 7),)
-        high = 10000.0 * np.ones(6 + min(self.N-1, 7),)
+        low = -10000.0 * np.ones(22 + 6*min(self.N-1, 7),)
+        high = 10000.0 * np.ones(22 + 6*min(self.N-1, 7),)
         observation_space = spaces.Box(low = low, high = high)
         self.observation_spaces = {bird: observation_space for bird in self.agents}
-        self.observation_space = [observation_space for _ in range(self.N)]
+        # self.observation_space = [observation_space for _ in range(self.N)]
+        self.observation_space = observation_space
 
-        self.file = open(filename, 'a+', newline ='')
         self.data = []
         self.infos = {i:{} for i in range(self.N)}
 
     def step(self, action, observe = True):
         bird = self.birds[self.agent_selection]
-
+        #print(action)
 
         if np.isnan(action).any():
             action = np.zeros(5)
@@ -93,6 +96,9 @@ class raw_env(AECEnv):
 
         if self.crashed(bird):
             self.dones = {i: True for i in range(self.N)}
+            #self.dones = [True for i in range(self.N)]
+            print("Done!")
+            print("agent ", self.agent_selection, " crashed")
             self.rewards[self.agents.index(self.agent_selection)] = self.crash_reward
 
         # if we have moved through one complete timestep
@@ -113,33 +119,39 @@ class raw_env(AECEnv):
         self.agent_selection = self._agent_selector.next()
 
         if bird.x > 500.0:
-            #self.dones = {bird: True for bird in birds}
             self.dones = {i: True for i in range(self.N)}
+            #self.dones = [True for i in range(self.N)]
+            #print("Done!")
+            #print("agent ", self.agent_selection, " made it to the destination")
 
         #self.log(bird)
 
+        #print(self.agent_selection)
+        #print("z: ", bird.z)
+
         if observe:
             obs = self.observe()
+            #print("dones: ", self.dones)
             return obs, self.rewards, self.dones, self.infos
 
     def observe(self):
         force = self.birds[self.agent_selection].F
         torque = self.birds[self.agent_selection].T
         bird = self.agent_selection
-        pos = []
 
         bird = self.birds[bird]
+        pos += [bird.x, bird.y, bird.z]
+        pos += [bird.u, bird.v, bird.w]
+        pos += [bird.p, bird.q, bird.r]
+        pos += [bird.phi, bird.theta, bird.psi]
+        pos += [bird.alpha_l, bird.beta_l, bird.alpha_r, bird.beta_r]
         nearest = bird.seven_nearest(self.birds)
         for other in nearest:
             pos += [other.x - bird.x, other.y - bird.y, other.z - bird.z]
             # print("pos1 ", pos)
-            pos += [other.u - bird.u, other.v - bird.v, other.z - bird.z]
+            pos += [other.u - bird.u, other.v - bird.v, other.w - bird.w]
             # print("pos2 ", pos)
         obs = np.array(force + torque + pos)
-        # print("pos ", pos)
-        # print("obs length: ", len(obs))
-        # print("ideal length: ", 6 + min(self.N - 1, 7))
-        # assert len(obs) == 6 + min(self.N - 1, 7)
         return obs
 
     def reset(self, observe = True):
@@ -162,10 +174,15 @@ class raw_env(AECEnv):
         self.steps = 0
 
         self.dones = {i:False for i in range(self.N)}
+        #self.dones = [False for i in range(self.N)]
 
         obs = self.observe()
 
         return obs
+
+    def render(self):
+        self.plot_values(show = True)
+        self.plot_birds(show = True)
 
     def update_angles(self, action):
         bird = self.birds[self.agent_selection]
@@ -232,11 +249,11 @@ class raw_env(AECEnv):
         if abs(bird.p) > lim or abs(bird.q) > lim or  abs(bird.r) > lim:
             return True
 
-        # for b in self.birds:
-        #     other = self.birds[b]
-        #     if other is not bird:
-        #         dist = np.sqrt((bird.x - other.x)**2 + (bird.y - other.y)**2 + (bird.z - other.z)**2)
-        #         return dist < bird.Xl/2.0
+        for b in self.birds:
+            other = self.birds[b]
+            if other is not bird:
+                dist = np.sqrt((bird.x - other.x)**2 + (bird.y - other.y)**2 + (bird.z - other.z)**2)
+                return dist < bird.Xl/2.0
 
     def plot_values(self, show = False):
         plotting.plot_values(self.birds, show)
