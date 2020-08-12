@@ -7,16 +7,18 @@ class env(MultiAgentEnv):
 
     metadata = {'render.modes': ['human']}
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, N, *args, **kwargs):
         super(env, self).__init__()
         self.env = _env(*args, **kwargs)
-
-        self.num_agents = self.env.num_agents
+        self.N = N
+        self.num_agents = self.N
         self.agent_ids = list(range(self.num_agents))
         # spaces
-        self.n_act_agents = self.env.act_dims[0]
-        self.action_space_dict = dict(zip(self.agent_ids, self.env.action_space))
-        self.observation_space_dict = dict(zip(self.agent_ids, self.env.observation_space))
+        self.act_dims = [5 for i in range(self.N)]
+        self.n_act_agents = self.act_dims[0]
+        #self.action_space_dict = dict(zip(self.agent_ids, self.env.action_space))
+        self.action_space_dict = dict(zip(self.agent_ids, [self.env.action_space for i in range(N)]))
+        self.observation_space_dict = dict(zip(self.agent_ids, [self.env.observation_space for i in range(N)]))
         self.steps = 0
 
         self.reset()
@@ -26,6 +28,7 @@ class env(MultiAgentEnv):
 
     def reset(self):
         obs = self.env.reset()
+        #print("OBS RESET ", obs)
         self.steps = 0
         return self.convert_to_dict([obs for _ in range(self.num_agents)])
 
@@ -46,6 +49,8 @@ class env(MultiAgentEnv):
             action_list[agent_id] = action_dict[agent_id]
 
         observation, reward, done, info = self.env.step(action_list[0])
+        observation = observation
+        #print("OBSERVATION ", observation)
 
         if self.steps >= 50000:
             done = {i:True for i in range(self.num_agents)}

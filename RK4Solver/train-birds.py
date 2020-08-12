@@ -1,18 +1,27 @@
+import os
+os.environ['SDL_AUDIODRIVER'] = 'dsp'
+
 import sys
 import gym
 import random
 import numpy as np
+
 import ray
-import solver_env
 from ray import tune
 from ray.rllib.models import Model, ModelCatalog
 from ray.tune.registry import register_env
 from ray.rllib.utils import try_import_tf
-import birds
+from ray.rllib.env import PettingZooEnv
+# from sisl_games.pursuit import pursuit
+#from pettingzoo.sisl import pursuit_v0 as game_env
+import solver_env as game_env
+from supersuit import normalize_obs, agent_indicator, flatten, frame_stack
+#from supersuit import frame_skip
+
 # for APEX-DQN
 from ray.rllib.models.tf.tf_modelv2 import TFModelV2
 
-tf = try_import_tf()[1]
+tf1, tf, tfv = try_import_tf()
 
 class MLPModel(Model):
     def _build_layers_v2(self, input_dict, num_outputs, options):
@@ -41,31 +50,28 @@ class MLPModelV2(TFModelV2):
 if __name__ == "__main__":
     # RDQN - Rainbow DQN
     # ADQN - Apex DQN
-    methods = ["A2C", "ADQN", "DQN", "IMPALA", "PPO", "RDQN"]
+    env_name = 'birds-v0'
+    trial_name = 'birds_ppo_500frames'
+
+    methods = ["A2C", "ADQN", "PPO", "RDQN"]
 
     assert len(sys.argv) == 2, "Input the learning method as the second argument"
     method = sys.argv[1]
     assert method in methods, "Method should be one of {}".format(methods)
 
-    # pursuit
     def env_creator(args):
-        return birds.env()
+        env = game_env.env(N=7)
+        #env = normalize_obs(env, -1000, 1000)
+        env = frame_stack(env, num_frames = 500)
+        env = agent_indicator(env)
+        env = flatten(env)
+        return env
 
-    env = env_creator(1)
-    register_env("birds", env_creator)
+    register_env(env_name, lambda config: PettingZooEnv(env_creator(config)))
 
-    N = 7
-    low = -10000.0 * np.ones(6 + 6 * min(N-1, 7),)
-    high = 10000.0 * np.ones(6 + 6 * min(N-1, 7),)
-    obs_space = gym.spaces.Box(low = low, high = high)
-    # obs_space = gym.spaces.Box(low=0, high=1, shape=(148,), dtype=np.float32)
-
-    limit = 0.01
-    act_space = gym.spaces.Box(low = np.array([0.0, -limit, -limit, -limit, -limit]),
-                                    high = np.array([10.0, limit, limit, limit, limit]))
-    # act_space = gym.spaces.Discrete(5)
-
-    # ray.init()
+    test_env = PettingZooEnv(env_creator({}))
+    obs_space = test_env.observation_space
+    act_space = test_env.action_space
 
     if method in ["ADQN", "RDQN"]:
         ModelCatalog.register_custom_model("MLPModelV2", MLPModelV2)
@@ -97,20 +103,20 @@ if __name__ == "__main__":
     if method == "A2C":
         tune.run(
             "A2C",
-            name="POSG_A2C",
-            stop={"episodes_total": 50000},
-            checkpoint_freq=1e6,
-            local_dir="~/ray_results_aecgames",
+            name="A2C",
+            stop={"episodes_total": 60000},
+            checkpoint_freq=10,
+            local_dir="~/ray_results/"+trial_name,
             config={
 
                 # Enviroment specific
-                "env": "pursuit",
+                "env": "birds-v0",
 
                 # General
                 "log_level": "ERROR",
-                "num_gpus": 0,
-                "num_workers": 3,
-                "num_envs_per_worker": 3,
+                "num_gpus": 2,
+                "num_workers": 8,
+                "num_envs_per_worker": 8,
                 "compress_observations": False,
                 "sample_batch_size": 20,
                 "train_batch_size": 512,
@@ -132,10 +138,10 @@ if __name__ == "__main__":
         # APEX-DQN
         tune.run(
             "APEX",
-            name="POSG_ADQN",
+            name="ADQN",
             stop={"episodes_total": 60000},
             checkpoint_freq=10,
-            local_dir="~/ray_results_aecgames",
+            local_dir="~/ray_results_pz/"+env_name,
             config={
 
                 # Enviroment specific
@@ -167,10 +173,10 @@ if __name__ == "__main__":
         # plain DQN
         tune.run(
             "DQN",
-            name="POSG_DQN",
+            name="DQN",
             stop={"episodes_total": 60000},
             checkpoint_freq=10,
-            local_dir="~/ray_results_aecgames",
+            local_dir="~/ray_results_pz/"+env_name,
             config={
                 # Enviroment specific
                 "env": "pursuit",
@@ -199,10 +205,10 @@ if __name__ == "__main__":
     elif method == "IMPALA":
         tune.run(
             "IMPALA",
-            name="POSG_IMPALA",
+            name="IMPALA",
             stop={"episodes_total": 60000},
             checkpoint_freq=10,
-            local_dir="~/ray_results_aecgames",
+            local_dir="~/ray_results_pz/"+env_name,
             config={
 
                 # Enviroment specific
@@ -234,14 +240,14 @@ if __name__ == "__main__":
     elif method == "PPO":
         tune.run(
             "PPO",
-            name="POSG_PPO",
+            name="PPO",
             stop={"episodes_total": 50000},
-            #checkpoint_freq= int(1e6),
-            local_dir="~/ray_results_aecgames",
+            checkpoint_freq=1000,
+            local_dir="~/training_results/PPO_"+trial_name,
             config={
 
                 # Enviroment specific
-                "env": "birds",
+                "env": "birds-v0",
 
                 # General
                 "log_level": "ERROR",
@@ -279,10 +285,10 @@ if __name__ == "__main__":
     elif method == "RDQN":
         tune.run(
             "DQN",
-            name="POSG_RDQN",
+            name="RDQN",
             stop={"episodes_total": 60000},
             checkpoint_freq=10,
-            local_dir="~/ray_results_aecgames",
+            local_dir="~/ray_results_pz/"+env_name,
             config={
 
                 # Enviroment specific
