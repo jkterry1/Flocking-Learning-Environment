@@ -15,7 +15,9 @@ import plotting
 
 def env(**kwargs):
     env = raw_env(**kwargs)
-    #env = gym_vec_env(env, 4, multiprocessing=False)
+    #env = wrappers.TerminateIllegalWrapper(env, illegal_reward=-100)
+    #env = wrappers.AssertOutOfBoundsWrapper(env)
+    #env = wrappers.OrderEnforcingWrapper(env)
     #env = wrappers.NanNoOpWrapper(env, np.zeros(5), "executing the 'do nothing' action.")
     return env
 
@@ -23,8 +25,8 @@ def env(**kwargs):
 class raw_env(AECEnv):
 
     def __init__(self,
-                 N = 7,
-                 h = 0.001,
+                 N = 10,
+                 h = 0.01,
                  t = 0.0,
                  birds = None,
                  filename = "episode_1.csv"
@@ -37,7 +39,7 @@ class raw_env(AECEnv):
         self.act_dims = [5 for i in range(self.N)]
 
         self.max_r = 1.0
-        self.max_steps = 100.0/h
+        self.max_steps = 100.0/self.h
 
         self.episodes = 0
 
@@ -47,7 +49,12 @@ class raw_env(AECEnv):
 
         self.agents = ["bird_{}".format(i) for i in range(N)]
         if birds is None:
-            birds = [Bird(z = 50.0, y = 3.0*i) for i in range(self.N)]
+            x_rand = 4.0 * np.random.random_sample((self.N)) - 2.0
+            #print("dtype ", x_rand[0].dtype)
+            #x_rand = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+            #print("dtype ", x_rand[0].dtype)
+            #print(x_rand)
+            birds = [Bird(z = 50.0, y = 3.0*i, x = 0.0) for i in range(self.N)]
         self.starting_conditions = [copy.deepcopy(bird) for bird in birds]
         self.birds = {agent: birds[i] for i, agent in enumerate(self.agents)}
         self.agent_order = list(self.agents)
@@ -62,24 +69,29 @@ class raw_env(AECEnv):
 
         low = -10000.0 * np.ones(22 + 6*min(self.N-1, 7),)
         high = 10000.0 * np.ones(22 + 6*min(self.N-1, 7),)
-        observation_space = spaces.Box(low = low, high = high)
+        observation_space = spaces.Box(low = low, high = high, dtype = np.float64)
+        #print("DTYPE ", observation_space.dtype)
         self.observation_spaces = {bird: observation_space for bird in self.agents}
         # self.observation_space = [observation_space for _ in range(self.N)]
         self.observation_space = observation_space
 
         self.data = []
-        self.infos = {i:{} for i in range(self.N)}
+        self.infos = {i:{} for i in self.agents}
 
     def step(self, action, observe = True):
+        noise = 0.01 * np.random.random_sample((5,))
         bird = self.birds[self.agent_selection]
-        #print(action)
 
         if np.isnan(action).any():
             action = np.zeros(5)
 
+        action = noise + action
+
+        #print(action)
         #self.print_bird(bird, action)
 
         thrust = action[0]
+        #print(thrust)
 
         self.update_angles(action)
 
@@ -92,54 +104,47 @@ class raw_env(AECEnv):
         if bird.x > bird.X[-2]:
             reward += self.forward_reward
         reward -= self.energy_punishment * action[0]
-        self.rewards[self.agents.index(self.agent_selection)] = reward
+        self.rewards[self.agent_selection] = reward
 
         if self.crashed(bird):
-            self.dones = {i: True for i in range(self.N)}
+            self.dones = {i: True for i in self.agents}
             #self.dones = [True for i in range(self.N)]
-            print("Done!")
-            print("agent ", self.agent_selection, " crashed")
-            self.rewards[self.agents.index(self.agent_selection)] = self.crash_reward
+            self.rewards[self.agent_selection] = self.crash_reward
 
         # if we have moved through one complete timestep
         if self.agent_selection == self.agents[-1]:
+            if self.steps % 10 == 0:
+                print(self.steps)
+                for b in self.birds:
+                    bird = self.birds[b]
+                    bird.shed_vortices()
+
+                    #remove expired vortices
+                    if self.steps > 1.0/self.h:
+                        bird.VORTICES_LEFT.pop(0)
+                        #print(len(bird.VORTICES_LEFT))
+                        #assert len(bird.VORTICES_LEFT) == 10
+                        bird.VORTICES_RIGHT.pop(0)
+
             self.steps += 1
-            for b in self.birds:
-                bird = self.birds[b]
-                bird.shed_vortices()
-
-                #remove expired vortices
-                if self.steps > 1.0/self.h:
-                    bird.VORTICES_LEFT.pop(0)
-                    bird.VORTICES_RIGHT.pop(0)
-
             self.positions = self.get_positions()
             self.t = self.t + self.h
 
         self.agent_selection = self._agent_selector.next()
 
         if bird.x > 500.0:
-            self.dones = {i: True for i in range(self.N)}
-            #self.dones = [True for i in range(self.N)]
-            #print("Done!")
-            #print("agent ", self.agent_selection, " made it to the destination")
-
-        #self.log(bird)
-
-        #print(self.agent_selection)
-        #print("z: ", bird.z)
+            self.dones = {i: True for i in self.agents}
 
         if observe:
-            obs = self.observe()
-            #print("dones: ", self.dones)
-            return obs, self.rewards, self.dones, self.infos
+            obs = self.observe(self.agent_selection)
+            return obs
 
-    def observe(self):
-        force = self.birds[self.agent_selection].F
-        torque = self.birds[self.agent_selection].T
-        bird = self.agent_selection
+    def observe(self, agent):
+        force = self.birds[agent].F
+        torque = self.birds[agent].T
 
-        bird = self.birds[bird]
+        bird = self.birds[agent]
+        pos = []
         pos += [bird.x, bird.y, bird.z]
         pos += [bird.u, bird.v, bird.w]
         pos += [bird.p, bird.q, bird.r]
@@ -160,7 +165,6 @@ class raw_env(AECEnv):
 
         self.old_birds = {bird: copy.deepcopy(self.birds[bird]) for bird in self.birds}
 
-
         self.agent_order = list(self.agents)
         self._agent_selector.reinit(self.agent_order)
         self.agent_selection = self._agent_selector.reset()
@@ -169,20 +173,23 @@ class raw_env(AECEnv):
         self.birds = {agent: birds[i] for i, agent in enumerate(self.agents)}
         self.positions = self.get_positions()
 
-        self.rewards = {i: 0 for i in range(self.N)}
+        self.rewards = {i: 0 for i in self.agents}
 
         self.steps = 0
 
-        self.dones = {i:False for i in range(self.N)}
+        self.dones = {i:False for i in self.agents}
         #self.dones = [False for i in range(self.N)]
 
-        obs = self.observe()
+        if observe:
+            obs = self.observe(self.agent_selection)
+            return obs
 
-        return obs
-
-    def render(self):
-        self.plot_values(show = True)
+    def render(self, mode='human'):
+        #self.plot_values(show = True)
         self.plot_birds(show = True)
+
+    def close(self):
+        plotting.close()
 
     def update_angles(self, action):
         bird = self.birds[self.agent_selection]
@@ -229,6 +236,7 @@ class raw_env(AECEnv):
             bird = self.birds[b]
             if bird is not curr:
                 for vorts in [bird.VORTICES_LEFT, bird.VORTICES_RIGHT]:
+                    #print("vortices ", len(vorts))
                     i = 0
                     v = vorts[i]
                     #want first vortex ahead of it
@@ -243,17 +251,23 @@ class raw_env(AECEnv):
 
     def crashed(self, bird):
         if bird.z <= 0 or bird.z >= 100:
+            #print("Crashed into ground! ")
             return True
 
         lim = 2*np.pi
         if abs(bird.p) > lim or abs(bird.q) > lim or  abs(bird.r) > lim:
+            #print("Crashed! Spun too fast")
             return True
 
+        crash = False
         for b in self.birds:
             other = self.birds[b]
             if other is not bird:
                 dist = np.sqrt((bird.x - other.x)**2 + (bird.y - other.y)**2 + (bird.z - other.z)**2)
-                return dist < bird.Xl/2.0
+                if dist < bird.Xl/2.0:
+                    #print("Crashed into a bird! ")
+                    crash = True
+        return crash
 
     def plot_values(self, show = False):
         plotting.plot_values(self.birds, show)

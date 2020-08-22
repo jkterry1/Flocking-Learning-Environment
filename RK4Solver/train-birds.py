@@ -15,7 +15,7 @@ from ray.rllib.env import PettingZooEnv
 # from sisl_games.pursuit import pursuit
 #from pettingzoo.sisl import pursuit_v0 as game_env
 import solver_env as game_env
-from supersuit import normalize_obs, agent_indicator, flatten, frame_stack
+from supersuit import normalize_obs, agent_indicator, flatten, frame_skip, delay_observations
 #from supersuit import frame_skip
 
 # for APEX-DQN
@@ -51,7 +51,7 @@ if __name__ == "__main__":
     # RDQN - Rainbow DQN
     # ADQN - Apex DQN
     env_name = 'birds-v0'
-    trial_name = 'birds_ppo_500frames'
+    trial_name = '10birds_500frames_32workers'
 
     methods = ["A2C", "ADQN", "PPO", "RDQN"]
 
@@ -60,9 +60,10 @@ if __name__ == "__main__":
     assert method in methods, "Method should be one of {}".format(methods)
 
     def env_creator(args):
-        env = game_env.env(N=7)
+        env = game_env.env(N=10)
         #env = normalize_obs(env, -1000, 1000)
-        env = frame_stack(env, num_frames = 500)
+        #env = delay_observations(env, 100)
+        env = frame_skip(env, 500)
         env = agent_indicator(env)
         env = flatten(env)
         return env
@@ -106,7 +107,7 @@ if __name__ == "__main__":
             name="A2C",
             stop={"episodes_total": 60000},
             checkpoint_freq=10,
-            local_dir="~/ray_results/"+trial_name,
+            local_dir="~/A2C_results/"+trial_name,
             config={
 
                 # Enviroment specific
@@ -242,8 +243,8 @@ if __name__ == "__main__":
             "PPO",
             name="PPO",
             stop={"episodes_total": 50000},
-            checkpoint_freq=1000,
-            local_dir="~/training_results/PPO_"+trial_name,
+            checkpoint_freq=1,
+            local_dir="~/PPO_Results/"+trial_name,
             config={
 
                 # Enviroment specific
@@ -252,7 +253,7 @@ if __name__ == "__main__":
                 # General
                 "log_level": "ERROR",
                 "num_gpus": 2,
-                "num_workers": 8,
+                "num_workers": 32,
                 "num_envs_per_worker": 8,
                 "compress_observations": False,
                 "gamma": .99,

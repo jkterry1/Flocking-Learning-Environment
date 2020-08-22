@@ -1,6 +1,9 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
+def close():
+    plt.close()
+
 def plot_values(birds, show = True):
     fig = plt.figure()
     plt1 = fig.add_subplot(411)
