@@ -1,111 +1,53 @@
 import numpy as np
 
-def dudt(u, bird):
-    X = Fu(u, bird)/bird.m
-    grav = -bird.g * np.sin(bird.theta)
-    udot = X + grav
-    udot += bird.r * bird.v - bird.q * bird.w
-
-    return udot
-
-def dvdt(v, bird):
-    #g * sphi*cthe - r * ub + p * wb # = vdot
-    Y = Fv(v, bird)/bird.m
-    grav = bird.g * np.cos(bird.theta) * np.sin(bird.phi)
-    vdot = Y + grav
-    vdot += bird.p * bird.w - bird.r * bird.u
-
-    return vdot
-
-def dwdt(w, bird):
-    Z = Fw(w, bird)/bird.m
-    grav = bird.g * np.cos(bird.theta) * np.cos(bird.phi)
-    wdot = Z + grav
-    wdot += bird.q * bird.u - bird.p * bird.v
-
-    return wdot
-
-def dxdt(x, bird):
+def duvwdt(uvw, bird):
     theta = bird.theta
     phi = bird.phi
     psi = bird.psi
-    return np.cos(theta) * np.cos(psi) * bird.u + (-np.cos(phi)*np.sin(psi) +\
-            np.sin(phi) * np.sin(theta) * np.cos(psi)) * bird.v + \
-            (np.sin(phi) * np.sin(psi) + np.cos(phi) * np.sin(theta) * \
-            np.cos(psi)) * bird.w
+    pqr = bird.pqr
+    u, v, w = uvw
+    m = bird.m
+    g = bird.g
+    grav = np.array([-g * np.sin(bird.theta), g * np.cos(bird.theta) * np.sin(bird.phi), g * np.cos(bird.theta) * np.cos(bird.phi)])
+    F = np.array([Fu(u, bird), Fv(v, bird), Fw(w, bird)])
+    return (1.0/m)*F - np.cross(pqr, uvw) + grav
 
-def dydt(y, bird):
-    #cthe*spsi * ub + (cphi*cpsi+sphi*sthe*spsi) * vb + (-sphi*cpsi+cphi*sthe*spsi) * wb # = yEdot
+def dxyzdt(xyz, bird):
     theta = bird.theta
     phi = bird.phi
     psi = bird.psi
-    return np.cos(theta) * np.sin(psi) * bird.u + \
-            (np.cos(phi) * np.cos(psi) + np.sin(phi) * np.sin(theta) * np.sin(psi)) * bird.v + \
-            (-np.sin(phi) * np.cos(psi) + np.cos(phi) * np.sin(theta) * np.sin(psi)) * bird.w
+    R3 = np.array([[np.cos(psi), -np.sin(psi), 0],
+                    [np.sin(psi), np.cos(psi), 0],
+                    [0, 0, 1]])
+    R2 = np.array([[np.cos(theta), 0, np.sin(theta)],
+                    [0, 1, 0],
+                    [-np.sin(theta), 0, np.cos(theta)]])
+    R1 = np.array([[1, 0, 0],
+                    [0, np.cos(phi), -np.sin(phi)],
+                    [0, np.sin(phi), np.cos(phi)]])
+    output = np.matmul(R3, np.matmul(R2, np.matmul(R1, bird.uvw)))
+    return output
 
-def dzdt(z, bird):
-    theta = bird.theta
-    phi = bird.phi
-    psi = bird.psi
-    return (-np.sin(theta) * bird.u + np.sin(phi) * np.cos(theta) * \
-            bird.v + np.cos(phi) * np.cos(theta) * bird.w)
 
-def dpdt(p, bird):
-    #1/Ixx * (L + (Iyy - Izz) * q * r)  # = pdot
-    Ix = bird.Ixx
-    Iy = bird.Iyy
-    Iz = bird.Izz
-    Ixz = bird.Ixz
-    q = bird.q
-    r = bird.r
-    N = TN(bird, bird.r)
-    L = TL(bird, p)
-    pdot = 1.0/(Ix - (Ixz/Iz)**2)
-    pdot *= (L + (q * r * (Iy - Iz)) - Ixz * p * q + \
-            (Ixz/Iz) * (N - p * q * (Iy - Ix) - Ixz * q * r) )
-    return pdot
+def dpqrdt(pqr, bird):
+    p, q, r = pqr
+    LMN = np.array([TL(bird, p), TM(bird, q), TN(bird, r)])
+    inertia = bird.inertia
+    mat = np.array([[0.0, -r, q],
+                    [r, 0.0, -p],
+                    [-q, p, 0.0]])
+    rhs = LMN - np.matmul(mat, np.matmul(inertia, pqr))
+    return np.matmul(np.linalg.inv(inertia), rhs)
 
-def dqdt(q, bird):
-    #1/Iyy * (M + (Izz - Ixx) * p * r)  # = qdot
-    Ix = bird.Ixx
-    Iy = bird.Iyy
-    Iz = bird.Izz
-    Ixz = bird.Ixz
-    p = bird.p
-    r = bird.r
-    M = TM(bird, q)
-    qdot = (1.0/Iy)
-    qdot *= (M + r * p * (Iz - Ix) - Ixz * (p**2 - r**2))
-    return qdot
 
-def drdt(r, bird):
-    #xdot[5] = 1/Izz * (N + (Ixx - Iyy) * p * q)  # = rdot
-    Ix = bird.Ixx
-    Iy = bird.Iyy
-    Iz = bird.Izz
-    Ixz = bird.Ixz
-    p = bird.p
-    q = bird.q
-    N = TN(bird, r)
-    L = TL(bird, bird.p)
-    rdot = 1.0/(Iz - (Ixz**2 / Ix))
-    rdot *= (N + p * q * (Ix - Iy) + (Ixz / Ix) *\
-            (q * r * (Iz - Iy) - Ixz * p * q + L) - Ixz * q * r)
-    return rdot
-
-def dthetadt(theta, bird):
-    #q * cphi - r * sphi  # = thetadot
-    return bird.q * np.cos(bird.phi) - bird.r * np.sin(bird.phi)
-
-def dphidt(phi, bird):
-    #p + (q*sphi + r*cphi) * sthe / cthe  # = phidot
-    return bird.p + (bird.q * np.sin(bird.phi) + \
-            bird.r * np.cos(bird.phi)) * (np.sin(bird.theta)/np.cos(bird.theta))
-
-def dpsidt(psi, bird):
-    #(q * sphi + r * cphi) / cthe  # = psidot
-    return (bird.q * np.sin(bird.phi) + \
-            bird.r * np.cos(bird.phi)) * (1.0/np.cos(bird.theta))
+def danglesdt(angles, bird):
+    theta, phi, psi = angles
+    pqr = bird.pqr
+    mat = np.array([[1.0, np.sin(phi)*np.tan(theta), np.cos(phi)*np.tan(theta)],
+                    [0.0, np.cos(phi), -np.sin(phi)],
+                    [0.0, np.sin(phi)*(1.0/np.cos(theta)), np.cos(phi)*(1.0/np.cos(theta))]])
+    output = np.matmul(mat, pqr)
+    return output
 
 def TL(bird, P):
     T = 0

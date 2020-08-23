@@ -45,6 +45,9 @@ class Bird():
         self.Iyy = self.m * self.Yl**2
         self.Izz = self.m * self.Zl**2
         self.Ixz = 0.5 * self.m * self.Zl**2    #approximation
+        self.inertia = np.array([[self.Ixx, 0.0, self.Ixz],
+                                    [0.0, self.Iyy, 0.0],
+                                    [self.Ixz, 0.0, self.Izz]])
 
         # fixed body frame variables:
         '''
@@ -56,6 +59,7 @@ class Bird():
         self.u = u
         self.v = v
         self.w = w
+        self.uvw = np.array([u,v,w])
 
         '''
         angular velocity:
@@ -66,6 +70,7 @@ class Bird():
         self.p = p
         self.q = q
         self.r = r
+        self.pqr = np.array([p, q, r])
 
         # intertial frame variables
         '''
@@ -77,6 +82,7 @@ class Bird():
         self.theta = theta
         self.phi = phi
         self.psi = psi
+        self.angles = np.array([theta, phi, psi])
 
         '''
         position
@@ -85,6 +91,7 @@ class Bird():
         self.x = x
         self.y = y
         self.z = z
+        self.xyz = np.array([x,y,z])
 
         '''
         wing orientation
@@ -142,29 +149,20 @@ class Bird():
         self.vortex_torque_v = a[4]
         self.vortex_torque_w = a[5]
 
-        # update u, v, w from forces, old angles, and old p,q,r
-        u = self.take_time_step(de.dudt, self.u, h)
-        v = self.take_time_step(de.dvdt, self.v, h)
-        w = self.take_time_step(de.dwdt, self.w, h)
+        uvw = self.take_time_step(de.duvwdt, self.uvw, h)
+        u, v, w = uvw
 
-        #update p, q, r from torque
-        p = self.take_time_step(de.dpdt, self.p, h)
-        q = self.take_time_step(de.dqdt, self.q, h)
-        r = self.take_time_step(de.drdt, self.r, h)
+        pqr = self.take_time_step(de.dpqrdt, self.pqr, h)
+        p, q, r = pqr
 
-        #calculate new angles from new p,q,r and old angles
-        theta = self.take_time_step(de.dthetadt, self.theta, h)
-        phi = self.take_time_step(de.dphidt, self.phi, h)
-        psi = self.take_time_step(de.dpsidt, self.psi, h)
+        angles = self.take_time_step(de.danglesdt, self.angles, h)
+        theta, phi, psi = angles
 
-        #update x,y,z
-        x = self.take_time_step(de.dxdt, self.x, h)
-        y = self.take_time_step(de.dydt, self.y, h)
-        z = self.take_time_step(de.dzdt, self.z, h)
+        xyz = self.take_time_step(de.dxyzdt, self.xyz, h)
+        x, y, z = xyz
 
-        self.x = x
-        self.y = y
-        self.z = z
+        self.xyz = xyz
+        self.x, self.y, self.z = self.xyz
         if self.z <= 0:
             self.z = 0
             u = 0
@@ -180,6 +178,7 @@ class Bird():
         self.u = u
         self.v = v
         self.w = w
+        self.uvw = uvw
         self.U.append(u)
         self.V.append(v)
         self.W.append(w)
@@ -187,13 +186,16 @@ class Bird():
         self.p = p
         self.q = q
         self.r = r
+        self.pqr = pqr
         self.P.append(p)
         self.Q.append(q)
         self.R.append(r)
 
-        self.theta = theta
-        self.phi = phi
-        self.psi = psi
+        # self.theta = theta
+        # self.phi = phi
+        # self.psi = psi
+        self.angles = angles
+        self.theta, self.phi, self.psi = self.angles
         self.THETA.append(theta)
         self.PHI.append(phi)
         self.PSI.append(psi)

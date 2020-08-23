@@ -49,12 +49,7 @@ class raw_env(AECEnv):
 
         self.agents = ["bird_{}".format(i) for i in range(N)]
         if birds is None:
-            x_rand = 4.0 * np.random.random_sample((self.N)) - 2.0
-            #print("dtype ", x_rand[0].dtype)
-            #x_rand = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
-            #print("dtype ", x_rand[0].dtype)
-            #print(x_rand)
-            birds = [Bird(z = 50.0, y = 3.0*i, x = 0.0) for i in range(self.N)]
+            birds = [Bird(z = 50.0, y = 3.0*i) for i in range(self.N)]
         self.starting_conditions = [copy.deepcopy(bird) for bird in birds]
         self.birds = {agent: birds[i] for i, agent in enumerate(self.agents)}
         self.agent_order = list(self.agents)
@@ -87,8 +82,6 @@ class raw_env(AECEnv):
 
         action = noise + action
 
-        #print(action)
-        #self.print_bird(bird, action)
 
         thrust = action[0]
         #print(thrust)
@@ -114,7 +107,6 @@ class raw_env(AECEnv):
         # if we have moved through one complete timestep
         if self.agent_selection == self.agents[-1]:
             if self.steps % 10 == 0:
-                print(self.steps)
                 for b in self.birds:
                     bird = self.birds[b]
                     bird.shed_vortices()
