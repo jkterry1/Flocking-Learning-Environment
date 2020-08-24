@@ -8,6 +8,7 @@ class Vortex():
         self.C = 25.0
         self.min_vel = 1.0
         self.max_r = 1.0
+        self.dist_travelled = 0.0
 
         '''
         orientation
@@ -24,6 +25,7 @@ class Vortex():
         else:
             self.phi -= bird.beta_l
         mat = self.get_transform(self.phi, self.theta, self.psi)
+
         a = np.array([0.0, bird.Xl, 0.0])
         if sign == 1: # right wing
             self.pos = np.array([bird.x, bird.y, bird.z]) -  np.matmul(mat, a)
@@ -49,8 +51,8 @@ class Vortex():
             return [0.0, 0.0, 0.0]
 
         v_tan = self.gamma * r**2 / (2 * np.pi * r * (r**2 + self.core**2))
-        r_vec = np.array([0, y - self.y, z - self.z])/r
-        tan_vec = v_tan * np.array([0, -r_vec[2], r_vec[1]])
+        r_vec = np.array([0.0, y - self.y, z - self.z])/r
+        tan_vec = v_tan * np.array([0.0, -r_vec[2], r_vec[1]])
 
         phi = self.phi
         theta = self.theta
@@ -74,11 +76,11 @@ class Vortex():
         v_tan_l = self.gamma * r_left**2 / (2 * np.pi * r_left * (r_left**2 + self.core**2))
         v_tan_r = self.gamma * r_right**2 / (2 * np.pi * r_right * (r_right**2 + self.core**2))
 
-        r_vec_right = np.array([0, pos_right[1] - self.y, pos_right[2] - self.z])/r_right
-        r_vec_left = np.array([0, pos_left[1] - self.y, pos_left[2] - self.z])/r_left
+        r_vec_right = np.array([0.0, pos_right[1] - self.y, pos_right[2] - self.z])/r_right
+        r_vec_left = np.array([0.0, pos_left[1] - self.y, pos_left[2] - self.z])/r_left
 
-        tan_vec_left = v_tan_l * np.array([0, -r_vec_left[2], r_vec_left[1]])
-        tan_vec_right = v_tan_r * np.array([0, -r_vec_right[2], r_vec_right[1]])
+        tan_vec_left = v_tan_l * np.array([0.0, -r_vec_left[2], r_vec_left[1]])
+        tan_vec_right = v_tan_r * np.array([0.0, -r_vec_right[2], r_vec_right[1]])
 
         phi = bird.phi - self.phi
         theta = bird.theta - self.theta

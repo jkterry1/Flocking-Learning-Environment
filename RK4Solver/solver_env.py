@@ -26,7 +26,7 @@ class raw_env(AECEnv):
 
     def __init__(self,
                  N = 10,
-                 h = 0.01,
+                 h = 0.001,
                  t = 0.0,
                  birds = None,
                  filename = "episode_1.csv"
@@ -36,7 +36,9 @@ class raw_env(AECEnv):
         self.N = N
         self.num_agents = N
 
-        self.act_dims = [5 for i in range(self.N)]
+        #self.act_dims = [5 for i in range(self.N)]
+        self.total_vortices = 0.0
+        self.total_dist = 0.0
 
         self.max_r = 1.0
         self.max_steps = 100.0/self.h
@@ -49,7 +51,7 @@ class raw_env(AECEnv):
 
         self.agents = ["bird_{}".format(i) for i in range(N)]
         if birds is None:
-            birds = [Bird(z = 50.0, y = 3.0*i) for i in range(self.N)]
+            birds = [Bird(z = 50.0, y = 3.0*i, u=5.0) for i in range(self.N)]
         self.starting_conditions = [copy.deepcopy(bird) for bird in birds]
         self.birds = {agent: birds[i] for i, agent in enumerate(self.agents)}
         self.agent_order = list(self.agents)
@@ -64,31 +66,25 @@ class raw_env(AECEnv):
 
         low = -10000.0 * np.ones(22 + 6*min(self.N-1, 7),)
         high = 10000.0 * np.ones(22 + 6*min(self.N-1, 7),)
-        observation_space = spaces.Box(low = low, high = high, dtype = np.float64)
-        #print("DTYPE ", observation_space.dtype)
+        observation_space = spaces.Box(low = low, high = high)
         self.observation_spaces = {bird: observation_space for bird in self.agents}
-        # self.observation_space = [observation_space for _ in range(self.N)]
         self.observation_space = observation_space
 
         self.data = []
         self.infos = {i:{} for i in self.agents}
 
     def step(self, action, observe = True):
-        noise = 0.01 * np.random.random_sample((5,))
         bird = self.birds[self.agent_selection]
 
-        if np.isnan(action).any():
-            action = np.zeros(5)
-
-        action = noise + action
-
-
+        noise = 0.01 * np.random.random_sample((5,))
+        #action = noise + action
         thrust = action[0]
-        #print(thrust)
 
         self.update_angles(action)
 
         vortices = self.get_vortices(bird)
+        #print()
+        #print("bird ", self.agent_selection)
         #print("vortices: ", vortices)
         bird.update(thrust, self.h, vortices)
 
@@ -101,7 +97,6 @@ class raw_env(AECEnv):
 
         if self.crashed(bird):
             self.dones = {i: True for i in self.agents}
-            #self.dones = [True for i in range(self.N)]
             self.rewards[self.agent_selection] = self.crash_reward
 
         # if we have moved through one complete timestep
@@ -110,13 +105,16 @@ class raw_env(AECEnv):
                 for b in self.birds:
                     bird = self.birds[b]
                     bird.shed_vortices()
+                    bird.update_vortex_positions(bird.VORTICES_RIGHT, self.h*10.0)
+                    bird.update_vortex_positions(bird.VORTICES_LEFT, self.h*10.0)
 
                     #remove expired vortices
                     if self.steps > 1.0/self.h:
-                        bird.VORTICES_LEFT.pop(0)
-                        #print(len(bird.VORTICES_LEFT))
-                        #assert len(bird.VORTICES_LEFT) == 10
-                        bird.VORTICES_RIGHT.pop(0)
+                        a = bird.VORTICES_LEFT.pop(0)
+                        b = bird.VORTICES_RIGHT.pop(0)
+                        self.total_vortices += 2.0
+                        self.total_dist += a.dist_travelled
+                        self.total_dist += b.dist_travelled
 
             self.steps += 1
             self.positions = self.get_positions()
@@ -127,6 +125,7 @@ class raw_env(AECEnv):
         if bird.x > 500.0:
             self.dones = {i: True for i in self.agents}
 
+        #self.print_bird(bird, action)
         if observe:
             obs = self.observe(self.agent_selection)
             return obs
@@ -145,9 +144,8 @@ class raw_env(AECEnv):
         nearest = bird.seven_nearest(self.birds)
         for other in nearest:
             pos += [other.x - bird.x, other.y - bird.y, other.z - bird.z]
-            # print("pos1 ", pos)
             pos += [other.u - bird.u, other.v - bird.v, other.w - bird.w]
-            # print("pos2 ", pos)
+
         obs = np.array(force + torque + pos)
         return obs
 
@@ -176,9 +174,9 @@ class raw_env(AECEnv):
             obs = self.observe(self.agent_selection)
             return obs
 
-    def render(self, mode='human'):
-        #self.plot_values(show = True)
-        self.plot_birds(show = True)
+    def render(self, mode='human', plot_vortices=False):
+        self.plot_values(show = True)
+        self.plot_birds(show = True, plot_vortices = plot_vortices)
 
     def close(self):
         plotting.close()
@@ -228,27 +226,29 @@ class raw_env(AECEnv):
             bird = self.birds[b]
             if bird is not curr:
                 for vorts in [bird.VORTICES_LEFT, bird.VORTICES_RIGHT]:
-                    #print("vortices ", len(vorts))
+                    #print("Vortices list: ", vorts)
                     i = 0
                     v = vorts[i]
-                    #want first vortex ahead of it
+
+                    #want first vortex ahead of current vortex
                     while i < len(vorts) and v.x < curr.x:
                         v = vorts[i]
                         i = i+1
-                    if v.x >= curr.x:
+                    if i < len(vorts) and v.x >= curr.x:
                         r = np.sqrt((curr.y - v.y)**2 + (curr.z - v.z)**2)
-                        if i < len(vorts) and r < self.max_r:
+                        #print("r ", r)
+                        if r < self.max_r:
                             vortices.append(v)
         return vortices
 
     def crashed(self, bird):
         if bird.z <= 0 or bird.z >= 100:
-            #print("Crashed into ground! ")
+            print("Crashed into ground! ")
             return True
 
         lim = 2*np.pi
         if abs(bird.p) > lim or abs(bird.q) > lim or  abs(bird.r) > lim:
-            #print("Crashed! Spun too fast")
+            print("Crashed! Spun too fast")
             return True
 
         crash = False
@@ -257,7 +257,7 @@ class raw_env(AECEnv):
             if other is not bird:
                 dist = np.sqrt((bird.x - other.x)**2 + (bird.y - other.y)**2 + (bird.z - other.z)**2)
                 if dist < bird.Xl/2.0:
-                    #print("Crashed into a bird! ")
+                    print("Crashed into a bird! ")
                     crash = True
         return crash
 

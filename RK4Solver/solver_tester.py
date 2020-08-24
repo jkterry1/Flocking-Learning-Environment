@@ -4,15 +4,16 @@ from bird import Bird
 import time
 
 
-t = 10.0
-h = 0.01
+t = 2.0
+h = 0.001
 n = (int)(t/h)
 N = 10
 
-if __name__ == "__main__":
+def run():
     tik = time.time()
-
-    env = solver.env(N = 10, h = h)
+    z = 0.01
+    #birds = [Bird(z=10.0, y=0.6, x=-1.0, u=5.0), Bird(z = 10.0, y = 1.2, u=5.0), Bird(z=10.0, y=0.0, u=5.0)]
+    env = solver.env(N = 10)
     env.reset()
     done = False
     for i in range(n):
@@ -39,4 +40,10 @@ if __name__ == "__main__":
     print("Time per step: ", (tok-tik)/n)
     print("Steps per second: ", n/(tok-tik))
 
-    env.render()
+    avg = env.total_dist/env.total_vortices
+    print("average distance travelled of a vortex: ", avg)
+
+    env.render(plot_vortices = False)
+
+if __name__ == "__main__":
+    run()

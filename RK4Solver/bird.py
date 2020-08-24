@@ -82,7 +82,7 @@ class Bird():
         self.theta = theta
         self.phi = phi
         self.psi = psi
-        self.angles = np.array([theta, phi, psi])
+        self.angles = np.array([phi, theta, psi])
 
         '''
         position
@@ -148,15 +148,18 @@ class Bird():
         self.vortex_torque_u = a[3]
         self.vortex_torque_v = a[4]
         self.vortex_torque_w = a[5]
-
+        #print()
+        #print("Updating uvw")
         uvw = self.take_time_step(de.duvwdt, self.uvw, h)
         u, v, w = uvw
+        #print("uvw: ", uvw)
+        #print("u: ", u)
 
         pqr = self.take_time_step(de.dpqrdt, self.pqr, h)
         p, q, r = pqr
 
         angles = self.take_time_step(de.danglesdt, self.angles, h)
-        theta, phi, psi = angles
+        phi, theta, psi = angles
 
         xyz = self.take_time_step(de.dxyzdt, self.xyz, h)
         x, y, z = xyz
@@ -175,27 +178,20 @@ class Bird():
         self.Y.append(y)
         self.Z.append(z)
 
-        self.u = u
-        self.v = v
-        self.w = w
         self.uvw = uvw
+        self.u, self.v, self.w = uvw
         self.U.append(u)
         self.V.append(v)
         self.W.append(w)
 
-        self.p = p
-        self.q = q
-        self.r = r
         self.pqr = pqr
+        self.p, self.q, self.r = pqr
         self.P.append(p)
         self.Q.append(q)
         self.R.append(r)
 
-        # self.theta = theta
-        # self.phi = phi
-        # self.psi = psi
         self.angles = angles
-        self.theta, self.phi, self.psi = self.angles
+        self.phi, self.theta, self.psi = self.angles
         self.THETA.append(theta)
         self.PHI.append(phi)
         self.PSI.append(psi)
@@ -206,7 +202,39 @@ class Bird():
         #     self.vortex_buffer = (Vortex(self, 1), Vortex(self, -1))
         self.vortex_buffer = (Vortex(self, 1), Vortex(self, -1))
 
+    def update_vortex_positions(self, vortices, h):
+        for i in range(1, len(vortices)-2):
+            #tangent vectors
+            t_minus = vortices[i].pos - vortices[i-1].pos
+            t = vortices[i+1].pos - vortices[i].pos
+            t_plus = vortices[i+2].pos - vortices[i+1].pos
+
+            l_t_minus = np.linalg.norm(t_minus)
+            l_t = np.linalg.norm(t)
+            theta = np.arccos(np.dot(t_minus, t)/(l_t_minus * l_t))
+
+            #normal vector
+            n = (np.cross(t, t_plus)/(1 * np.dot(t, t_plus))) - (np.cross(t_minus, t)/(1 + np.dot(t_minus, t)))
+            #binormal vector
+            b = np.cross(t, n)
+
+            #strength
+            gamma = vortices[i].gamma
+            #distance from last point
+            epsilon = l_t_minus
+
+            pos = self.take_vortex_time_step(vortices[i].pos, gamma, epsilon, b, theta, h)
+
+            #print(abs(vortices[i].pos - pos))
+            vortices[i].dist_travelled += abs(vortices[i].pos - pos)
+            vortices[i].pos = pos
+            vortices[i].x, vortices[i].y, vortices[i].z = vortices[i].pos
+
     def shed_vortices(self):
+        x = self.vortex_buffer[0].x
+        y = self.vortex_buffer[0].y
+        z = self.vortex_buffer[0].z
+        #print("Shedding vortex at ", [x,y,z])
         self.VORTICES_RIGHT.append(self.vortex_buffer[0])
         self.VORTICES_LEFT.append(self.vortex_buffer[1])
 
@@ -217,7 +245,12 @@ class Bird():
         for vortex in vortices:
             #returns velocities on left and right wing
             L, R = vortex.bird_vel(self)
-            #print("L ", L)
+            # print()
+            # print("bird ", self)
+            # print("vort ", vortex)
+            # print("L ", L)
+            # print("R ", R)
+
             #calculate up and down forces
             #left wing
             u, v, w = L
@@ -261,6 +294,15 @@ class Bird():
         k4 = h * ddt(y + k3, self)
 
         return y + (1.0 / 6.0)*(k1 + (2.0 * k2) + (2.0 * k3) + k4)
+
+    def take_vortex_time_step(self, pos, gamma, epsilon, b, theta, h):
+        ddt = de.drdt
+        k1 = h * ddt(gamma, epsilon, b, theta)
+        k2 = h * ddt(gamma, epsilon, b, theta)
+        k3 = h * ddt(gamma, epsilon, b, theta)
+        k4 = h * ddt(gamma, epsilon, b, theta)
+
+        return pos + (1.0 / 6.0)*(k1 + (2.0 * k2) + (2.0 * k3) + k4)
 
     def __lt__(self, other):
         return self.x < other.x

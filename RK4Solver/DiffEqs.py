@@ -1,5 +1,8 @@
 import numpy as np
 
+def drdt(gamma, epsilon, b, theta):
+    return (gamma/(4.0* np.pi * epsilon)) * b * np.tan(theta/2.0)
+
 def duvwdt(uvw, bird):
     theta = bird.theta
     phi = bird.phi
@@ -8,7 +11,12 @@ def duvwdt(uvw, bird):
     u, v, w = uvw
     m = bird.m
     g = bird.g
-    grav = np.array([-g * np.sin(bird.theta), g * np.cos(bird.theta) * np.sin(bird.phi), g * np.cos(bird.theta) * np.cos(bird.phi)])
+    grav = np.array([-g * np.sin(bird.theta),
+                    g * np.cos(bird.theta) * np.sin(bird.phi),
+                    g * np.cos(bird.theta) * np.cos(bird.phi)])
+
+    #print("grav force: ", grav)
+
     F = np.array([Fu(u, bird), Fv(v, bird), Fw(w, bird)])
     return (1.0/m)*F - np.cross(pqr, uvw) + grav
 
@@ -16,15 +24,15 @@ def dxyzdt(xyz, bird):
     theta = bird.theta
     phi = bird.phi
     psi = bird.psi
-    R3 = np.array([[np.cos(psi), -np.sin(psi), 0],
-                    [np.sin(psi), np.cos(psi), 0],
-                    [0, 0, 1]])
-    R2 = np.array([[np.cos(theta), 0, np.sin(theta)],
-                    [0, 1, 0],
-                    [-np.sin(theta), 0, np.cos(theta)]])
-    R1 = np.array([[1, 0, 0],
-                    [0, np.cos(phi), -np.sin(phi)],
-                    [0, np.sin(phi), np.cos(phi)]])
+    R3 = np.array([[np.cos(psi), -np.sin(psi), 0.0],
+                    [np.sin(psi), np.cos(psi), 0.0],
+                    [0.0, 0.0, 1.0]])
+    R2 = np.array([[np.cos(theta), 0.0, np.sin(theta)],
+                    [0.0, 1.0, 0.0],
+                    [-np.sin(theta), 0.0, np.cos(theta)]])
+    R1 = np.array([[1.0, 0.0, 0.0],
+                    [0.0, np.cos(phi), -np.sin(phi)],
+                    [0.0, np.sin(phi), np.cos(phi)]])
     output = np.matmul(R3, np.matmul(R2, np.matmul(R1, bird.uvw)))
     return output
 
@@ -41,7 +49,7 @@ def dpqrdt(pqr, bird):
 
 
 def danglesdt(angles, bird):
-    theta, phi, psi = angles
+    phi, theta, psi = angles
     pqr = bird.pqr
     mat = np.array([[1.0, np.sin(phi)*np.tan(theta), np.cos(phi)*np.tan(theta)],
                     [0.0, np.cos(phi), -np.sin(phi)],
@@ -198,18 +206,22 @@ def TN(bird, R):
     return T
 
 def Fu(u, bird):
-    F = 0
+    F = 0.0
     alpha_l = abs(bird.alpha_l)
     alpha_r = abs(bird.alpha_r)
 
     #Drag = Cd * (rho * v^2)/2 * A
     A = bird.Xl * bird.Zl + bird.Xl * bird.Yl * np.sin(alpha_l) +\
         bird.Xl * bird.Yl * np.sin(alpha_r)
+    #print("u before drag: ", u)
     D = -np.sign(u) * bird.Cd * A * (bird.rho * u**2)/2.0
+    #print("Drag: ", D)
 
     F += D
     F += bird.vortex_force_u
+    #print("Vortex force: ", bird.vortex_force_u)
     F += bird.thrust
+    #print("Thrust: ", bird.thrust)
     bird.F[0] = F
     return F
 
@@ -255,12 +267,12 @@ def check_A(bird, A, angle):
         bird.print_bird(bird)
         file = open('A_errors.txt', 'w')
         file = sys.stderr
-        print("Angle: ", angle, file = file)
+        #print("Angle: ", angle, file = file)
         bird.broken = True
 
 def C_lift(bird):
     if bird.u == 0:
-        d = np.pi/2
+        d = np.pi/2.0
     else:
         d = np.arctan(bird.w/bird.u)
     aoa_l = np.degrees(bird.alpha_l + d)
