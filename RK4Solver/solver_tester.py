@@ -1,10 +1,11 @@
 import numpy as np
-import solver_env as solver
+#import solver_env as solver
+import flocking_env as solver
 from bird import Bird
 import time
 
 
-t = 2.0
+t = 10.0
 h = 0.001
 n = (int)(t/h)
 N = 10
@@ -12,8 +13,8 @@ N = 10
 def run():
     tik = time.time()
     z = 0.01
-    #birds = [Bird(z=10.0, y=0.6, x=-1.0, u=5.0), Bird(z = 10.0, y = 1.2, u=5.0), Bird(z=10.0, y=0.0, u=5.0)]
-    env = solver.env(N = 10)
+    birds = [Bird(z=90.0, y=0.6, x=-1.0, u=0.5, p = 5.0)]
+    env = solver.env(N = 1, birds = birds)
     env.reset()
     done = False
     for i in range(n):

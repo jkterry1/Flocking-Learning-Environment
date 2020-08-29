@@ -211,7 +211,13 @@ class Bird():
 
             l_t_minus = np.linalg.norm(t_minus)
             l_t = np.linalg.norm(t)
-            theta = np.arccos(np.dot(t_minus, t)/(l_t_minus * l_t))
+            #print(np.dot(t_minus, t)/(l_t_minus * l_t))
+            if np.dot(t_minus, t)/(l_t_minus * l_t) <= -1.0:
+                theta = np.arccos(-1.0)
+            if np.dot(t_minus, t)/(l_t_minus * l_t) >= 1.0:
+                theta = np.arccos(1.0)
+            else:
+                theta = np.arccos(np.dot(t_minus, t)/(l_t_minus * l_t))
 
             #normal vector
             n = (np.cross(t, t_plus)/(1 * np.dot(t, t_plus))) - (np.cross(t_minus, t)/(1 + np.dot(t_minus, t)))
@@ -306,22 +312,3 @@ class Bird():
 
     def __lt__(self, other):
         return self.x < other.x
-
-    '''
-    def print_bird(self, bird, action = []):
-        file = open('A_errors.txt', 'w')
-        file = sys.stderr
-        print('-----------------------------------------------------------------------', file = file)
-        print("thrust, al, ar, bl, br \n", action, file = file)
-        print("x, y, z: \t\t", [bird.x, bird.y, bird.z], file = file)
-        print("u, v, w: \t\t", [bird.u, bird.v, bird.w], file = file)
-        print("phi, theta, psi: \t", [bird.phi, bird.theta, bird.psi], file = file)
-        print("p, q, r: \t\t", [bird.p, bird.q, bird.r], file = file)
-        print("alpha, beta (left): \t", [bird.alpha_l, bird.beta_l], file = file)
-        print("alpha, beta (right): \t", [bird.alpha_r, bird.beta_r], file = file)
-        print("Fu, Fv, Fw: \t\t", bird.F, file = file)
-        print("Tu, Tv, Tw: \t\t", bird.T, file = file)
-        print("VFu, VFv, VFw: \t\t", bird.vortex_force_u, bird.vortex_force_v, bird.vortex_force_w, file = file)
-        print("VTu, VTv, VTw: \t\t", bird.vortex_torque_u, bird.vortex_torque_v, bird.vortex_torque_w, file = file)
-        print(file = file)
-    '''
