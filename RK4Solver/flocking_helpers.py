@@ -56,7 +56,7 @@ def get_vortices(env, curr):
                     i = i+1
                 if i < len(vorts) and v.x >= curr.x:
                     r = np.sqrt((curr.y - v.y)**2 + (curr.z - v.z)**2)
-                    if r < self.max_r:
+                    if r < env.max_r:
                         vortices.append(v)
     return vortices
 
@@ -83,8 +83,10 @@ def update_vortices(env):
     for b in env.birds:
         bird = env.birds[b]
         bird.shed_vortices()
-        bird.update_vortex_positions(bird.VORTICES_RIGHT, env.h*10.0)
-        bird.update_vortex_positions(bird.VORTICES_LEFT, env.h*10.0)
+
+        if env.LIA:
+            bird.update_vortex_positions(bird.VORTICES_RIGHT, env.h*10.0)
+            bird.update_vortex_positions(bird.VORTICES_LEFT, env.h*10.0)
 
         #remove expired vortices
         if env.steps > 1.0/env.h:

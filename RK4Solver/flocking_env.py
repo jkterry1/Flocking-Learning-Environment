@@ -26,12 +26,14 @@ class raw_env(AECEnv):
                  h = 0.001,
                  t = 0.0,
                  birds = None,
+                 LIA = False,
                  filename = "episode_1.csv"
                  ):
         self.h = h
         self.t = t
         self.N = N
         self.num_agents = N
+        self.LIA = LIA
 
         self.total_vortices = 0.0
         self.total_dist = 0.0
@@ -45,7 +47,7 @@ class raw_env(AECEnv):
         self.forward_reward = 5.0
         self.crash_reward = -100.0
 
-        self.agents = ["bird_{}".format(i) for i in range(N)]
+        self.agents = range(self.N)
         if birds is None:
             birds = [Bird(z = 50.0, y = 3.0*i, u=5.0) for i in range(self.N)]
         self.starting_conditions = [copy.deepcopy(bird) for bird in birds]
@@ -96,8 +98,7 @@ class raw_env(AECEnv):
             return obs
 
     def observe(self, agent):
-        obs = helpers.get_observation(self, agent)
-        return obs
+        return helpers.get_observation(self, agent)
 
     def reset(self, observe = True):
         self.episodes +=1
@@ -116,8 +117,7 @@ class raw_env(AECEnv):
         self.steps = 0
 
         if observe:
-            obs = self.observe(self.agent_selection)
-            return obs
+            return self.observe(self.agent_selection)
 
     def render(self, mode='human', plot_vortices=False):
         plotting.plot_values(self.birds, show = True)
