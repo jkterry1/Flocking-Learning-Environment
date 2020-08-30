@@ -96,13 +96,6 @@ def update_vortices(env):
             env.total_dist += a.dist_travelled
             env.total_dist += b.dist_travelled
 
-def get_positions(env):
-    pos = []
-    for agent in env.agents:
-        bird = env.birds[agent]
-        pos.append([bird.x, bird.y, bird.z])
-    return pos
-
 def update_angles(env, action):
     bird = env.birds[env.agent_selection]
     limit_alpha = np.pi/6.0

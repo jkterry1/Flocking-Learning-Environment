@@ -87,7 +87,6 @@ class raw_env(AECEnv):
                 helpers.update_vortices(self)
 
             self.steps += 1
-            self.positions = helpers.get_positions(self)
             self.t = self.t + self.h
 
         self.agent_selection = self._agent_selector.next()
@@ -110,7 +109,6 @@ class raw_env(AECEnv):
         self.old_birds = {bird: copy.deepcopy(self.birds[bird]) for bird in self.birds}
         birds = [copy.deepcopy(bird) for bird in self.starting_conditions]
         self.birds = {agent: birds[i] for i, agent in enumerate(self.agents)}
-        self.positions = helpers.get_positions(self)
 
         self.rewards = {i: 0 for i in self.agents}
         self.dones = {i:False for i in self.agents}
