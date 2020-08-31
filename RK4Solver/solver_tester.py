@@ -14,9 +14,9 @@ LIA = True
 def run():
     tik = time.time()
     z = 0.01
-    #birds = [Bird(z=90.0, y=0.6, x=-1.0, u=0.5, p = 5.0)]
-    #env = solver.env(N = 1, birds = birds, LIA = LIA)
-    env = solver.env(N = 10, LIA = LIA)
+    birds = [Bird(z=90.0, y=0.6, x=-1.0, u=0.5, p = 5.0)]
+    env = solver.env(N = 1, birds = birds, LIA = LIA)
+    #env = solver.env(N = 10, LIA = LIA)
     env.reset()
     done = False
     for i in range(n):
@@ -42,10 +42,6 @@ def run():
     print("Steps: ", n)
     print("Time per step: ", (tok-tik)/n)
     print("Steps per second: ", n/(tok-tik))
-
-    if LIA:
-        avg = env.total_dist/env.total_vortices
-        print("average distance travelled of a vortex: ", avg)
 
     env.render(plot_vortices = False)
 

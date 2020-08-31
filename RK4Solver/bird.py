@@ -278,7 +278,7 @@ class Bird():
         output = []
 
         import sys
-        for b in birds:
+        for b in range(len(birds)):
             other = birds[b]
             if other is not self:
                 d = np.sqrt((self.x - other.x)**2 + (self.y - other.y)**2 + (self.z - other.z)**2)

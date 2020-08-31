@@ -10,7 +10,7 @@ def plot_values(birds, show = True):
     plt2 = fig.add_subplot(412)
     plt3 = fig.add_subplot(413)
     plt4 = fig.add_subplot(414)
-    for bird in birds:
+    for bird in range(len(birds)):
         bird = birds[bird]
         t = np.arange(len(bird.U))
 
@@ -70,7 +70,7 @@ def plot_birds(birds, plot_vortices = False, show = True):
     ax.set_xlabel('x')
     ax.set_ylabel('y')
     ax.set_zlabel('z')
-    for b in birds:
+    for b in range(len(birds)):
         bird = birds[b]
         ax.plot(xs = bird.X, ys = bird.Y, zs = bird.Z, zdir = 'z', color = 'orange')
         ax.scatter([v.pos[0] for v in bird.VORTICES_LEFT],
