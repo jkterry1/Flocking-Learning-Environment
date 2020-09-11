@@ -8,6 +8,7 @@ from bird import Bird
 from flock import Flock
 import plotting
 import csv
+import example
 
 def env(**kwargs):
     env = raw_env(**kwargs)
@@ -24,17 +25,16 @@ class raw_env(AECEnv):
                  N = 10,
                  h = 0.001,
                  t = 0.0,
-                 birds = None,
                  LIA = False,
                  filename = "episode_1.csv"
                  ):
 
-        self.flock = Flock(
-                     N = N,
-                     h = h,
-                     t = t,
-                     birds = birds,
-                     LIA = LIA)
+        self.flock = example.Flock(
+                     N,
+                     h,
+                     t,
+                     LIA)
+
         self.h = h
         self.t = t
         self.N = N
@@ -79,11 +79,13 @@ class raw_env(AECEnv):
         done, reward = self.flock.get_reward(action, self.agent_selection)
         self.rewards[self.agent_selection] = reward
         self.dones = {i:done for i in self.agents}
+        # print(done)
+        # print(reward)
 
         # if we have moved through one complete timestep
         if self.agent_selection == self.agents[-1]:
             if self.steps % 10 == 0:
-                self.flock.update_vortices(self.steps)
+                self.flock.update_vortices()
 
             self.steps += 1
             self.t = self.t + self.h

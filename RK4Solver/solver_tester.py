@@ -9,17 +9,19 @@ t = 10.0
 h = 0.001
 n = (int)(t/h)
 N = 10
-LIA = True
+LIA = False
 
 def run():
     tik = time.time()
     z = 0.01
-    birds = [Bird(z=90.0, y=0.6, x=-1.0, u=0.5, p = 5.0)]
-    env = solver.env(N = 1, birds = birds, LIA = LIA)
+    #birds = [Bird(z=90.0, y=0.6, x=-1.0, u=0.5, p = 5.0)]
+    env = solver.env(N = 10, LIA = LIA)
     #env = solver.env(N = 10, LIA = LIA)
     env.reset()
     done = False
     for i in range(n):
+        if i % 100 == 0:
+            print(i)
         if not done:
             for i in range(N):
                 if not done:
@@ -29,13 +31,18 @@ def run():
                     # if env.birds[agent].u < 7.1271:
                     #     a[0] = 2.0
                     obs = env.step(a)
-                    reward, done, info = env.last()
+                    done = env.dones[env.agent_selection]
+                    rew = env.rewards[env.agent_selection]
+                    #reward, done, info = env.last()
                     #print("bird ", i, " ", obs)
                 else:
                     break
 
         else:
             break
+            env.reset()
+            done = False
+            print("reset")
     print("timesteps ", i)
     tok = time.time()
     print("Time: ", tok - tik)
