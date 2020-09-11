@@ -211,6 +211,14 @@ class Bird():
 
             l_t_minus = np.linalg.norm(t_minus)
             l_t = np.linalg.norm(t)
+
+            # if np.linalg.norm(t_minus) > 0.0:
+            #     t_minus = t_minus/np.linalg.norm(t_minus)
+            # if np.linalg.norm(t) > 0.0:
+            #     t = t/np.linalg.norm(t)
+            # if np.linalg.norm(t_plus) > 0.0:
+            #     t_plus = t_plus/np.linalg.norm(t_plus)
+
             #print(np.dot(t_minus, t)/(l_t_minus * l_t))
             if np.dot(t_minus, t)/(l_t_minus * l_t) <= -1.0:
                 theta = np.arccos(-1.0)
@@ -221,8 +229,15 @@ class Bird():
 
             #normal vector
             n = (np.cross(t, t_plus)/(1 * np.dot(t, t_plus))) - (np.cross(t_minus, t)/(1 + np.dot(t_minus, t)))
+
+            if np.linalg.norm(n) > 0.0:
+                n = n/np.linalg.norm(n)
+
             #binormal vector
             b = np.cross(t, n)
+
+            if np.linalg.norm(b) > 0.0:
+                b = b/np.linalg.norm(b)
 
             #strength
             gamma = vortices[i].gamma
@@ -232,7 +247,7 @@ class Bird():
             pos = self.take_vortex_time_step(vortices[i].pos, gamma, epsilon, b, theta, h)
 
             #print(abs(vortices[i].pos - pos))
-            vortices[i].dist_travelled += abs(vortices[i].pos - pos)
+            vortices[i].dist_travelled += np.abs(vortices[i].pos - pos)
             vortices[i].pos = pos
             vortices[i].x, vortices[i].y, vortices[i].z = vortices[i].pos
 
