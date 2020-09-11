@@ -8,6 +8,7 @@ from bird import Bird
 from flock import Flock
 import plotting
 import csv
+import time
 import example
 
 def env(**kwargs):
@@ -39,6 +40,8 @@ class raw_env(AECEnv):
         self.t = t
         self.N = N
         self.num_agents = N
+        self.tot_time = 0
+        self.start_time = time.time()
 
         self.total_vortices = 0.0
         self.total_dist = 0.0
@@ -73,7 +76,9 @@ class raw_env(AECEnv):
     def step(self, action, observe = True):
         noise = 0.01 * np.random.random_sample((5,))
         #action = noise + action
+        start = time.time()
         self.flock.update_bird(action, self.agent_selection)
+        self.tot_time += time.time() - start
 
         # reward calculation
         done, reward = self.flock.get_reward(action, self.agent_selection)
@@ -89,7 +94,11 @@ class raw_env(AECEnv):
 
             self.steps += 1
             self.t = self.t + self.h
-
+            if self.steps % 25 == 0:
+                cur_time = time.time()
+                #print("pytime:",self.tot_time / (cur_time - self.start_time))
+                self.start_time = cur_time
+                self.tot_time = 0
         self.agent_selection = self._agent_selector.next()
 
         #self.print_bird(bird, action)

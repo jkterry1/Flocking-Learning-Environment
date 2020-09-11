@@ -1,6 +1,7 @@
 #pragma once
 #include "Eigen/Dense"
 #include <cmath>
+#include <ctime>
 
 using namespace Eigen;
 
@@ -38,7 +39,7 @@ inline RangeIncr<size_t> range(size_t end){
     return RangeIncr<size_t>(0,end);
 }
 template<class collection_ty>
-size_t len(collection_ty data){
+size_t len(const collection_ty & data){
     return data.size();
 }
 class unwrap3d{
@@ -112,6 +113,9 @@ T sqr(T x){
 template <typename T>
 void pop0(T vec){
     vec.erase(vec.begin());
+}
+double time(){
+    return clock()/double(CLOCKS_PER_SEC);
 }
 
 
