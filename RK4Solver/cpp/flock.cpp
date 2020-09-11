@@ -165,7 +165,7 @@ struct Flock{
         extend(obs, {bird.alpha_l, bird.beta_l, bird.alpha_r, bird.beta_r});
         std::vector<Bird *> nearest = bird.seven_nearest(self.birds);
         for (Bird * otherp : nearest){
-	    Bird & other = *otherp;
+	        Bird & other = *otherp;
             extend(obs, {other.x - bird.x, other.y - bird.y, other.z - bird.z});
             extend(obs, {other.u - bird.u, other.v - bird.v, other.w - bird.w});
         }

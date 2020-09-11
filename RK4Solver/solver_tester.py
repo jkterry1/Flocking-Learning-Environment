@@ -31,6 +31,7 @@ def run():
                     # if env.birds[agent].u < 7.1271:
                     #     a[0] = 2.0
                     obs = env.step(a)
+                    #print(np.array(obs,dtype=np.float32))
                     done = env.dones[env.agent_selection]
                     rew = env.rewards[env.agent_selection]
                     #reward, done, info = env.last()
