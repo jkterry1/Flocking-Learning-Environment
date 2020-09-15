@@ -17,6 +17,7 @@ def run():
     #birds = [Bird(z=90.0, y=0.6, x=-1.0, u=0.5, p = 5.0)]
     env = solver.env(N = 10, LIA = LIA)
     #env = solver.env(N = 10, LIA = LIA)
+    print(env.flock.get_bird(1).F)
     env.reset()
     done = False
     for i in range(n):
@@ -25,6 +26,7 @@ def run():
         if not done:
             for i in range(N):
                 if not done:
+                    #print(env.flock.get_bird(1).U)
                     #env.birds[agent].u = 7.1271
                     #env.birds[agent].print_bird(env.birds[agent])
                     a = np.zeros(5)
