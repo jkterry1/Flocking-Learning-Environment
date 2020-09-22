@@ -11,6 +11,31 @@ using VortexForces = std::array<double,6>;
 using Vorticies = std::vector<Vortex>;
 typedef Vector3d (DiffEqType)(Vector3d uvw, Bird & bird);
 
+struct BirdInit{
+    double u,v,w;
+    double p,q,r;
+    double x,y,z;
+    double theta;
+    double phi;
+    double psi;
+    using dbl = double;
+    BirdInit(dbl x, dbl y,dbl z,dbl u,dbl v,dbl w,dbl p,dbl q,dbl r,dbl theta,dbl phi,dbl psi){
+        BirdInit & self = *this;
+        self.x = x;
+        self.y = y;
+        self.z = z;
+        self.u = u;
+        self.v = v;
+        self.w = w;
+        self.p = p;
+        self.q = q;
+        self.r = r;
+        self.theta = theta;
+        self.phi = phi;
+        self.psi = psi;
+    }
+};
+using BirdInits = std::vector<BirdInit>;
 struct Bird{
     using Birds = std::vector<Bird>;
     /*
@@ -54,7 +79,7 @@ struct Bird{
         v points out of the right wing
         w points up through the center of the bird
     */
-    double u=0,v=0,w=0;
+    double u,v,w;
     Vector3d uvw()const{return Vector3d(u,v,w);}
 
     /*
@@ -63,7 +88,7 @@ struct Bird{
         q is the rotation about teh axis coming out the right wing of the bird
         r is the rotation about the axis coming out the top of the bird
     */
-    double p=0,q=0,r=0;
+    double p,q,r;
     Vector3d pqr()const{return Vector3d(p,q,r);}
 
     // intertial frame variables
@@ -73,16 +98,16 @@ struct Bird{
         phi is the rotated angle about the intertial y axis
         psi is the rotated angle about the intertial z axis
     */
-    double theta=0;
-    double phi=0;
-    double psi=0;
+    double theta;
+    double phi;
+    double psi;
     Vector3d angles()const{return Vector3d(theta,phi,psi);}
 
     /*
     position
         x, y, z
     */
-    double x=0,y=0,z=0;
+    double x,y,z;
     Vector3d xyz()const{return Vector3d(x,y,z);}
 
     /*
@@ -131,17 +156,26 @@ struct Bird{
     PrevValues PSI;// = [psi]
 
     Bird() = default;
-    Bird(double z, double y, double u){
+    Bird(const BirdInit & init){
         Bird & self = *this;
+        self.x = init.x;
+        self.y = init.y;
+        self.z = init.z;
+        self.u = init.u;
+        self.v = init.v;
+        self.w = init.w;
+        self.p = init.p;
+        self.q = init.q;
+        self.r = init.r;
+        self.theta = init.theta;
+        self.phi = init.phi;
+        self.psi = init.psi;
         // double v = 0.0, w = 0.0,
         // p = 0.0, q = 0.0, r = 0.0,
         // theta = 0.0, phi = 0.0, psi = 0.0,
-        // alpha_l = 0.0, beta_l = 0.0, alpha_r = 0.0, beta_r = 0.0,
+        double alpha_l = 0.0, beta_l = 0.0, alpha_r = 0.0, beta_r = 0.0;
         // x = 0.0;//, y = 0.0, z = 0.0;
 
-        self.z = z;
-        self.y = y;
-        self.u = u;
 
         // self.g = -9.8
         // self.rho = 1.225
@@ -165,8 +199,8 @@ struct Bird{
                                     0.0, self.Iyy, 0.0,
                                     self.Ixz, 0.0, self.Izz);
 
-	self.F = Vector3d(0.0, 0.0, 0.0);
-	self.T = Vector3d(0.0, 0.0, 0.0);
+    	self.F = Vector3d(0.0, 0.0, 0.0);
+    	self.T = Vector3d(0.0, 0.0, 0.0);
         /*
         wing orientation
         */

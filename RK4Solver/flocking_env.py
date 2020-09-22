@@ -19,6 +19,8 @@ def env(**kwargs):
     #env = wrappers.NanNoOpWrapper(env, np.zeros(5), "executing the 'do nothing' action.")
     return env
 
+def make_bird(x=0.,y=0.,z=0.,u=0.,v=0.,w=0.,p=0.,q=0.,r=0.,theta=0.,phi=0.,psi=0.):
+    return example.BirdInit(x,y,z,u,v,w,p,q,r,theta,phi,psi)
 
 class raw_env(AECEnv):
 
@@ -26,14 +28,18 @@ class raw_env(AECEnv):
                  N = 10,
                  h = 0.001,
                  t = 0.0,
+                 bird_inits=None,
                  LIA = False,
                  filename = "episode_1.csv"
                  ):
 
+        if bird_inits is None:
+            bird_inits = [make_bird(z = 50.0, y = 3.0*i, u=5.0) for i in range(N)]
         self.flock = example.Flock(
                      N,
                      h,
                      t,
+                     bird_inits,
                      LIA)
 
         self.h = h
@@ -86,6 +92,8 @@ class raw_env(AECEnv):
         self.dones = {i:done for i in self.agents}
         # print(done)
         # print(reward)
+        # for bird in self.flock.get_birds():
+        #     print(bird.z)
 
         # if we have moved through one complete timestep
         if self.agent_selection == self.agents[-1]:

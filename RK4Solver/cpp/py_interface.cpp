@@ -25,7 +25,7 @@ PYBIND11_MODULE(example, m) {
         // .def(.def(py::init([](std::string arg) {
         //     return std::unique_ptr<Example>(new Example(arg));
         // })))
-        .def(py::init<int,double,double,bool>())
+        .def(py::init<int,double,double,BirdInits,bool>())
         .def("reset",&Flock::reset)
         .def("update_bird",&Flock::update_bird)
         .def("get_reward",&Flock::get_reward)
@@ -55,9 +55,11 @@ PYBIND11_MODULE(example, m) {
         .def("get_birds",[](Flock & flock){return flock.birds;})
         ;
 
+    py::class_<BirdInit>(m, "BirdInit")
+        .def(py::init<double,double,double,double,double,double,double,double,double,double,double,double>())
+        ;
     #define expose_bird_var(var) def_readonly(#var, &Bird::var)
     py::class_<Bird>(m, "Bird")
-        .def(py::init())
         .expose_bird_var(x)
         .expose_bird_var(y)
         .expose_bird_var(z)
@@ -94,6 +96,8 @@ PYBIND11_MODULE(example, m) {
         .expose_bird_var(THETA)
         .expose_bird_var(PHI)
         .expose_bird_var(PSI)
+        .expose_bird_var(VORTICES_LEFT)
+        .expose_bird_var(VORTICES_RIGHT)
         ;
 
     #define expose_vortex_var(var) def_readonly(#var, &Vortex::var)

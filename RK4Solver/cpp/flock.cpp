@@ -25,11 +25,12 @@ struct Flock{
     double forward_reward;
     double crash_reward;
     Birds birds;
-    Birds starting_conditions;
-    Flock(  int N = 10,
-            double h = 0.001,
-            double t = 0.0,
-            bool LIA = false
+    BirdInits starting_conditions;
+    Flock(  int N,
+            double h,
+            double t,
+            BirdInits init_vals,
+            bool LIA
          ){
         Flock & self = *this;
         self.h = h;
@@ -48,16 +49,17 @@ struct Flock{
         self.forward_reward = 5.0;
         self.crash_reward = -100.0;
 
-        self.birds.resize(N);
         for (size_t i : range(N)){
-            self.birds[i] = Bird(50.0, 3.0*i, 5.0);
+            self.birds.emplace_back(init_vals[i]);
         }
-        self.starting_conditions = self.birds;
+        self.starting_conditions = init_vals;
     }
 
     void reset(){
         Flock & self = *this;
-        self.birds = self.starting_conditions;
+        for (size_t i : range(self.N)){
+            self.birds[i] = Bird(self.starting_conditions[i]);
+        }
     }
 
     void update_bird(EnvAction action, int agent){

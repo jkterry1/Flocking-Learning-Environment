@@ -17,7 +17,10 @@ def run():
     #birds = [Bird(z=90.0, y=0.6, x=-1.0, u=0.5, p = 5.0)]
     env = solver.env(N = 10, LIA = LIA)
     #env = solver.env(N = 10, LIA = LIA)
-    print(env.flock.get_bird(1).F)
+    # env.flock.get_bird(1).x=1.
+    # print(env.flock.get_bird(1).x)
+    # print(setattr(env.flock.get_bird(1),"x",1.))
+    # print(getattr(env.flock.get_bird(1),"x"))
     env.reset()
     done = False
     for i in range(n):

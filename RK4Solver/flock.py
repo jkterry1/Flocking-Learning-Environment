@@ -8,6 +8,7 @@ class Flock():
                  N = 10,
                  h = 0.001,
                  t = 0.0,
+                 bird_starts=None,
                  LIA = False
                  ):
         self.h = h
@@ -28,8 +29,10 @@ class Flock():
 
         self.agents = range(self.N)
         birds = None
-        if birds is None:
-            birds = [Bird(z = 50.0, y = 3.0*i, u=5.0) for i in range(self.N)]
+        if bird_starts is None:
+            bird_starts = [dict(z = 50.0, y = 3.0*i, u=5.0) for i in range(self.N)]
+
+        birds = [Bird(**start_val) for start_val in bird_starts]
         self.starting_conditions = [copy.deepcopy(bird) for bird in birds]
         self.birds = birds
 
