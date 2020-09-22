@@ -1,1 +1,0 @@
-compile `bash build.sh`
