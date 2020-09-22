@@ -3,7 +3,7 @@
 Vortex::Vortex(Bird & bird, double sign){
     Vortex & self = *this;
     self.sign = sign;
-    self.C = 25.0;
+    self.C = 15.0;
     self.min_vel = 1.0;
     self.max_r = 1.0;
     self.dist_travelled = 0.0;

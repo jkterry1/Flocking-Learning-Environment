@@ -297,6 +297,14 @@ struct Bird{
             double l_t = t.norm();
             double theta;
             //print(dot(t_minus, t)/(l_t_minus * l_t))
+
+            // if np.linalg.norm(t_minus) > 0.0:
+            //     t_minus = t_minus/np.linalg.norm(t_minus)
+            // if np.linalg.norm(t) > 0.0:
+            //     t = t/np.linalg.norm(t)
+            // if np.linalg.norm(t_plus) > 0.0:
+            //     t_plus = t_plus/np.linalg.norm(t_plus)
+
             if (dot(t_minus, t)/(l_t_minus * l_t) <= -1.0){
                 theta = arccos(-1.0);
             }
@@ -312,6 +320,11 @@ struct Bird{
             //binormal vector
             Vector3d b = cross(t, n);
 
+            if n.norm() > 0.0:
+                n = n/n.norm()
+
+            if b.norm() > 0.0:
+                b = b/b.norm()
             //strength
             double gamma = vortices[i].gamma;
             //distance from last point
