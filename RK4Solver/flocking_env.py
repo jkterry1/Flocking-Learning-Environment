@@ -9,7 +9,7 @@ from flock import Flock
 import plotting
 import csv
 import time
-import example
+import flocking_cpp
 
 def env(**kwargs):
     env = raw_env(**kwargs)
@@ -20,8 +20,8 @@ def env(**kwargs):
     return env
 
 def make_bird(x=0.,y=0.,z=0.,u=0.,v=0.,w=0.,p=0.,q=0.,r=0.,theta=0.,phi=0.,psi=0.):
-    return example.BirdInit(x,y,z,u,v,w,p,q,r,theta,phi,psi)
-
+    return flocking_cpp.BirdInit(x,y,z,u,v,w,p,q,r,theta,phi,psi)
+flocking_cpp
 class raw_env(AECEnv):
 
     def __init__(self,
@@ -35,7 +35,7 @@ class raw_env(AECEnv):
 
         if bird_inits is None:
             bird_inits = [make_bird(z = 50.0, y = 3.0*i, u=5.0) for i in range(N)]
-        self.flock = example.Flock(
+        self.flock = flocking_cpp.Flock(
                      N,
                      h,
                      t,
@@ -97,8 +97,9 @@ class raw_env(AECEnv):
 
         # if we have moved through one complete timestep
         if self.agent_selection == self.agents[-1]:
-            if self.steps % 10 == 0:
-                self.flock.update_vortices()
+            vortex_update_frequency = 10
+            if self.steps % vortex_update_frequency == 0:
+                self.flock.update_vortices(vortex_update_frequency)
 
             self.steps += 1
             self.t = self.t + self.h

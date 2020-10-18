@@ -17,7 +17,7 @@ py::array_t<double> return_vec(Vector3d & vec){
         &vec[0]); // numpy array references this parent
 }
 
-PYBIND11_MODULE(example, m) {
+PYBIND11_MODULE(flocking_cpp, m) {
     m.doc() = "pybind11 example plugin"; // optional module docstring
 
     m.def("add", &add, "A function which adds two numbers");

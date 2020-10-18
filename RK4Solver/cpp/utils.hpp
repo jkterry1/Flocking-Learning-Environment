@@ -111,7 +111,7 @@ T sqr(T x){
     return x * x;
 }
 template <typename T>
-void pop0(T vec){
+void pop0(T & vec){
     vec.erase(vec.begin());
 }
 double time(){

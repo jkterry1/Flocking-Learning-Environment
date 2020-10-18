@@ -76,6 +76,7 @@ struct Flock{
             //std::cout << tot_time/(time() - start_time) << std::endl;
             tot_time = 0;
             start_time = time();
+            // std::cout << bird.VORTICES_LEFT.size() << std::endl;
         }
     }
 
@@ -174,19 +175,19 @@ struct Flock{
         return obs;
     }
 
-    void update_vortices(){
+    void update_vortices(double vortex_update_frequency){
         Flock & self = *this;
         for (size_t b : range(len(self.birds))){
             Bird & bird = self.birds[b];
             bird.shed_vortices();
 
             if (self.LIA){
-                bird.update_vortex_positions(bird.VORTICES_RIGHT, self.h*10.0);
-                bird.update_vortex_positions(bird.VORTICES_LEFT, self.h*10.0);
+                bird.update_vortex_positions(bird.VORTICES_RIGHT, self.h*vortex_update_frequency);
+                bird.update_vortex_positions(bird.VORTICES_LEFT, self.h*vortex_update_frequency);
             }
 
             //remove expired vortices
-            if (len(bird.VORTICES_RIGHT) > 1.0/self.h){
+            if (len(bird.VORTICES_RIGHT) > 1.0/(self.h*vortex_update_frequency)){
                 pop0(bird.VORTICES_LEFT);
                 pop0(bird.VORTICES_RIGHT);
             }

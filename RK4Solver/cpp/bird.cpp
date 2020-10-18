@@ -320,11 +320,13 @@ struct Bird{
             //binormal vector
             Vector3d b = cross(t, n);
 
-            if n.norm() > 0.0:
-                n = n/n.norm()
+            if (n.norm() > 0.0){
+                n = n/n.norm();
+            }
 
-            if b.norm() > 0.0:
-                b = b/b.norm()
+            if (b.norm() > 0.0){
+                b = b/b.norm();
+            }
             //strength
             double gamma = vortices[i].gamma;
             //distance from last point
@@ -390,18 +392,19 @@ struct Bird{
         for(size_t i = 0; i < birds.size(); i++){
             arange[i] = i;
         }
-        std::vector<double> dists(birds.size());
-        for(size_t i = 0; i < birds.size(); i++){
-            Bird & other = birds[i];
-            dists[i] = sqrt(sqr(self.x - other.x) + sqr(self.y - other.y) + sqr(self.z - other.z));
+        if(len(birds) > 7){
+            std::vector<double> dists(birds.size());
+            for(size_t i = 0; i < birds.size(); i++){
+                Bird & other = birds[i];
+                dists[i] = sqrt(sqr(self.x - other.x) + sqr(self.y - other.y) + sqr(self.z - other.z));
+            }
+            std::sort(arange.begin(),arange.end(), [&](int b1, int b2){
+                return dists[b1] < dists[b2];
+            });
         }
-        std::sort(arange.begin(),arange.end(), [&](int b1, int b2){
-            return dists[b1] < dists[b2];
-        });
         std::vector<Bird *> result;
-        const int SEVEN = 7;
-        assert(birds.size() >= SEVEN);
-        for(int i = 0; i < SEVEN; i++){
+        const size_t SEVEN = 7;
+        for(size_t i = 0; i < std::min(SEVEN, birds.size()); i++){
             result.push_back(&birds[arange[i]]);
         }
         return result;
@@ -417,7 +420,7 @@ struct Bird{
         return y + (1.0 / 6.0)*(k1 + (2.0 * k2) + (2.0 * k3) + k4);
     }
     Vector3d take_vortex_time_step(Vector3d pos,double gamma, double epsilon, Vector3d b,double theta,double h){
-        Bird & self = *this;
+        // Bird & self = *this;
         // TODO: this formula is weird. You calculate the same value 4 times, it never changes. This is almost certainly wrong
         Vector3d k1 = h * drdt(gamma, epsilon, b, theta);
         Vector3d k2 = h * drdt(gamma, epsilon, b, theta);

@@ -8,14 +8,14 @@ import time
 t = 10.0
 h = 0.001
 n = (int)(t/h)
-N = 10
+N = 50
 LIA = False
 
 def run():
     tik = time.time()
     z = 0.01
-    #birds = [Bird(z=90.0, y=0.6, x=-1.0, u=0.5, p = 5.0)]
-    env = solver.env(N = 10, LIA = LIA)
+    birds = [solver.make_bird(z=90.0, y=0.6, x=-1.0, u=0, p = 0)]
+    env = solver.env(N = N, LIA = LIA)
     #env = solver.env(N = 10, LIA = LIA)
     # env.flock.get_bird(1).x=1.
     # print(env.flock.get_bird(1).x)
@@ -23,9 +23,12 @@ def run():
     # print(getattr(env.flock.get_bird(1),"x"))
     env.reset()
     done = False
+    start = time.time()
     for i in range(n):
         if i % 100 == 0:
-            print(i)
+            end = time.time()
+            print(i, end-start)
+            start = end
         if not done:
             for i in range(N):
                 if not done:
@@ -33,6 +36,7 @@ def run():
                     #env.birds[agent].u = 7.1271
                     #env.birds[agent].print_bird(env.birds[agent])
                     a = np.zeros(5)
+                    a[0] = 1
                     # if env.birds[agent].u < 7.1271:
                     #     a[0] = 2.0
                     obs = env.step(a)
