@@ -8,6 +8,8 @@ from bird import Bird
 from flock import Flock
 import plotting
 import csv
+import time
+import flocking_cpp
 
 def env(**kwargs):
     env = raw_env(**kwargs)
@@ -17,28 +19,35 @@ def env(**kwargs):
     #env = wrappers.NanNoOpWrapper(env, np.zeros(5), "executing the 'do nothing' action.")
     return env
 
-
+def make_bird(x=0.,y=0.,z=0.,u=0.,v=0.,w=0.,p=0.,q=0.,r=0.,theta=0.,phi=0.,psi=0.):
+    return flocking_cpp.BirdInit(x,y,z,u,v,w,p,q,r,theta,phi,psi)
+flocking_cpp
 class raw_env(AECEnv):
 
     def __init__(self,
                  N = 10,
                  h = 0.001,
                  t = 0.0,
-                 birds = None,
+                 bird_inits=None,
                  LIA = False,
                  filename = "episode_1.csv"
                  ):
 
-        self.flock = Flock(
-                     N = N,
-                     h = h,
-                     t = t,
-                     birds = birds,
-                     LIA = LIA)
+        if bird_inits is None:
+            bird_inits = [make_bird(z = 50.0, y = 3.0*i, u=5.0) for i in range(N)]
+        self.flock = flocking_cpp.Flock(
+                     N,
+                     h,
+                     t,
+                     bird_inits,
+                     LIA)
+
         self.h = h
         self.t = t
         self.N = N
         self.num_agents = N
+        self.tot_time = 0
+        self.start_time = time.time()
 
         self.total_vortices = 0.0
         self.total_dist = 0.0
@@ -73,21 +82,32 @@ class raw_env(AECEnv):
     def step(self, action, observe = True):
         noise = 0.01 * np.random.random_sample((5,))
         #action = noise + action
+        start = time.time()
         self.flock.update_bird(action, self.agent_selection)
+        self.tot_time += time.time() - start
 
         # reward calculation
         done, reward = self.flock.get_reward(action, self.agent_selection)
         self.rewards[self.agent_selection] = reward
         self.dones = {i:done for i in self.agents}
+        # print(done)
+        # print(reward)
+        # for bird in self.flock.get_birds():
+        #     print(bird.z)
 
         # if we have moved through one complete timestep
         if self.agent_selection == self.agents[-1]:
-            if self.steps % 10 == 0:
-                self.flock.update_vortices(self.steps)
+            vortex_update_frequency = 10
+            if self.steps % vortex_update_frequency == 0:
+                self.flock.update_vortices(vortex_update_frequency)
 
             self.steps += 1
             self.t = self.t + self.h
-
+            if self.steps % 25 == 0:
+                cur_time = time.time()
+                #print("pytime:",self.tot_time / (cur_time - self.start_time))
+                self.start_time = cur_time
+                self.tot_time = 0
         self.agent_selection = self._agent_selector.next()
 
         #self.print_bird(bird, action)

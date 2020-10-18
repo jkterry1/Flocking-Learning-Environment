@@ -8,7 +8,7 @@ class Flock():
                  N = 10,
                  h = 0.001,
                  t = 0.0,
-                 birds = None,
+                 bird_starts=None,
                  LIA = False
                  ):
         self.h = h
@@ -28,8 +28,11 @@ class Flock():
         self.crash_reward = -100.0
 
         self.agents = range(self.N)
-        if birds is None:
-            birds = [Bird(z = 50.0, y = 3.0*i, u=5.0) for i in range(self.N)]
+        birds = None
+        if bird_starts is None:
+            bird_starts = [dict(z = 50.0, y = 3.0*i, u=5.0) for i in range(self.N)]
+
+        birds = [Bird(**start_val) for start_val in bird_starts]
         self.starting_conditions = [copy.deepcopy(bird) for bird in birds]
         self.birds = birds
 
@@ -117,7 +120,7 @@ class Flock():
         obs = np.array(force + torque + pos)
         return obs
 
-    def update_vortices(self, steps):
+    def update_vortices(self):
         for b in range(len(self.birds)):
             bird = self.birds[b]
             bird.shed_vortices()
@@ -127,7 +130,7 @@ class Flock():
                 bird.update_vortex_positions(bird.VORTICES_LEFT, self.h*10.0)
 
             #remove expired vortices
-            if steps > 1.0/self.h:
+            if len(bird.VORTICES_LEFT) > 1.0/self.h:
                 a = bird.VORTICES_LEFT.pop(0)
                 b = bird.VORTICES_RIGHT.pop(0)
 
