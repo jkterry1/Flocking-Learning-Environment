@@ -3,9 +3,6 @@ from pettingzoo.utils import agent_selector
 from pettingzoo.utils import wrappers
 from gym import spaces
 import numpy as np
-import DiffEqs as de
-from bird import Bird
-from flock import Flock
 import plotting
 import csv
 import time
@@ -21,7 +18,7 @@ def env(**kwargs):
 
 def make_bird(x=0.,y=0.,z=0.,u=0.,v=0.,w=0.,p=0.,q=0.,r=0.,theta=0.,phi=0.,psi=0.):
     return flocking_cpp.BirdInit(x,y,z,u,v,w,p,q,r,theta,phi,psi)
-flocking_cpp
+
 class raw_env(AECEnv):
 
     def __init__(self,
@@ -45,7 +42,7 @@ class raw_env(AECEnv):
         self.h = h
         self.t = t
         self.N = N
-        self.num_agents = N
+        # self.num_agents = N
         self.tot_time = 0
         self.start_time = time.time()
 

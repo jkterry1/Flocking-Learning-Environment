@@ -1,14 +1,13 @@
 import numpy as np
 #import solver_env as solver
 import flocking_env as solver
-from bird import Bird
 import time
 
 
 t = 10.0
 h = 0.001
 n = (int)(t/h)
-N = 50
+N = 10
 LIA = False
 
 def run():
