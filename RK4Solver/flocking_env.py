@@ -10,16 +10,16 @@ import flocking_cpp
 
 def env(**kwargs):
     env = raw_env(**kwargs)
-    #env = wrappers.TerminateIllegalWrapper(env, illegal_reward=-100)
-    #env = wrappers.AssertOutOfBoundsWrapper(env)
-    #env = wrappers.OrderEnforcingWrapper(env)
-    #env = wrappers.NanNoOpWrapper(env, np.zeros(5), "executing the 'do nothing' action.")
+    env = wrappers.ClipOutOfBoundsWrapper(env)
+    env = wrappers.NanNoOpWrapper(env, np.zeros(5), "executing the 'do nothing' action.")
+    env = wrappers.OrderEnforcingWrapper(env)
     return env
 
 def make_bird(x=0.,y=0.,z=0.,u=0.,v=0.,w=0.,p=0.,q=0.,r=0.,theta=0.,phi=0.,psi=0.):
     return flocking_cpp.BirdInit(x,y,z,u,v,w,p,q,r,theta,phi,psi)
 
 class raw_env(AECEnv):
+    metadata = {'render.modes': ['human']}
 
     def __init__(self,
                  N = 10,
@@ -55,7 +55,9 @@ class raw_env(AECEnv):
         self.forward_reward = 5.0
         self.crash_reward = -100.0
 
-        self.agents = range(self.N)
+        self.agents = [f"b_{i}" for i in range(self.N)]
+        self._agent_idxs = {b:i for i, b in enumerate(self.agents)}
+        self.possible_agents = self.agents[:]
 
         self.agent_order = list(self.agents)
         self._agent_selector = agent_selector(self.agent_order)
@@ -68,7 +70,7 @@ class raw_env(AECEnv):
 
         low = -10000.0 * np.ones(22 + 6*min(self.N-1, 7),)
         high = 10000.0 * np.ones(22 + 6*min(self.N-1, 7),)
-        observation_space = spaces.Box(low = low, high = high, dtype = np.float64)
+        observation_space = spaces.Box(low = low, high = high, dtype = np.float32)
         self.observation_spaces = {i: observation_space for i in self.agents}
         self.observation_space = observation_space
 
@@ -76,15 +78,19 @@ class raw_env(AECEnv):
         self.infos = {i:{} for i in self.agents}
 
 
-    def step(self, action, observe = True):
+    def step(self, action):
+        if self.dones[self.agent_selection]:
+            return self._was_done_step(action)
+        cur_agent = self.agent_selection
         noise = 0.01 * np.random.random_sample((5,))
         #action = noise + action
         start = time.time()
-        self.flock.update_bird(action, self.agent_selection)
+        self.flock.update_bird(action, self._agent_idxs[self.agent_selection])
         self.tot_time += time.time() - start
 
         # reward calculation
-        done, reward = self.flock.get_reward(action, self.agent_selection)
+        done, reward = self.flock.get_reward(action, self._agent_idxs[self.agent_selection])
+        self._clear_rewards()
         self.rewards[self.agent_selection] = reward
         self.dones = {i:done for i in self.agents}
         # print(done)
@@ -107,17 +113,20 @@ class raw_env(AECEnv):
                 self.tot_time = 0
         self.agent_selection = self._agent_selector.next()
 
-        #self.print_bird(bird, action)
-        if observe:
-            obs = self.observe(self.agent_selection)
-            return obs
+        self._cumulative_rewards[cur_agent] = 0
+        self._accumulate_rewards()
+        self._dones_step_first()
 
 
     def observe(self, agent):
-        return self.flock.get_observation(agent)
+        return self.flock.get_observation(self._agent_idxs[agent])
 
 
-    def reset(self, observe = True):
+    def seed(self, seed=None):
+        pass
+
+
+    def reset(self):
         self.episodes +=1
 
         self.agent_order = list(self.agents)
@@ -126,12 +135,10 @@ class raw_env(AECEnv):
 
         self.flock.reset()
 
+        self._cumulative_rewards = {name: 0. for name in self.agents}
         self.rewards = {i: 0 for i in self.agents}
         self.dones = {i:False for i in self.agents}
         self.steps = 0
-
-        if observe:
-            return self.observe(self.agent_selection)
 
 
     def render(self, mode='human', plot_vortices=False):

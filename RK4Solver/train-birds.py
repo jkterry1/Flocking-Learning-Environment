@@ -8,14 +8,14 @@ import numpy as np
 
 import ray
 from ray import tune
-from ray.rllib.models import Model, ModelCatalog
+from ray.rllib.models import ModelCatalog
 from ray.tune.registry import register_env
 from ray.rllib.utils import try_import_tf
 from ray.rllib.env import PettingZooEnv
 # from sisl_games.pursuit import pursuit
 #from pettingzoo.sisl import pursuit_v0 as game_env
-import solver_env as game_env
-from supersuit import normalize_obs, agent_indicator, flatten, frame_skip, delay_observations
+import flocking_env as game_env
+from supersuit import normalize_obs_v0, agent_indicator_v0, flatten_v0, frame_skip_v0, delay_observations_v0
 #from supersuit import frame_skip
 
 # for APEX-DQN
@@ -23,15 +23,6 @@ from ray.rllib.models.tf.tf_modelv2 import TFModelV2
 
 tf1, tf, tfv = try_import_tf()
 
-class MLPModel(Model):
-    def _build_layers_v2(self, input_dict, num_outputs, options):
-        last_layer = tf.layers.dense(
-                input_dict["obs"], 400, activation=tf.nn.relu, name="fc1")
-        last_layer = tf.layers.dense(
-            last_layer, 300, activation=tf.nn.relu, name="fc2")
-        output = tf.layers.dense(
-            last_layer, num_outputs, activation=None, name="fc_out")
-        return output, last_layer
 
 class MLPModelV2(TFModelV2):
     def __init__(self, obs_space, action_space, num_outputs, model_config,
@@ -61,11 +52,11 @@ if __name__ == "__main__":
 
     def env_creator(args):
         env = game_env.env(N=10)
-        #env = normalize_obs(env, -1000, 1000)
-        #env = delay_observations(env, 100)
-        env = frame_skip(env, 500)
-        env = agent_indicator(env)
-        env = flatten(env)
+        #env = normalize_obs_v0(env, -1000, 1000)
+        #env = delay_observations_v0(env, 100)
+        env = frame_skip_v0(env, 500)
+        env = agent_indicator_v0(env)
+        env = flatten_v0(env)
         return env
 
     register_env(env_name, lambda config: PettingZooEnv(env_creator(config)))
@@ -74,30 +65,16 @@ if __name__ == "__main__":
     obs_space = test_env.observation_space
     act_space = test_env.action_space
 
-    if method in ["ADQN", "RDQN"]:
-        ModelCatalog.register_custom_model("MLPModelV2", MLPModelV2)
-        def gen_policyV2(i):
-            config = {
-                "model": {
-                    "custom_model": "MLPModelV2",
-                },
-                "gamma": 0.99,
-            }
-            return (None, obs_space, act_space, config)
-        policies = {"policy_0": gen_policyV2(0)}
-
-    else:
-        ModelCatalog.register_custom_model("MLPModel", MLPModel)
-        def gen_policy(i):
-            config = {
-                "model": {
-                    "custom_model": "MLPModel",
-                },
-                "gamma": 0.99,
-            }
-            return (None, obs_space, act_space, config)
-        policies = {"policy_0": gen_policy(0)}
-
+    ModelCatalog.register_custom_model("MLPModelV2", MLPModelV2)
+    def gen_policyV2(i):
+        config = {
+            "model": {
+                "custom_model": "MLPModelV2",
+            },
+            "gamma": 0.99,
+        }
+        return (None, obs_space, act_space, config)
+    policies = {"policy_0": gen_policyV2(0)}
     # for all methods
     policy_ids = list(policies.keys())
 
@@ -151,12 +128,12 @@ if __name__ == "__main__":
                 # General
                 "log_level": "INFO",
                 "num_gpus": 1,
-                "num_workers": 8,
+                "num_workers": 4,
                 "num_envs_per_worker": 8,
                 "learning_starts": 1000,
                 "buffer_size": int(1e5),
                 "compress_observations": True,
-                "sample_batch_size": 20,
+                # "sample_batch_size": 20,
                 "train_batch_size": 512,
                 "gamma": .99,
 
@@ -253,7 +230,7 @@ if __name__ == "__main__":
                 # General
                 "log_level": "ERROR",
                 "num_gpus": 2,
-                "num_workers": 32,
+                "num_workers": 16,
                 "num_envs_per_worker": 8,
                 "compress_observations": False,
                 "gamma": .99,
@@ -266,7 +243,7 @@ if __name__ == "__main__":
                 "vf_clip_param": 10.0,
                 "entropy_coeff": 0.01,
                 "train_batch_size": 5000,
-                "sample_batch_size": 100,
+                # "sample_batch_size": 100,
                 "sgd_minibatch_size": 500,
                 "num_sgd_iter": 10,
                 "batch_mode": 'truncate_episodes',
