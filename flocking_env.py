@@ -62,6 +62,7 @@ class raw_env(AECEnv):
         self.observation_space = observation_space
 
         self.data = []
+
         self.infos = {i: {} for i in self.agents}
 
     def step(self, action):
