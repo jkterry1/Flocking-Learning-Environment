@@ -14,7 +14,7 @@ def run():
     tik = time.time()
     z = 0.01
     birds = [solver.make_bird(z=90.0, y=0.6, x=-1.0, u=0, p = 0)]
-    env = solver.env(N = N, LIA = LIA)
+    env = solver.raw_env(N = N, LIA = LIA)
     #env = solver.env(N = 10, LIA = LIA)
     # env.flock.get_bird(1).x=1.
     # print(env.flock.get_bird(1).x)

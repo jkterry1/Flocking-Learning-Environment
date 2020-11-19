@@ -6,21 +6,14 @@
 #include "DiffEqs.cpp"
 #include "vortex.cpp"
 
-double start_time = time();
-double tot_time = 0;
-
 using Birds = std::vector<Bird>;
 struct Flock{
 
     double h;
     double t;
     int N;
-    int total_vortices;
-    double total_dist;
     double max_r;
     bool LIA;
-    int updates;
-    int max_steps;
     double energy_punishment;
     double forward_reward;
     double crash_reward;
@@ -38,12 +31,7 @@ struct Flock{
         self.N = N;
         self.LIA = LIA;
 
-        self.total_vortices = 0.0;
-        self.total_dist = 0.0;
-
         self.max_r = 1.0;
-        self.updates = 0;
-        self.max_steps = 100.0/self.h;
 
         self.energy_punishment = 2.0;
         self.forward_reward = 5.0;
@@ -66,18 +54,9 @@ struct Flock{
         Flock & self = *this;
         double thrust = action[0];
         Bird & bird = self.birds[agent];
-        double start = time();
         self.update_angles(action, agent);
-        tot_time += time() - start;
         Vorticies vortices = self.get_vortices(bird);
         bird.update(thrust, self.h, vortices);
-        updates++;
-        if (updates % 1000 == 0){
-            //std::cout << tot_time/(time() - start_time) << std::endl;
-            tot_time = 0;
-            start_time = time();
-            // std::cout << bird.VORTICES_LEFT.size() << std::endl;
-        }
     }
 
     std::pair<bool, double> get_reward(EnvAction & action, int agent){
@@ -88,7 +67,7 @@ struct Flock{
         if (len(bird.X) >= 2 && bird.x > bird.X[len(bird.X)-2]){
             reward += self.forward_reward;
         }
-        reward -= self.energy_punishment * action[0];
+        reward += self.energy_punishment * action[0];
 
         if (self.crashed(bird)){
             done = true;

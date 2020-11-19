@@ -5,7 +5,6 @@ from gym import spaces
 import numpy as np
 import plotting
 import csv
-import time
 import flocking_cpp
 
 def env(**kwargs):
@@ -32,6 +31,8 @@ class raw_env(AECEnv):
 
         if bird_inits is None:
             bird_inits = [make_bird(z = 50.0, y = 3.0*i, u=5.0) for i in range(N)]
+
+        # creates c++ flocking object with initial bird values and hyperparameters
         self.flock = flocking_cpp.Flock(
                      N,
                      h,
@@ -42,18 +43,6 @@ class raw_env(AECEnv):
         self.h = h
         self.t = t
         self.N = N
-        # self.num_agents = N
-        self.tot_time = 0
-        self.start_time = time.time()
-
-        self.total_vortices = 0.0
-        self.total_dist = 0.0
-
-        self.episodes = 0
-
-        self.energy_punishment = 2.0
-        self.forward_reward = 5.0
-        self.crash_reward = -100.0
 
         self.agents = [f"b_{i}" for i in range(self.N)]
         self._agent_idxs = {b:i for i, b in enumerate(self.agents)}
@@ -84,9 +73,7 @@ class raw_env(AECEnv):
         cur_agent = self.agent_selection
         noise = 0.01 * np.random.random_sample((5,))
         #action = noise + action
-        start = time.time()
         self.flock.update_bird(action, self._agent_idxs[self.agent_selection])
-        self.tot_time += time.time() - start
 
         # reward calculation
         done, reward = self.flock.get_reward(action, self._agent_idxs[self.agent_selection])
@@ -105,12 +92,6 @@ class raw_env(AECEnv):
                 self.flock.update_vortices(vortex_update_frequency)
 
             self.steps += 1
-            self.t = self.t + self.h
-            if self.steps % 25 == 0:
-                cur_time = time.time()
-                #print("pytime:",self.tot_time / (cur_time - self.start_time))
-                self.start_time = cur_time
-                self.tot_time = 0
         self.agent_selection = self._agent_selector.next()
 
         self._cumulative_rewards[cur_agent] = 0
@@ -127,8 +108,6 @@ class raw_env(AECEnv):
 
 
     def reset(self):
-        self.episodes +=1
-
         self.agent_order = list(self.agents)
         self._agent_selector.reinit(self.agent_order)
         self.agent_selection = self._agent_selector.reset()
