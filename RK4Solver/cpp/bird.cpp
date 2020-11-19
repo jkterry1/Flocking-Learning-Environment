@@ -19,7 +19,7 @@ struct BirdInit{
     double phi;
     double psi;
     using dbl = double;
-    BirdInit(dbl x, dbl y,dbl z,dbl u,dbl v,dbl w,dbl p,dbl q,dbl r,dbl theta,dbl phi,dbl psi){
+    BirdInit(dbl x, dbl y, dbl z, dbl u, dbl v, dbl w, dbl p, dbl q, dbl r, dbl theta, dbl phi, dbl psi){
         BirdInit & self = *this;
         self.x = x;
         self.y = y;

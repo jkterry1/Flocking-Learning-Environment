@@ -14,8 +14,8 @@ def env(**kwargs):
     env = wrappers.OrderEnforcingWrapper(env)
     return env
 
-def make_bird(x=0.,y=0.,z=0.,u=0.,v=0.,w=0.,p=0.,q=0.,r=0.,theta=0.,phi=0.,psi=0.):
-    return flocking_cpp.BirdInit(x,y,z,u,v,w,p,q,r,theta,phi,psi)
+def make_bird(x=0., y=0., z=0., u=0., v=0., w=0., p=0., q=0., r=0., theta=0., phi=0., psi=0.):
+    return flocking_cpp.BirdInit(x, y, z, u, v, w, p, q, r, theta, phi, psi)
 
 class raw_env(AECEnv):
     metadata = {'render.modes': ['human']}
@@ -65,7 +65,6 @@ class raw_env(AECEnv):
 
         self.data = []
         self.infos = {i:{} for i in self.agents}
-
 
     def step(self, action):
         if self.dones[self.agent_selection]:
