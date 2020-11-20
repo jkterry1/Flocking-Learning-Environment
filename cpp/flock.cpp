@@ -22,6 +22,9 @@ struct Flock{
     Flock(  int N,
             double h,
             double t,
+            double energy_punishment,
+            double forward_reward,
+            double crash_reward,
             BirdInits init_vals,
             bool LIA
          ){
@@ -33,9 +36,9 @@ struct Flock{
 
         self.max_r = 1.0;
 
-        self.energy_punishment = 2.0;
-        self.forward_reward = 5.0;
-        self.crash_reward = -100.0;
+        self.energy_punishment = energy_punishment;
+        self.forward_reward = forward_reward;
+        self.crash_reward = crash_reward;
 
         for (size_t i : range(N)){
             self.birds.emplace_back(init_vals[i]);

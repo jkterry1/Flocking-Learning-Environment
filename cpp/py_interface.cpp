@@ -25,7 +25,7 @@ PYBIND11_MODULE(flocking_cpp, m) {
         // .def(.def(py::init([](std::string arg) {
         //     return std::unique_ptr<Example>(new Example(arg));
         // })))
-        .def(py::init<int,double,double,BirdInits,bool>())
+        .def(py::init<int,double,double,double,double,double,BirdInits,bool>())
         .def("reset",&Flock::reset)
         .def("update_bird",&Flock::update_bird)
         .def("get_reward",&Flock::get_reward)
