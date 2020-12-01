@@ -28,7 +28,7 @@ class raw_env(AECEnv):
     def __init__(self,
                  N=10,
                  h=0.001,
-                 t=10.0,
+                 t=60.0,
                  energy_punishment=2.0,
                  forward_reward=5.0,
                  crash_reward=-100.0,
@@ -44,11 +44,11 @@ class raw_env(AECEnv):
         LIA: Local approximation for vortice movement
         '''
         if bird_inits is None:
-            bird_inits = [make_bird(z=50.0, y=3.0*i, u=5.0) for i in range(N)]   # please change this to random points in a sphere
+            bird_inits = [make_bird(z=50.0, y=3.0*i, u=5.0) for i in range(N)]  # please change this to random points in a sphere
         else:
             N = len(bird_inits)
 
-        # creates c++ flocking object with initial bird values and hyperparameters
+        # creates c++ environment with initial birds
         self.flock = flocking_cpp.Flock(N, h, t, energy_punishment, forward_reward, crash_reward, bird_inits, LIA)
 
         self.h = h
@@ -64,7 +64,7 @@ class raw_env(AECEnv):
 
         limit = 0.01
         action_space = spaces.Box(low=np.array([0.0, -limit, -limit, -limit, -limit]),
-                                        high=np.array([10.0, limit, limit, limit, limit]))
+                                        high=np.array([10.0, limit, limit, limit, limit]))  # also needs proper fixing
         self.action_spaces = {i: action_space for i in self.agents}
         self.action_space = action_space
 
@@ -76,7 +76,7 @@ class raw_env(AECEnv):
         self.observation_spaces = {i: observation_space for i in self.agents}
         self.observation_space = observation_space
 
-        self.data = []
+        self.data = []  # used for logging
 
         self.infos = {i: {} for i in self.agents}
 
@@ -126,7 +126,7 @@ class raw_env(AECEnv):
         self.steps = 0
 
     def render(self, mode='human', plot_vortices=False):
-        # This function generates some plots of summary stastics of the birds
+        # This function generates plots summarizing the statics of birds
         birds = self.flock.get_birds()
         plotting.plot_values(birds, show=True)
         plotting.plot_birds(birds, plot_vortices=plot_vortices, show=True)
