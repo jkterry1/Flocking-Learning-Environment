@@ -29,9 +29,9 @@ class raw_env(AECEnv):
                  N=10,
                  h=0.001,
                  t=10.0,
-                 energy_punishment = 2.0,
-                 forward_reward = 5.0,
-                 crash_reward = -100.0,
+                 energy_punishment=2.0,
+                 forward_reward=5.0,
+                 crash_reward=-100.0,
                  bird_inits=None,
                  LIA=False,
                  filename="episode_1.csv"
@@ -41,10 +41,10 @@ class raw_env(AECEnv):
         h: seconds per frame (step size)
         t: maximum seconds per episode
         bird_inits: initial positions of the birds
-        LIA: Local approximation for vertex movement
+        LIA: Local approximation for vortice movement
         '''
         if bird_inits is None:
-            bird_inits = [make_bird(z=50.0, y=3.0*i, u=5.0) for i in range(N)]  # please change this to random points in a sphere
+            bird_inits = [make_bird(z=50.0, y=3.0*i, u=5.0) for i in range(N)]   # please change this to random points in a sphere
         else:
             N = len(bird_inits)
 
@@ -82,14 +82,10 @@ class raw_env(AECEnv):
 
     def step(self, action):
         if self.dones[self.agent_selection]:
-            # either im going crazy or i cant see where this was defined
-            # BEN: These are the helper functions I defined in the base environment class.
             return self._was_done_step(action)
         cur_agent = self.agent_selection
         noise = 0.01 * np.random.random_sample((5,))
-        #action = noise + action
-        # why is the above line commented out?
-        # BEN: No idea, it was that way before I joined the project
+
         self.flock.update_bird(action, self._agent_idxs[self.agent_selection])
 
         done, reward = self.flock.get_reward(action, self._agent_idxs[self.agent_selection])  # why does "get_reward" also return done?
@@ -108,9 +104,8 @@ class raw_env(AECEnv):
         self.agent_selection = self._agent_selector.next()
 
         self._cumulative_rewards[cur_agent] = 0
-        self._accumulate_rewards()  # okay seriously where are these functions defined? am i going crazy?
+        self._accumulate_rewards()
         self._dones_step_first()
-        # BEN: These are the helper functions I defined in the base environment class.
 
     def observe(self, agent):
         return self.flock.get_observation(self._agent_idxs[agent])
@@ -131,8 +126,7 @@ class raw_env(AECEnv):
         self.steps = 0
 
     def render(self, mode='human', plot_vortices=False):
-        # what does this actually do?
-        # BEN: This function generates some plots of summary stastics of the birds
+        # This function generates some plots of summary stastics of the birds
         birds = self.flock.get_birds()
         plotting.plot_values(birds, show=True)
         plotting.plot_birds(birds, plot_vortices=plot_vortices, show=True)
@@ -147,7 +141,7 @@ class raw_env(AECEnv):
             # [ID, x, y, z, phi, theta, psi, aleft, aright, bleft, bright]
             ID = self.agents.index(self.agent_selection)
             time = self.steps * self.h
-            state = [ID, time, bird.x, bird.y, bird.z, bird.phi, bird.theta, bird.psi, bird.alpha_l, bird.alpha_r, bird.beta_l, bird.beta_r]  # 1) these dont seem complete? 2 why are the names different than everywhere else. the fuck are alpha and beta referring to
+            state = [ID, time, bird.x, bird.y, bird.z, bird.phi, bird.theta, bird.psi, bird.alpha_l, bird.alpha_r, bird.beta_l, bird.beta_r]  # 1) these dont seem complete? 2) why are the names different than everywhere else. the fuck are alpha and beta referring to
             self.data.append(state)
             if np.any(self.dones):
                 wr = csv.writer(self.file)
