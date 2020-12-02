@@ -31,6 +31,7 @@ class raw_env(AECEnv):
                  energy_punishment=2.0,
                  forward_reward=5.0,
                  crash_reward=-100.0,
+                 max_observable_birds=7,
                  bird_inits=None,
                  LIA=False,
                  filename="episode_1.csv"
@@ -53,6 +54,7 @@ class raw_env(AECEnv):
         self.h = h
         self.N = N
         self.max_frames = int(t/h)
+        self.max_observable_birds = max_observable_birds
 
         self.agents = [f"b_{i}" for i in range(self.N)]
         self._agent_idxs = {b: i for i, b in enumerate(self.agents)}
@@ -68,8 +70,8 @@ class raw_env(AECEnv):
         self.action_space = action_space
 
         # They're giant because there's position, so there's no clear limit. Smaller ones should be used for things other than that. Comment needed with each element of vector
-        low = -10000.0 * np.ones(22 + 6*min(self.N-1, 7),)  # looks at 7 nearest birds
-        high = 10000.0 * np.ones(22 + 6*min(self.N-1, 7),)
+        low = -10000.0 * np.ones(22 + 6*min(self.N-1, self.max_observable_birds),) # looks at 7 nearest birds
+        high = 10000.0 * np.ones(22 + 6*min(self.N-1, self.max_observable_birds),)
         observation_space = spaces.Box(low=low, high=high, dtype=np.float32)
         self.observation_spaces = {i: observation_space for i in self.agents}
 

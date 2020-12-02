@@ -386,16 +386,21 @@ struct Bird{
         return VortexForces{fu, fv, fw, tu, tv, tw};
     }
 
-    std::vector<Bird *> seven_nearest(Birds & birds){
+    std::vector<Bird *> n_nearest(Birds & birds, size_t max_observable_birds){
         Bird & self = *this;
-        std::vector<int> arange(birds.size());
+        std::vector<int> arange(birds.size()-1);
+        size_t j = 0;
         for(size_t i = 0; i < birds.size(); i++){
-            arange[i] = i;
+            // do not give observation
+            if(&birds[i] != this){
+                arange.at(j) = i;
+                j++;
+            }
         }
-        if(len(birds) > 7){
-            std::vector<double> dists(birds.size());
-            for(size_t i = 0; i < birds.size(); i++){
-                Bird & other = birds[i];
+        if(len(birds) > max_observable_birds){
+            std::vector<double> dists(arange.size());
+            for(size_t i = 0; i < arange.size(); i++){
+                Bird & other = birds[arange[i]];
                 dists[i] = sqrt(sqr(self.x - other.x) + sqr(self.y - other.y) + sqr(self.z - other.z));
             }
             std::sort(arange.begin(),arange.end(), [&](int b1, int b2){
@@ -403,8 +408,7 @@ struct Bird{
             });
         }
         std::vector<Bird *> result;
-        const size_t SEVEN = 7;
-        for(size_t i = 0; i < std::min(SEVEN, birds.size()); i++){
+        for(size_t i = 0; i < std::min(max_observable_birds, arange.size()); i++){
             result.push_back(&birds[arange[i]]);
         }
         return result;
