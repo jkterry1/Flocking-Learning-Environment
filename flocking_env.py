@@ -85,7 +85,8 @@ class raw_env(AECEnv):
 
         self.flock.update_bird(action, self._agent_idxs[self.agent_selection])
 
-        done, reward = self.flock.get_reward(action, self._agent_idxs[self.agent_selection])
+        done, reward = self.flock.get_done_reward(action, self._agent_idxs[self.agent_selection])
+
         self._clear_rewards()
         self.rewards[self.agent_selection] = reward
         if self.steps >= self.max_frames:
