@@ -62,7 +62,7 @@ struct Flock{
         bird.update(thrust, self.h, vortices);
     }
 
-    std::pair<bool, double> get_reward(EnvAction & action, int agent){
+    std::pair<bool, double> get_done_reward(EnvAction & action, int agent){
         Flock & self = *this;
         double reward = 0;
         bool done = false;
