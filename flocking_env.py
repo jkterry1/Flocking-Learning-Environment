@@ -139,7 +139,7 @@ class raw_env(AECEnv):
             # [ID, x, y, z, phi, theta, psi, aleft, aright, bleft, bright]
             ID = self.agents.index(self.agent_selection)
             time = self.steps * self.h
-            # alpha and beta are wing angles for each wing
+            # alpha and beta are wing angles for each wings, though which means what is unclear
             state = [ID, time, bird.x, bird.y, bird.z, bird.phi, bird.theta, bird.psi, bird.alpha_l, bird.alpha_r, bird.beta_l, bird.beta_r]
             self.data.append(state)
             if np.any(self.dones):
