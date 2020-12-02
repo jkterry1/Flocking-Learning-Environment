@@ -18,7 +18,6 @@ def env(**kwargs):
 
 def make_bird(x=0., y=0., z=0., u=0., v=0., w=0., p=0., q=0., r=0., theta=0., phi=0., psi=0.):
      # a comment is needed defining all of these, including their units
-     # BEN: I don't actually know what they do or their units either, and I don't have a good way of finding out
     return flocking_cpp.BirdInit(x, y, z, u, v, w, p, q, r, theta, phi, psi)
 
 
@@ -44,7 +43,7 @@ class raw_env(AECEnv):
         LIA: Local approximation for vortice movement
         '''
         if bird_inits is None:
-            bird_inits = [make_bird(z=50.0, y=3.0*i, u=5.0) for i in range(N)]  # please change this to random points in a sphere
+            bird_inits = [make_bird(z=50.0, y=3.0*i, u=5.0) for i in range(N)]  # change this to random points in a sphere,that takes sphere size as an argument
         else:
             N = len(bird_inits)
 
@@ -64,12 +63,11 @@ class raw_env(AECEnv):
 
         limit = 0.01
         action_space = spaces.Box(low=np.array([0.0, -limit, -limit, -limit, -limit]),
-                                        high=np.array([10.0, limit, limit, limit, limit]))  # also needs proper fixing
+                                        high=np.array([10.0, limit, limit, limit, limit]))  # first is thrust (needs units), others need to be labeled and dimensioned (why 4?)
         self.action_spaces = {i: action_space for i in self.agents}
         self.action_space = action_space
 
-        # were these abominations carolines doing or yours? we're going to have to normalize, and these are going to be a problem for normalizing
-        # BEN: definitely not mine. We really need to think about the design of the observation space more deeply, relative position is just such a bad observation
+        # They're giant because there's position, so there's no clear limit. Smaller ones should be used for things other than that. Comment needed with each element of vector
         low = -10000.0 * np.ones(22 + 6*min(self.N-1, 7),)
         high = 10000.0 * np.ones(22 + 6*min(self.N-1, 7),)
         observation_space = spaces.Box(low=low, high=high, dtype=np.float32)
