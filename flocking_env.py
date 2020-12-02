@@ -31,6 +31,7 @@ class raw_env(AECEnv):
                  energy_punishment=2.0,
                  forward_reward=5.0,
                  crash_reward=-100.0,
+                 max_observable_birds=7,
                  bird_inits=None,
                  LIA=False,
                  filename="episode_1.csv"
@@ -53,6 +54,7 @@ class raw_env(AECEnv):
         self.h = h
         self.N = N
         self.max_frames = int(t/h)
+        self.max_observable_birds = max_observable_birds
 
         self.agents = [f"b_{i}" for i in range(self.N)]
         self._agent_idxs = {b: i for i, b in enumerate(self.agents)}
@@ -68,8 +70,8 @@ class raw_env(AECEnv):
         self.action_space = action_space
 
         # They're giant because there's position, so there's no clear limit. Smaller ones should be used for things other than that. Comment needed with each element of vector
-        low = -10000.0 * np.ones(22 + 6*min(self.N-1, 7),)
-        high = 10000.0 * np.ones(22 + 6*min(self.N-1, 7),)
+        low = -10000.0 * np.ones(22 + 6*min(self.N-1, self.max_observable_birds),)
+        high = 10000.0 * np.ones(22 + 6*min(self.N-1, self.max_observable_birds),)
         observation_space = spaces.Box(low=low, high=high, dtype=np.float32)
         self.observation_spaces = {i: observation_space for i in self.agents}
         self.observation_space = observation_space
@@ -139,7 +141,10 @@ class raw_env(AECEnv):
             # [ID, x, y, z, phi, theta, psi, aleft, aright, bleft, bright]
             ID = self.agents.index(self.agent_selection)
             time = self.steps * self.h
-            state = [ID, time, bird.x, bird.y, bird.z, bird.phi, bird.theta, bird.psi, bird.alpha_l, bird.alpha_r, bird.beta_l, bird.beta_r]  # 1) these dont seem complete? 2) why are the names different than everywhere else. the fuck are alpha and beta referring to
+            # 1) these dont seem complete? 2) why are the names different than everywhere else. the fuck are alpha and beta referring to
+            # BEN: yes, this misses some information, for example velocity information
+            # BEN: I think alpha and beta are refering to wing angles
+            state = [ID, time, bird.x, bird.y, bird.z, bird.phi, bird.theta, bird.psi, bird.alpha_l, bird.alpha_r, bird.beta_l, bird.beta_r]
             self.data.append(state)
             if np.any(self.dones):
                 wr = csv.writer(self.file)

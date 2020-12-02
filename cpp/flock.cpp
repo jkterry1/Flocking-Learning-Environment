@@ -134,7 +134,7 @@ struct Flock{
         return vortices;
     }
 
-    Observation get_observation(int agent){
+    Observation get_observation(int agent, int max_observable_birds){
         Flock & self = *this;
         Vector3d force = self.birds[agent].F;
         Vector3d torque = self.birds[agent].T;
@@ -148,7 +148,7 @@ struct Flock{
         extend(obs, {bird.p, bird.q, bird.r});
         extend(obs, {bird.phi, bird.theta, bird.psi});
         extend(obs, {bird.alpha_l, bird.beta_l, bird.alpha_r, bird.beta_r});
-        std::vector<Bird *> nearest = bird.seven_nearest(self.birds);
+        std::vector<Bird *> nearest = bird.n_nearest(self.birds, max_observable_birds);
         for (Bird * otherp : nearest){
 	        Bird & other = *otherp;
             extend(obs, {other.x - bird.x, other.y - bird.y, other.z - bird.z});

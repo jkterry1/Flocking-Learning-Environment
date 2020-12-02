@@ -28,10 +28,10 @@ PYBIND11_MODULE(flocking_cpp, m) {
         .def(py::init<int,double,double,double,double,double,BirdInits,bool>())
         .def("reset",&Flock::reset)
         .def("update_bird",&Flock::update_bird)
-        .def("get_reward",&Flock::get_reward)
+        .def("get_done_reward",&Flock::get_done_reward)
         .def("update_vortices",&Flock::update_vortices)
-        .def("get_observation",[](Flock & arg, int agent) {
-            Observation obs = arg.get_observation(agent);
+        .def("get_observation",[](Flock & arg, int agent, size_t max_observable_birds) {
+            Observation obs = arg.get_observation(agent, max_observable_birds);
             size_t size = obs.size();
             float *foo = new float[size];
             std::copy(obs.begin(),obs.end(), foo);
