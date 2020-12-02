@@ -68,11 +68,10 @@ class raw_env(AECEnv):
         self.action_space = action_space
 
         # They're giant because there's position, so there's no clear limit. Smaller ones should be used for things other than that. Comment needed with each element of vector
-        low = -10000.0 * np.ones(22 + 6*min(self.N-1, 7),)
+        low = -10000.0 * np.ones(22 + 6*min(self.N-1, 7),)  # looks at 7 nearest birds
         high = 10000.0 * np.ones(22 + 6*min(self.N-1, 7),)
         observation_space = spaces.Box(low=low, high=high, dtype=np.float32)
         self.observation_spaces = {i: observation_space for i in self.agents}
-        self.observation_space = observation_space
 
         self.data = []  # used for logging
 
@@ -86,7 +85,7 @@ class raw_env(AECEnv):
 
         self.flock.update_bird(action, self._agent_idxs[self.agent_selection])
 
-        done, reward = self.flock.get_reward(action, self._agent_idxs[self.agent_selection])  # why does "get_reward" also return done?
+        done, reward = self.flock.get_reward(action, self._agent_idxs[self.agent_selection])
         self._clear_rewards()
         self.rewards[self.agent_selection] = reward
         if self.steps >= self.max_frames:
@@ -139,7 +138,8 @@ class raw_env(AECEnv):
             # [ID, x, y, z, phi, theta, psi, aleft, aright, bleft, bright]
             ID = self.agents.index(self.agent_selection)
             time = self.steps * self.h
-            state = [ID, time, bird.x, bird.y, bird.z, bird.phi, bird.theta, bird.psi, bird.alpha_l, bird.alpha_r, bird.beta_l, bird.beta_r]  # 1) these dont seem complete? 2) why are the names different than everywhere else. the fuck are alpha and beta referring to
+            # alpha and beta are wing angles for each wing
+            state = [ID, time, bird.x, bird.y, bird.z, bird.phi, bird.theta, bird.psi, bird.alpha_l, bird.alpha_r, bird.beta_l, bird.beta_r]
             self.data.append(state)
             if np.any(self.dones):
                 wr = csv.writer(self.file)
