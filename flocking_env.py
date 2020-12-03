@@ -64,8 +64,7 @@ class raw_env(AECEnv):
         self._agent_idxs = {b: i for i, b in enumerate(self.agents)}
         self.possible_agents = self.agents[:]
 
-        self.agent_order = list(self.agents)
-        self._agent_selector = agent_selector(self.agent_order)
+        self._agent_selector = agent_selector(self.agents)
 
         limit = 0.01
         #action_space =   # first is thrust (needs units), others need to be labeled and dimensioned (why 4?)
@@ -87,13 +86,13 @@ class raw_env(AECEnv):
 
     def step(self, action):
         if self.dones[self.agent_selection]:
-            return self._was_done_step(action)  # please explain what this function does
+            return self._was_done_step(action)  # please explain what this function does BEN: this function handles agent termination logic like checking that the action is None and removing the agent from the agents list
         cur_agent = self.agent_selection
-        noise = 0.01 * self.np_random.random_sample((5,))  # this isn't used anywhere?
+        noise = 0.01 * self.np_random.random_sample((5,))  # this isn't used anywhere? BEN: remmeber that this was used in the line that was commented out and then removed.
 
         self.simulation.update_bird(action, self._agent_idxs[self.agent_selection])
 
-        done, reward = self.simulation.get_done_reward(action, self._agent_idxs[self.agent_selection])  # 1 why is action taken here 2 the logic separating this line and the last is unclear
+        done, reward = self.simulation.get_done_reward(action, self._agent_idxs[self.agent_selection])  # 1 why is action taken here BEN: look at the get_done_reward function in flock.cpp. It should be obvious from that. 2 the logic separating this line and the last is unclear BEN: Sometimes you put logic in different functions for no reason other than to make the functions smaller and more easily understandable. I think this is why Caroline did it this way
 
         self._clear_rewards()
         self.rewards[self.agent_selection] = reward
@@ -103,22 +102,22 @@ class raw_env(AECEnv):
 
         if self.agent_selection == self.agents[-1]:
             if self.steps % self.vortex_update_frequency == 0:
-                self.simulation.update_vortices(self.vortex_update_frequency)  # why is the argument needed?
+                self.simulation.update_vortices(self.vortex_update_frequency)  # why is the argument needed? BEN: look at the update_vortices function in flock.cpp. The update frequency is needed as part of the step size for the physics
             self.steps += 1
 
         self.agent_selection = self._agent_selector.next()
 
-        self._cumulative_rewards[cur_agent] = 0  # why is that needed? why can't we just call this before the above line and use self.agent_selection?
-        self._accumulate_rewards()  # please explain what this function does
-        self._dones_step_first()  # please explain what this function does
+        self._cumulative_rewards[cur_agent] = 0  # why is that needed? why can't we just call this before the above line and use self.agent_selection? BEN: You can
+        self._accumulate_rewards()  # please explain what this function does # BEN: this function adds everything in the rewards dict into the _cumulative_rewards dict
+        self._dones_step_first()  # please explain what this function does # BEN: this handles the agent death logic. It is necessary here, but I guess it probably should not be necessary here because there is no non-trivial death mechanics here. If you want, you can create an issue of this, and I can fix it so that this call isn't necessary.
 
     def observe(self, agent):
         return self.simulation.get_observation(self._agent_idxs[agent], self.max_observable_birds)
 
     def reset(self):
         self.agents = self.possible_agents[:]
-        self.agent_order = list(self.agents)  # why is the list() needed, and why is this as it's own variable needed?
-        self._agent_selector.reinit(self.agent_order)
+        # why is the list() needed, and why is this as it's own variable needed? BEN: It isn't
+        self._agent_selector.reinit(self.agents)
         self.agent_selection = self._agent_selector.reset()
 
         self.simulation.reset()
