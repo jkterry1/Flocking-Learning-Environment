@@ -5,6 +5,7 @@ from gym import spaces
 import numpy as np
 import plotting
 import csv
+from gym.utils import seeding
 import flocking_cpp
 
 
@@ -50,6 +51,7 @@ class raw_env(AECEnv):
 
         # creates c++ environment with initial birds
         self.flock = flocking_cpp.Flock(N, h, t, energy_punishment, forward_reward, crash_reward, bird_inits, LIA)
+        self.seed()
 
         self.h = h
         self.N = N
@@ -64,10 +66,9 @@ class raw_env(AECEnv):
         self._agent_selector = agent_selector(self.agent_order)
 
         limit = 0.01
-        action_space = spaces.Box(low=np.array([0.0, -limit, -limit, -limit, -limit]),
-                                        high=np.array([10.0, limit, limit, limit, limit]))  # first is thrust (needs units), others need to be labeled and dimensioned (why 4?)
-        self.action_spaces = {i: action_space for i in self.agents}
-        self.action_space = action_space
+        #action_space =   # first is thrust (needs units), others need to be labeled and dimensioned (why 4?)
+        self.action_spaces = {i: spaces.Box(low=np.array([0.0, -limit, -limit, -limit, -limit]),
+                                        high=np.array([10.0, limit, limit, limit, limit])) for i in self.agents}
 
         # They're giant because there's position, so there's no clear limit. Smaller ones should be used for things other than that. Comment needed with each element of vector
         low = -10000.0 * np.ones(22 + 6*min(self.N-1, self.max_observable_birds),) # looks at 7 nearest birds
@@ -79,11 +80,14 @@ class raw_env(AECEnv):
 
         self.infos = {i: {} for i in self.agents}
 
+    def seed(self, seed=None):
+        self.np_random, _ = seeding.np_random(seed)
+
     def step(self, action):
         if self.dones[self.agent_selection]:
             return self._was_done_step(action)
         cur_agent = self.agent_selection
-        noise = 0.01 * np.random.random_sample((5,))
+        noise = 0.01 * self.np_random.random_sample((5,))
 
         self.flock.update_bird(action, self._agent_idxs[self.agent_selection])
 
@@ -108,12 +112,10 @@ class raw_env(AECEnv):
         self._dones_step_first()
 
     def observe(self, agent):
-        return self.flock.get_observation(self._agent_idxs[agent])
-
-    def seed(self, seed=None):
-        pass
+        return self.flock.get_observation(self._agent_idxs[agent], self.max_observable_birds)
 
     def reset(self):
+        self.agents = self.possible_agents[:]
         self.agent_order = list(self.agents)
         self._agent_selector.reinit(self.agent_order)
         self.agent_selection = self._agent_selector.reset()
@@ -123,6 +125,7 @@ class raw_env(AECEnv):
         self._cumulative_rewards = {name: 0. for name in self.agents}
         self.rewards = {i: 0 for i in self.agents}
         self.dones = {i: False for i in self.agents}
+        self.infos = {i: {} for i in self.agents}
         self.steps = 0
 
     def render(self, mode='human', plot_vortices=False):
