@@ -35,7 +35,8 @@ class raw_env(AECEnv):
                  max_observable_birds=7,
                  bird_inits=None,
                  LIA=False,
-                 filename="episode_1.csv"
+                 filename="episode_1.csv",
+                 vortex_update_frequency=10
                  ):
         '''
         N: number of birds (if bird_inits is None)
@@ -50,13 +51,14 @@ class raw_env(AECEnv):
             N = len(bird_inits)
 
         # creates c++ environment with initial birds
-        self.flock = flocking_cpp.Flock(N, h, t, energy_punishment, forward_reward, crash_reward, bird_inits, LIA)
+        self.simulation = flocking_cpp.Flock(N, h, t, energy_punishment, forward_reward, crash_reward, bird_inits, LIA)
         self.seed()
 
         self.h = h
         self.N = N
         self.max_frames = int(t/h)
-        self.max_observable_birds = max_observable_birds
+        self.max_observable_birds = max_observable_birds  # nearest birds that can be observed
+        self.vortex_update_frequency = vortex_update_frequency
 
         self.agents = [f"b_{i}" for i in range(self.N)]
         self._agent_idxs = {b: i for i, b in enumerate(self.agents)}
@@ -71,7 +73,7 @@ class raw_env(AECEnv):
                                         high=np.array([10.0, limit, limit, limit, limit])) for i in self.agents}
 
         # They're giant because there's position, so there's no clear limit. Smaller ones should be used for things other than that. Comment needed with each element of vector
-        low = -10000.0 * np.ones(22 + 6*min(self.N-1, self.max_observable_birds),) # looks at 7 nearest birds
+        low = -10000.0 * np.ones(22 + 6*min(self.N-1, self.max_observable_birds),)
         high = 10000.0 * np.ones(22 + 6*min(self.N-1, self.max_observable_birds),)
         observation_space = spaces.Box(low=low, high=high, dtype=np.float32)
         self.observation_spaces = {i: observation_space for i in self.agents}
@@ -85,13 +87,13 @@ class raw_env(AECEnv):
 
     def step(self, action):
         if self.dones[self.agent_selection]:
-            return self._was_done_step(action)
+            return self._was_done_step(action)  # please explain what this function does
         cur_agent = self.agent_selection
-        noise = 0.01 * self.np_random.random_sample((5,))
+        noise = 0.01 * self.np_random.random_sample((5,))  # this isn't used anywhere?
 
-        self.flock.update_bird(action, self._agent_idxs[self.agent_selection])
+        self.simulation.update_bird(action, self._agent_idxs[self.agent_selection])
 
-        done, reward = self.flock.get_done_reward(action, self._agent_idxs[self.agent_selection])
+        done, reward = self.simulation.get_done_reward(action, self._agent_idxs[self.agent_selection])  # 1 why is action taken here 2 the logic separating this line and the last is unclear
 
         self._clear_rewards()
         self.rewards[self.agent_selection] = reward
@@ -100,27 +102,26 @@ class raw_env(AECEnv):
         self.dones = {agent: done for agent in self.agents}
 
         if self.agent_selection == self.agents[-1]:
-            vortex_update_frequency = 10
-            if self.steps % vortex_update_frequency == 0:
-                self.flock.update_vortices(vortex_update_frequency)
+            if self.steps % self.vortex_update_frequency == 0:
+                self.simulation.update_vortices(self.vortex_update_frequency)  # why is the argument needed?
             self.steps += 1
 
         self.agent_selection = self._agent_selector.next()
 
-        self._cumulative_rewards[cur_agent] = 0
-        self._accumulate_rewards()
-        self._dones_step_first()
+        self._cumulative_rewards[cur_agent] = 0  # why is that needed? why can't we just call this before the above line and use self.agent_selection?
+        self._accumulate_rewards()  # please explain what this function does
+        self._dones_step_first()  # please explain what this function does
 
     def observe(self, agent):
-        return self.flock.get_observation(self._agent_idxs[agent], self.max_observable_birds)
+        return self.simulation.get_observation(self._agent_idxs[agent], self.max_observable_birds)
 
     def reset(self):
         self.agents = self.possible_agents[:]
-        self.agent_order = list(self.agents)
+        self.agent_order = list(self.agents)  # why is the list() needed, and why is this as it's own variable needed?
         self._agent_selector.reinit(self.agent_order)
         self.agent_selection = self._agent_selector.reset()
 
-        self.flock.reset()
+        self.simulation.reset()
 
         self._cumulative_rewards = {name: 0. for name in self.agents}
         self.rewards = {i: 0 for i in self.agents}
@@ -130,7 +131,7 @@ class raw_env(AECEnv):
 
     def render(self, mode='human', plot_vortices=False):
         # This function generates plots summarizing the statics of birds
-        birds = self.flock.get_birds()
+        birds = self.simulation.get_birds()
         plotting.plot_values(birds, show=True)
         plotting.plot_birds(birds, plot_vortices=plot_vortices, show=True)
 
@@ -138,7 +139,7 @@ class raw_env(AECEnv):
         plotting.close()
 
     def log(self):
-        birds = self.flock.get_birds()
+        birds = self.simulation.get_birds()
         for bird in birds:
             state = []
             # [ID, x, y, z, phi, theta, psi, aleft, aright, bleft, bright]
