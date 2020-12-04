@@ -86,9 +86,7 @@ class raw_env(AECEnv):
 
     def step(self, action):
         if self.dones[self.agent_selection]:
-            return self._was_done_step(action)  # please explain what this function does BEN: this function handles agent termination logic like checking that the action is None and removing the agent from the agents list
-        cur_agent = self.agent_selection
-        noise = 0.01 * self.np_random.random_sample((5,))  # this isn't used anywhere? BEN: remmeber that this was used in the line that was commented out and then removed.
+            return self._was_done_step(action)  # BEN: this function handles agent termination logic like checking that the action is None and removing the agent from the agents list
 
         self.simulation.update_bird(action, self._agent_idxs[self.agent_selection])
 
@@ -105,11 +103,12 @@ class raw_env(AECEnv):
                 self.simulation.update_vortices(self.vortex_update_frequency)  # why is the argument needed? BEN: look at the update_vortices function in flock.cpp. The update frequency is needed as part of the step size for the physics
             self.steps += 1
 
+        self._cumulative_rewards[self.agent_selection] = 0 
+
         self.agent_selection = self._agent_selector.next()
 
-        self._cumulative_rewards[cur_agent] = 0  # why is that needed? why can't we just call this before the above line and use self.agent_selection? BEN: You can
-        self._accumulate_rewards()  # please explain what this function does # BEN: this function adds everything in the rewards dict into the _cumulative_rewards dict
-        self._dones_step_first()  # please explain what this function does # BEN: this handles the agent death logic. It is necessary here, but I guess it probably should not be necessary here because there is no non-trivial death mechanics here. If you want, you can create an issue of this, and I can fix it so that this call isn't necessary.
+        self._accumulate_rewards()  # BEN: this function adds everything in the rewards dict into the _cumulative_rewards dict
+        self._dones_step_first()  # BEN: this handles the agent death logic. It is necessary here, but I guess it probably should not be necessary here because there is no non-trivial death mechanics here. If you want, you can create an issue of this, and I can fix it so that this call isn't necessary.
 
     def observe(self, agent):
         return self.simulation.get_observation(self._agent_idxs[agent], self.max_observable_birds)
