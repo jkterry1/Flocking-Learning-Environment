@@ -3,6 +3,7 @@ from pettingzoo.utils import agent_selector
 from pettingzoo.utils import wrappers
 from gym import spaces
 import numpy as np
+
 import plotting
 import csv
 from gym.utils import seeding
@@ -20,6 +21,36 @@ def env(**kwargs):
 def make_bird(x=0., y=0., z=0., u=0., v=0., w=0., p=0., q=0., r=0., theta=0., phi=0., psi=0.):
      # a comment is needed defining all of these, including their units
     return flocking_cpp.BirdInit(x, y, z, u, v, w, p, q, r, theta, phi, psi)
+
+
+def sphere_points(height, radius, N):
+    # centered at z=height+radius, x=0, y=0
+    xs = []
+    ys = []
+    zs = []
+    for i in range(N):
+        Done = False
+        while not Done:
+            rands = np.random.rand(3)
+            x = height+radius*rands[0]
+            y = radius * rands[1]
+            z = radius * rands[2]
+
+        if np.sqrt((x-height)**2 + y**2 + z**2) <= radius:
+            xs.append(x)
+            ys.append(y)
+            zs.append(z)
+            Done = True
+    return xs, ys, zs
+
+# make sure z=0 is bottom, hitting it means death
+# make sure distance counting for reward compatible with sphere- global vs local ratio?
+# pettingzoo tests on environment
+# see what rendering does- carolines idea of many position curves adequate, though vector curves better if supported
+# move bird_inits to reset
+# make sure seeding controls work
+# angle of attack in sim?
+# wing flap timing
 
 
 class raw_env(AECEnv):
@@ -45,10 +76,13 @@ class raw_env(AECEnv):
         bird_inits: initial positions of the birds
         LIA: Local approximation for vortice movement
         '''
+        self.bird_inits = bird_inits
+        if bird_inits is not None:
+            assert N == len(bird_inits)
+
         if bird_inits is None:
-            bird_inits = [make_bird(z=50.0, y=3.0*i, u=5.0) for i in range(N)]  # change this to random points in a sphere,that takes sphere size as an argument
-        else:
-            N = len(bird_inits)
+            xs, ys, zs = sphere_points(height=50, radius=6, N=7)  # no principled reason for radius
+            bird_inits = [make_bird(x=xs[i], y=ys[i], z=zs[i],  u=5.0) for i in range(N)]  # u choice of unclear origin; used to be straight line at height
 
         # creates c++ environment with initial birds
         self.simulation = flocking_cpp.Flock(N, h, t, energy_punishment, forward_reward, crash_reward, bird_inits, LIA)
@@ -66,10 +100,10 @@ class raw_env(AECEnv):
 
         self._agent_selector = agent_selector(self.agents)
 
-        limit = 0.01
-        #action_space =   # first is thrust (needs units), others need to be labeled and dimensioned (why 4?)
-        self.action_spaces = {i: spaces.Box(low=np.array([0.0, -limit, -limit, -limit, -limit]),
-                                        high=np.array([10.0, limit, limit, limit, limit])) for i in self.agents}
+        action_limit = 0.01
+        # first element is thrust (needs units), others need to be labeled and dimensioned (also why 4?)
+        self.action_spaces = {i: spaces.Box(low=np.array([0.0, -action_limit, -action_limit, -action_limit, -action_limit]),
+                                        high=np.array([10.0, action_limit, action_limit, action_limit, action_limit])) for i in self.agents}
 
         # They're giant because there's position, so there's no clear limit. Smaller ones should be used for things other than that. Comment needed with each element of vector
         low = -10000.0 * np.ones(22 + 6*min(self.N-1, self.max_observable_birds),)
@@ -100,10 +134,10 @@ class raw_env(AECEnv):
 
         if self.agent_selection == self.agents[-1]:
             if self.steps % self.vortex_update_frequency == 0:
-                self.simulation.update_vortices(self.vortex_update_frequency)  # why is the argument needed? BEN: look at the update_vortices function in flock.cpp. The update frequency is needed as part of the step size for the physics
+                self.simulation.update_vortices(self.vortex_update_frequency) # why is the argument needed? BEN: look at the update_vortices function in flock.cpp. The update frequency is needed as part of the step size for the physics
             self.steps += 1
 
-        self._cumulative_rewards[self.agent_selection] = 0 
+        self._cumulative_rewards[self.agent_selection] = 0
 
         self.agent_selection = self._agent_selector.next()
 
@@ -115,7 +149,6 @@ class raw_env(AECEnv):
 
     def reset(self):
         self.agents = self.possible_agents[:]
-        # why is the list() needed, and why is this as it's own variable needed? BEN: It isn't
         self._agent_selector.reinit(self.agents)
         self.agent_selection = self._agent_selector.reset()
 
@@ -143,7 +176,7 @@ class raw_env(AECEnv):
             # [ID, x, y, z, phi, theta, psi, aleft, aright, bleft, bright]
             ID = self.agents.index(self.agent_selection)
             time = self.steps * self.h
-            # alpha and beta are wing angles for each wings, though which means what is unclear
+            # alpha and beta are wing angles for each wings (l and r indicate side), though which means what is unclear
             state = [ID, time, bird.x, bird.y, bird.z, bird.phi, bird.theta, bird.psi, bird.alpha_l, bird.alpha_r, bird.beta_l, bird.beta_r]
             self.data.append(state)
             if np.any(self.dones):
