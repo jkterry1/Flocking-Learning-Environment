@@ -73,23 +73,15 @@ class raw_env(AECEnv):
         N: number of birds (if bird_inits is None)
         h: seconds per frame (step size)
         t: maximum seconds per episode
-        bird_inits: initial positions of the birds
+        bird_inits: initial positions of the birds (None for default random sphere)
         LIA: Local approximation for vortice movement
         '''
-        self.bird_inits = bird_inits
-        if bird_inits is not None:
-            assert N == len(bird_inits)
-
-        if bird_inits is None:
-            xs, ys, zs = sphere_points(height=50, radius=6, N=7)  # no principled reason for radius
-            bird_inits = [make_bird(x=xs[i], y=ys[i], z=zs[i],  u=5.0) for i in range(N)]  # u choice of unclear origin; used to be straight line at height
-
-        # creates c++ environment with initial birds
-        self.simulation = flocking_cpp.Flock(N, h, t, energy_punishment, forward_reward, crash_reward, bird_inits, LIA)
-        self.seed()
 
         self.h = h
         self.N = N
+        self.bird_inits = bird_inits
+        if self.bird_inits is not None:
+            assert self.N == len(self.bird_inits)
         self.max_frames = int(t/h)
         self.max_observable_birds = max_observable_birds  # nearest birds that can be observed
         self.vortex_update_frequency = vortex_update_frequency
@@ -119,6 +111,7 @@ class raw_env(AECEnv):
         self.np_random, _ = seeding.np_random(seed)
 
     def step(self, action):
+
         if self.dones[self.agent_selection]:
             return self._was_done_step(action)  # BEN: this function handles agent termination logic like checking that the action is None and removing the agent from the agents list
 
@@ -134,7 +127,7 @@ class raw_env(AECEnv):
 
         if self.agent_selection == self.agents[-1]:
             if self.steps % self.vortex_update_frequency == 0:
-                self.simulation.update_vortices(self.vortex_update_frequency) # why is the argument needed? BEN: look at the update_vortices function in flock.cpp. The update frequency is needed as part of the step size for the physics
+                self.simulation.update_vortices(self.vortex_update_frequency)  # why is the argument needed? BEN: look at the update_vortices function in flock.cpp. The update frequency is needed as part of the step size for the physics
             self.steps += 1
 
         self._cumulative_rewards[self.agent_selection] = 0
@@ -148,6 +141,15 @@ class raw_env(AECEnv):
         return self.simulation.get_observation(self._agent_idxs[agent], self.max_observable_birds)
 
     def reset(self):
+
+        self.seed()
+        if self.bird_inits is None:
+            xs, ys, zs = sphere_points(height=50, radius=6, N=7)  # no principled reason for radius
+            bird_inits = [make_bird(x=xs[i], y=ys[i], z=zs[i],  u=5.0) for i in range(self.N)]  # u choice of unclear origin; used to be straight line at height
+
+        # creates c++ environment with initial birds
+        self.simulation = flocking_cpp.Flock(self.N, self.h, self.t, self.energy_punishment, self.forward_reward, self.crash_reward, self.bird_inits, self.LIA)
+
         self.agents = self.possible_agents[:]
         self._agent_selector.reinit(self.agents)
         self.agent_selection = self._agent_selector.reset()
