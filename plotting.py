@@ -1,10 +1,12 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
+
 def close():
     plt.close()
 
-def plot_values(birds, show = True):
+
+def plot_values(birds, show=True):
     fig = plt.figure()
     plt1 = fig.add_subplot(411)
     plt2 = fig.add_subplot(412)
@@ -49,7 +51,7 @@ def plot_values(birds, show = True):
 
         plt4.title.set_text('velocity')
         plt4.set_xlabel('Time (s)')
-        plt4.set_ylabel('(m/s)')
+        plt4.set_ylabel('(m/s')
         plt4.plot(t, bird.U)
         plt4.plot(t, bird.V)
         plt4.plot(t, bird.W)
@@ -61,7 +63,8 @@ def plot_values(birds, show = True):
     if show:
         plt.show()
 
-def plot_birds(birds, plot_vortices = False, show = True):
+
+def plot_birds(birds, plot_vortices=False, show=True):
     first = plot_vortices
     fig = plt.figure(1)
     plt.clf()
@@ -72,15 +75,15 @@ def plot_birds(birds, plot_vortices = False, show = True):
     ax.set_zlabel('z')
     for b in range(len(birds)):
         bird = birds[b]
-        ax.plot(xs = bird.X, ys = bird.Y, zs = bird.Z, zdir = 'z', color = 'orange')
+        ax.plot(xs=bird.X, ys=bird.Y, zs=bird.Z, zdir='z', color='orange')
         ax.scatter([v.pos[0] for v in bird.VORTICES_LEFT],
                     [v.pos[1] for v in bird.VORTICES_LEFT],
                     [v.pos[2] for v in bird.VORTICES_LEFT],
-                    color = 'red', s = .5)
+                    color='red', s=.5)
         ax.scatter([v.pos[0] for v in bird.VORTICES_RIGHT],
                     [v.pos[1] for v in bird.VORTICES_RIGHT],
                     [v.pos[2] for v in bird.VORTICES_RIGHT],
-                    color = 'red', s = .5)
+                    color='red', s=.5)
         ax.scatter([bird.X[0]], [bird.Y[0]], [bird.Z[0]], 'blue')
 
     x = []; y = []; z = []
@@ -138,8 +141,6 @@ def plot_birds(birds, plot_vortices = False, show = True):
             a,b,c = vort.earth_vel(vort.x, vort.y + r, vort.z - r)
             u.append(a);v.append(b);w.append(c)
 
-
-
-    ax.quiver(x,y,z,u,v,w, length = .1, normalize = True)
+    ax.quiver(x, y, z, u, v, w, length=.1, normalize=True)
     if show:
         plt.show()

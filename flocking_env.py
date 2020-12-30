@@ -43,14 +43,13 @@ def sphere_points(height, radius, N):
             Done = True
     return xs, ys, zs
 
-# make sure z=0 is bottom, hitting it means death
-# make sure distance counting for reward compatible with sphere- global vs local ratio?
+# make sure z=0 is bottom, hitting it means death w/ reward penalty
+# make sure distance counting for reward compatible with sphere- global vs local ratio for distance/energy rewards?
 # pettingzoo tests on environment
 # see what rendering does- carolines idea of many position curves adequate, though vector curves better if supported
-# move bird_inits to reset
 # make sure seeding controls work
-# angle of attack in sim?
-# wing flap timing
+# is angle of attack in sim?
+# wing flap timing thing in new nature paper?
 
 
 class raw_env(AECEnv):
