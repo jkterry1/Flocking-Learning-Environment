@@ -22,27 +22,6 @@ def make_bird(x=0., y=0., z=0., u=0., v=0., w=0., p=0., q=0., r=0., theta=0., ph
      # a comment is needed defining all of these, including their units
     return flocking_cpp.BirdInit(x, y, z, u, v, w, p, q, r, theta, phi, psi)
 
-
-def sphere_points(height, radius, N):
-    # centered at z=height+radius, x=0, y=0
-    xs = []
-    ys = []
-    zs = []
-    for i in range(N):
-        Done = False
-        while not Done:
-            rands = np.random.rand(3)
-            x = height+radius*rands[0]
-            y = radius * rands[1]
-            z = radius * rands[2]
-
-        if np.sqrt((x-height)**2 + y**2 + z**2) <= radius:
-            xs.append(x)
-            ys.append(y)
-            zs.append(z)
-            Done = True
-    return xs, ys, zs
-
 # make sure z=0 is bottom, hitting it means death w/ reward penalty
 # make sure distance counting for reward compatible with sphere- global vs local ratio for distance/energy rewards?
 # pettingzoo tests on environment
@@ -75,6 +54,9 @@ class raw_env(AECEnv):
         bird_inits: initial positions of the birds (None for default random sphere)
         LIA: Local approximation for vortice movement
         '''
+
+        if bird_inits is None:
+            bird_inits = [make_bird(z=50.0, y=3.0*i, u=5.0) for i in range(N)]
 
         self.h = h
         self.N = N
@@ -142,9 +124,6 @@ class raw_env(AECEnv):
     def reset(self):
 
         self.seed()
-        if self.bird_inits is None:
-            xs, ys, zs = sphere_points(height=50, radius=6, N=7)  # no principled reason for radius
-            bird_inits = [make_bird(x=xs[i], y=ys[i], z=zs[i],  u=5.0) for i in range(self.N)]  # u choice of unclear origin; used to be straight line at height
 
         # creates c++ environment with initial birds
         self.simulation = flocking_cpp.Flock(self.N, self.h, self.t, self.energy_punishment, self.forward_reward, self.crash_reward, self.bird_inits, self.LIA)

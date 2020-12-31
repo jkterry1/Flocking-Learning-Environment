@@ -11,7 +11,7 @@ import flocking_env
 
 
 env = flocking_env.env()
-api_test(env, num_cycles=1, render=False, verbose_progress=True)
+api_test.api_test(env, num_cycles=1, render=False, verbose_progress=True)
 seed_test.seed_test(env, num_cycles=1)
 performance_benchmark.performance_benchmark(env)
 
