@@ -58,6 +58,7 @@ class raw_env(AECEnv):
         if bird_inits is None:
             bird_inits = [make_bird(z=50.0, y=3.0*i, u=5.0) for i in range(N)]
 
+        self.t = t
         self.h = h
         self.N = N
         self.bird_inits = bird_inits
