@@ -79,6 +79,8 @@ class raw_env(AECEnv):
 
         self._agent_selector = agent_selector(self.agents)
 
+        self.LIA = LIA
+
         action_limit = 0.01
         # first element is thrust (needs units), others need to be labeled and dimensioned (also why 4?)
         self.action_spaces = {i: spaces.Box(low=np.array([0.0, -action_limit, -action_limit, -action_limit, -action_limit]),
