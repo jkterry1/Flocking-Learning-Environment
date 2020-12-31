@@ -62,6 +62,7 @@ class raw_env(AECEnv):
         self.h = h
         self.N = N
         self.energy_punishment = energy_punishment
+        self.forward_reward = forward_reward
         self.bird_inits = bird_inits
         if self.bird_inits is not None:
             assert self.N == len(self.bird_inits)
