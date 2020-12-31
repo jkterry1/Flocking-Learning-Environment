@@ -70,7 +70,7 @@ struct Flock{
         if (len(bird.X) >= 2 && bird.x > bird.X[len(bird.X)-2]){
             reward += self.forward_reward;
         }
-        reward += self.energy_punishment * action[0];
+        reward -= self.energy_punishment * action[0];
 
         if (self.crashed(bird)){
             done = true;

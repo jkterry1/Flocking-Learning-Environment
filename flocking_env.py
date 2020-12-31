@@ -38,7 +38,7 @@ class raw_env(AECEnv):
                  N=10,
                  h=0.001,
                  t=60.0,
-                 energy_punishment=2.0,
+                 energy_punishment=-2.0,
                  forward_reward=5.0,
                  crash_reward=-100.0,
                  max_observable_birds=7,
