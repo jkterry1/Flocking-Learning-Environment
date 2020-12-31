@@ -38,7 +38,7 @@ class raw_env(AECEnv):
                  N=10,
                  h=0.001,
                  t=60.0,
-                 energy_punishment=2.0,
+                 energy_reward=-2.0,
                  forward_reward=5.0,
                  crash_reward=-100.0,
                  max_observable_birds=7,
@@ -62,7 +62,7 @@ class raw_env(AECEnv):
         self.h = h
         self.N = N
 
-        self.energy_punishment = energy_punishment
+        self.energy_reward = energy_reward
         self.forward_reward = forward_reward
         self.crash_reward = crash_reward
 
@@ -134,7 +134,7 @@ class raw_env(AECEnv):
         self.seed()
 
         # creates c++ environment with initial birds
-        self.simulation = flocking_cpp.Flock(self.N, self.h, self.t, self.energy_punishment, self.forward_reward, self.crash_reward, self.bird_inits, self.LIA)
+        self.simulation = flocking_cpp.Flock(self.N, self.h, self.t, self.energy_reward, self.forward_reward, self.crash_reward, self.bird_inits, self.LIA)
 
         self.agents = self.possible_agents[:]
         self._agent_selector.reinit(self.agents)

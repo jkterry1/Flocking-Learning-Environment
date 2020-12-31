@@ -14,7 +14,7 @@ struct Flock{
     int N;
     double max_r;
     bool LIA;
-    double energy_punishment;
+    double energy_reward;
     double forward_reward;
     double crash_reward;
     Birds birds;
@@ -22,7 +22,7 @@ struct Flock{
     Flock(  int N,
             double h,
             double t,
-            double energy_punishment,
+            double energy_reward,
             double forward_reward,
             double crash_reward,
             BirdInits init_vals,
@@ -36,7 +36,7 @@ struct Flock{
 
         self.max_r = 1.0;
 
-        self.energy_punishment = energy_punishment;
+        self.energy_reward = energy_reward;
         self.forward_reward = forward_reward;
         self.crash_reward = crash_reward;
 
@@ -70,7 +70,7 @@ struct Flock{
         if (len(bird.X) >= 2 && bird.x > bird.X[len(bird.X)-2]){
             reward += self.forward_reward;
         }
-        reward += self.energy_punishment * action[0];
+        reward += self.energy_reward * action[0];
 
         if (self.crashed(bird)){
             done = true;

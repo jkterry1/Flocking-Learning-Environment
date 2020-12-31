@@ -10,9 +10,6 @@ Vector3d drdt(double gamma, double epsilon, Vector3d b, double theta){
 }
 
 Vector3d duvwdt(Vector3d uvw, Bird & bird){
-    double theta = bird.theta;
-    double phi = bird.phi;
-    double psi = bird.psi;
     Vector3d pqr = bird.pqr();
     double u, v, w;
     up(u, v, w) = uvw;
