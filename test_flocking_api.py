@@ -2,11 +2,11 @@ import pettingzoo.tests.api_test as api_test
 import pettingzoo.tests.bombardment_test as bombardment_test
 import pettingzoo.tests.performance_benchmark as performance_benchmark
 
-from pettingzoo.render_test import render_test as render_test
-from pettingzoo.error_tests import error_test as error_test
-from pettingzoo.seed_test import seed_test as seed_test
-from pettingzoo.save_obs_test import test_save_obs as test_save_obs
-from pettingzoo.max_cycles_test import max_cycles_test as max_cycles_test
+from pettingzoo.tests import render_test
+from pettingzoo.tests import error_test
+from pettingzoo.tests import seed_test 
+from pettingzoo.tests import test_save_obs
+from pettingzoo.tests import max_cycles_test 
 
 import flocking_env
 
