@@ -1,7 +1,6 @@
-import pettingzoo.tests.api_test as api_test
-import pettingzoo.tests.bombardment_test as bombardment_test
-import pettingzoo.tests.performance_benchmark as performance_benchmark
-
+from pettingzoo.tests import api_test
+from pettingzoo.tests import bombardment_test
+from pettingzoo.tests import performance_benchmark
 from pettingzoo.tests import render_test
 from pettingzoo.tests import error_test
 from pettingzoo.tests import seed_test
