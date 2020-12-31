@@ -11,11 +11,10 @@ from pettingzoo.tests import max_cycles_test
 import flocking_env
 
 
-def test_flocking_env():
-    env = flocking_env.env()
-    api_test(env, num_cycles=1000, render=False, verbose_progress=True)
-    seed_test(env, num_cycles=1000)
-    performance_benchmark(env)
+env = flocking_env.env()
+api_test(env, num_cycles=1000, render=False, verbose_progress=True)
+seed_test(env, num_cycles=1000)
+performance_benchmark(env)
 
 # test render (both render test and api test w/ render)
 # test equivalent of save obs?
