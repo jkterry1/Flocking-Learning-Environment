@@ -15,5 +15,4 @@ performance_benchmark.performance_benchmark(env)
 
 # test render (both render test and api test w/ render)
 # test equivalent of save obs?
-# error tests?
-# seed tets
+# seed test
