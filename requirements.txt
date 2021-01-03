@@ -1,0 +1,3 @@
+git+https://github.com/PettingZoo-Team/PettingZoo.git@master
+pybind11
+matplotlib

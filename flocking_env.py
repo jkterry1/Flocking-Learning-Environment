@@ -83,12 +83,12 @@ class raw_env(AECEnv):
 
         action_limit = 0.01
         # first element is thrust (needs units), others need to be labeled and dimensioned (also why 4?)
-        self.action_spaces = {i: spaces.Box(low=np.array([0.0, -action_limit, -action_limit, -action_limit, -action_limit]),
-                                        high=np.array([10.0, action_limit, action_limit, action_limit, action_limit])) for i in self.agents}
+        self.action_spaces = {i: spaces.Box(low=np.array([0.0, -action_limit, -action_limit, -action_limit, -action_limit]).astype(np.float32),
+                                        high=np.array([10.0, action_limit, action_limit, action_limit, action_limit]).astype(np.float32)) for i in self.agents}
 
         # They're giant because there's position, so there's no clear limit. Smaller ones should be used for things other than that. Comment needed with each element of vector
-        low = -10000.0 * np.ones(22 + 6*min(self.N-1, self.max_observable_birds),)
-        high = 10000.0 * np.ones(22 + 6*min(self.N-1, self.max_observable_birds),)
+        low = -10000.0 * np.ones(22 + 6*min(self.N-1, self.max_observable_birds),).astype(np.float32)
+        high = 10000.0 * np.ones(22 + 6*min(self.N-1, self.max_observable_birds),).astype(np.float32)
         observation_space = spaces.Box(low=low, high=high, dtype=np.float32)
         self.observation_spaces = {i: observation_space for i in self.agents}
 
