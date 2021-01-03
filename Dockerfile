@@ -1,11 +1,4 @@
-FROM python:3.8-alpine
-
-RUN apk add \
-    git \
-    openblas-dev \
-    gfortran \
-    gcc \
-    g++ 
+FROM python:3.8
 
 COPY requirements.txt /
 
