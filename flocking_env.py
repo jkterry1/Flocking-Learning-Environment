@@ -152,7 +152,8 @@ class raw_env(AECEnv):
         # This function generates plots summarizing the statics of birds
         birds = self.simulation.get_birds()
         plotting.plot_values(birds, show=True)
-        plotting.plot_birds(birds, plot_vortices=plot_vortices, show=True)
+        plt.pause(0.01)
+        #plotting.plot_birds(birds, plot_vortices=plot_vortices, show=True)
 
     def close(self):
         plotting.close()
