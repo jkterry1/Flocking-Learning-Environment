@@ -1,5 +1,6 @@
-git+https://github.com/PettingZoo-Team/PettingZoo.git@master
+git+https://github.com/PettingZoo-Team/PettingZoo.git
 pybind11
 matplotlib
-numpy
 gym
+numpy
+scipy

@@ -6,7 +6,6 @@ import numpy as np
 
 import plotting
 import csv
-from gym.utils import seeding
 import flocking_cpp
 
 
@@ -96,9 +95,6 @@ class raw_env(AECEnv):
 
         self.infos = {i: {} for i in self.agents}
 
-    def seed(self, seed=None):
-        self.np_random, _ = seeding.np_random(seed)
-
     def step(self, action):
 
         if self.dones[self.agent_selection]:
@@ -146,11 +142,10 @@ class raw_env(AECEnv):
         self.steps = 0
 
     def render(self, mode='human', plot_vortices=False):
-        # This function generates plots summarizing the statics of birds
+        # replace with something functional or entirely remove for log based rendering
         birds = self.simulation.get_birds()
         plotting.plot_values(birds, show=True)
-        plt.pause(0.01)
-        #plotting.plot_birds(birds, plot_vortices=plot_vortices, show=True)
+        plotting.plot_birds(birds, plot_vortices=plot_vortices, show=True)
 
     def close(self):
         plotting.close()
@@ -159,10 +154,9 @@ class raw_env(AECEnv):
         birds = self.simulation.get_birds()
         for bird in birds:
             state = []
-            # [ID, x, y, z, phi, theta, psi, aleft, aright, bleft, bright]
             ID = self.agents.index(self.agent_selection)
             time = self.steps * self.h
-            # alpha and beta are wing angles for each wings (l and r indicate side), though which means what is unclear
+            # clarify variables
             state = [ID, time, bird.x, bird.y, bird.z, bird.phi, bird.theta, bird.psi, bird.alpha_l, bird.alpha_r, bird.beta_l, bird.beta_r]
             self.data.append(state)
             if np.any(self.dones):
