@@ -388,27 +388,21 @@ struct Bird{
 
     std::vector<Bird *> n_nearest(Birds & birds, size_t max_observable_birds){
         Bird & self = *this;
-        std::vector<int> arange(birds.size()-1);
-        size_t j = 0;
+        std::vector<int> arange(birds.size());
         for(size_t i = 0; i < birds.size(); i++){
-            // do not give observation
-            if(&birds[i] != this){
-                arange.at(j) = i;
-                j++;
-            }
+            arange.at(i) = i;
         }
-        if(len(birds) > max_observable_birds){
-            std::vector<double> dists(arange.size());
-            for(size_t i = 0; i < arange.size(); i++){
-                Bird & other = birds[arange[i]];
-                dists[i] = sqrt(sqr(self.x - other.x) + sqr(self.y - other.y) + sqr(self.z - other.z));
-            }
-            std::sort(arange.begin(),arange.end(), [&](int b1, int b2){
-                return dists[b1] < dists[b2];
-            });
+        std::vector<double> dists(arange.size());
+        for(size_t i = 0; i < arange.size(); i++){
+            Bird & other = birds[arange[i]];
+            dists[i] = sqrt(sqr(self.x - other.x) + sqr(self.y - other.y) + sqr(self.z - other.z));
         }
+        std::stable_sort(arange.begin(),arange.end(), [&](int b1, int b2){
+            return dists[b1] < dists[b2];
+        });
+        assert(dists[arange[0]] == 0 && "the smallest distance should be zero");
         std::vector<Bird *> result;
-        for(size_t i = 0; i < std::min(max_observable_birds, arange.size()); i++){
+        for(size_t i = 1; i < std::min(max_observable_birds + 1, arange.size()); i++){
             result.push_back(&birds[arange[i]]);
         }
         return result;

@@ -130,9 +130,6 @@ class raw_env(AECEnv):
         return self.simulation.get_observation(self._agent_idxs[agent], self.max_observable_birds)
 
     def reset(self):
-
-        self.seed()
-
         # creates c++ environment with initial birds
         self.simulation = flocking_cpp.Flock(self.N, self.h, self.t, self.energy_reward, self.forward_reward, self.crash_reward, self.bird_inits, self.LIA)
 
