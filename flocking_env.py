@@ -21,14 +21,6 @@ def make_bird(x=0., y=0., z=0., u=0., v=0., w=0., p=0., q=0., r=0., theta=0., ph
     # a comment is needed defining all of these, including their units
     return flocking_cpp.BirdInit(x, y, z, u, v, w, p, q, r, theta, phi, psi)
 
-# make sure z=0 is bottom, hitting it means death w/ reward penalty
-# make sure distance counting for reward compatible with sphere- global vs local ratio for distance/energy rewards?
-# pettingzoo tests on environment
-# see what rendering does- carolines idea of many position curves adequate, though vector curves better if supported
-# make sure seeding controls work
-# is angle of attack in sim?
-# wing flap timing thing in new nature paper?
-
 
 class raw_env(AECEnv):
     metadata = {'render.modes': ['human']}
@@ -98,11 +90,11 @@ class raw_env(AECEnv):
     def step(self, action):
 
         if self.dones[self.agent_selection]:
-            return self._was_done_step(action)  # BEN: this function handles agent termination logic like checking that the action is None and removing the agent from the agents list
+            return self._was_done_step(action)  # this function handles agent termination logic like checking that the action is None and removing the agent from the agents list
 
         self.simulation.update_bird(action, self._agent_idxs[self.agent_selection])
 
-        done, reward = self.simulation.get_done_reward(action, self._agent_idxs[self.agent_selection])  # 1 why is action taken here BEN: look at the get_done_reward function in flock.cpp. It should be obvious from that. 2 the logic separating this line and the last is unclear BEN: Sometimes you put logic in different functions for no reason other than to make the functions smaller and more easily understandable. I think this is why Caroline did it this way
+        done, reward = self.simulation.get_done_reward(action, self._agent_idxs[self.agent_selection])
 
         self._clear_rewards()
         self.rewards[self.agent_selection] = reward
@@ -112,15 +104,15 @@ class raw_env(AECEnv):
 
         if self.agent_selection == self.agents[-1]:
             if self.steps % self.vortex_update_frequency == 0:
-                self.simulation.update_vortices(self.vortex_update_frequency)  # why is the argument needed? BEN: look at the update_vortices function in flock.cpp. The update frequency is needed as part of the step size for the physics
+                self.simulation.update_vortices(self.vortex_update_frequency)
             self.steps += 1
 
         self._cumulative_rewards[self.agent_selection] = 0
 
         self.agent_selection = self._agent_selector.next()
 
-        self._accumulate_rewards()  # BEN: this function adds everything in the rewards dict into the _cumulative_rewards dict
-        self._dones_step_first()  # BEN: this handles the agent death logic. It is necessary here, but I guess it probably should not be necessary here because there is no non-trivial death mechanics here. If you want, you can create an issue of this, and I can fix it so that this call isn't necessary.
+        self._accumulate_rewards()  # this function adds everything in the rewards dict into the _cumulative_rewards dict
+        self._dones_step_first()  # this handles the agent death logic. It is necessary here, but I guess it probably should not be necessary here because there is no non-trivial death mechanics here. If you want, you can create an issue of this, and I can fix it so that this call isn't necessary.
 
     def observe(self, agent):
         return self.simulation.get_observation(self._agent_idxs[agent], self.max_observable_birds)
