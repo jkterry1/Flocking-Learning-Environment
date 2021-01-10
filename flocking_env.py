@@ -12,7 +12,6 @@ import flocking_cpp
 def env(**kwargs):
     env = raw_env(**kwargs)
     env = wrappers.ClipOutOfBoundsWrapper(env)
-    env = wrappers.NanNoOpWrapper(env, np.zeros(5), "executing the 'do nothing' action.")
     env = wrappers.OrderEnforcingWrapper(env)
     return env
 
