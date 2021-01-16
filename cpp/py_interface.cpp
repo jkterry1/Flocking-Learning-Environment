@@ -71,6 +71,7 @@ PYBIND11_MODULE(flocking_cpp, m) {
         .expose_bird_var(r)
         .expose_bird_var(theta)
         .expose_bird_var(phi)
+        .expose_bird_var(psi)
         .expose_bird_var(alpha_l)
         .expose_bird_var(alpha_r)
         .expose_bird_var(beta_l)

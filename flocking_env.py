@@ -34,7 +34,7 @@ class raw_env(AECEnv):
                  max_observable_birds=7,
                  bird_inits=None,
                  LIA=False,
-                 filename="episode_1.csv",
+                 filename="log_1.csv",
                  vortex_update_frequency=10
                  ):
         '''
@@ -85,6 +85,7 @@ class raw_env(AECEnv):
         self.data = []  # used for logging
 
         self.infos = {i: {} for i in self.agents}
+        self.filename = filename
 
     def step(self, action):
 
@@ -141,7 +142,15 @@ class raw_env(AECEnv):
     def close(self):
         plotting.close()
 
+    def plot_values(self):
+        plotting.plot_values(self.simulation.get_birds())
+
+    def plot_birds(self, vortices=False):
+        plotting.plot_birds(self.simulation.get_birds(), plot_vortices = vortices)
+
+
     def log(self):
+        file = open(self.filename, "w")
         birds = self.simulation.get_birds()
         for bird in birds:
             state = []
@@ -151,5 +160,5 @@ class raw_env(AECEnv):
             state = [ID, time, bird.x, bird.y, bird.z, bird.phi, bird.theta, bird.psi, bird.alpha_l, bird.alpha_r, bird.beta_l, bird.beta_r]
             self.data.append(state)
             if np.any(self.dones):
-                wr = csv.writer(self.file)
+                wr = csv.writer(file)
                 wr.writerows(self.data)
