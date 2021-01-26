@@ -10,12 +10,12 @@ t = 10.0
 h = 0.001
 n = (int)(t/h)
 N = 1
-LIA = False
+LIA = True
 
 def run():
     z = 0.01
-    birds = [solver.make_bird(z=90.0, y=0.6, x=-1.0, u=0, p = 0)]
-    env = solver.raw_env(N = N, LIA = LIA)
+    birds = [solver.make_bird(z=50.0, p=2.0, u=11.0)]
+    env = solver.raw_env(N = N, LIA = LIA, bird_inits = birds)
     env.reset()
     done = False
 
@@ -34,7 +34,8 @@ def run():
             break
             env.reset()
             done = False
-    env.log()
+    env.log_birds()
+    env.log_vortices()
     env.plot_birds()
     env.plot_values()
 

@@ -155,6 +155,11 @@ struct Bird{
     PrevValues PHI;// = [phi]
     PrevValues PSI;// = [psi]
 
+    PrevValues ALPHA_L;
+    PrevValues ALPHA_R;
+    PrevValues BETA_L;
+    PrevValues BETA_R;
+
     Bird() = default;
     Bird(const BirdInit & init){
         Bird & self = *this;
@@ -192,9 +197,9 @@ struct Bird{
         Moments of Inertia
         */
         self.Ixx = self.m * sqr(self.Xl);
-        self.Iyy = self.m * sqr(self.Xl);
-        self.Izz = self.m * sqr(self.Xl);
-        self.Ixz = 0.5 * self.m * sqr(self.Xl);    //approximation
+        self.Iyy = self.m * sqr(self.Yl);
+        self.Izz = self.m * sqr(self.Zl);
+        self.Ixz = 0.5 * self.m * sqr(self.Zl);    //approximation
         self.inertia = matrix(self.Ixx, 0.0, self.Ixz,
                                     0.0, self.Iyy, 0.0,
                                     self.Ixz, 0.0, self.Izz);
@@ -283,6 +288,11 @@ struct Bird{
         self.THETA.push_back(b.theta);
         self.PHI.push_back(b.phi);
         self.PSI.push_back(b.psi);
+
+        self.ALPHA_L.push_back(b.alpha_l);
+        self.ALPHA_R.push_back(b.alpha_r);
+        self.BETA_L.push_back(b.beta_l);
+        self.BETA_R.push_back(b.beta_r);
     }
 
     void update_vortex_positions(Vorticies & vortices, double h){

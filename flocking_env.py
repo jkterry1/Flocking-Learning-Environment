@@ -34,8 +34,9 @@ class raw_env(AECEnv):
                  max_observable_birds=7,
                  bird_inits=None,
                  LIA=False,
-                 filename="log_1.csv",
-                 vortex_update_frequency=10
+                 bird_filename="bird_log_1.csv",
+                 vortex_filename = "vortex_log_1.csv",
+                 vortex_update_frequency=100
                  ):
         '''
         N: number of birds (if bird_inits is None)
@@ -85,7 +86,8 @@ class raw_env(AECEnv):
         self.data = []  # used for logging
 
         self.infos = {i: {} for i in self.agents}
-        self.filename = filename
+        self.bird_filename = bird_filename
+        self.vortex_file = open(vortex_filename, "w")
 
     def step(self, action):
 
@@ -105,6 +107,7 @@ class raw_env(AECEnv):
         if self.agent_selection == self.agents[-1]:
             if self.steps % self.vortex_update_frequency == 0:
                 self.simulation.update_vortices(self.vortex_update_frequency)
+                self.log_vortices()
             self.steps += 1
 
         self._cumulative_rewards[self.agent_selection] = 0
@@ -149,16 +152,26 @@ class raw_env(AECEnv):
         plotting.plot_birds(self.simulation.get_birds(), plot_vortices = vortices)
 
 
-    def log(self):
-        file = open(self.filename, "w")
+    def log_vortices(self):
+        file = self.vortex_file
+        wr = csv.writer(file)
         birds = self.simulation.get_birds()
+        time = self.steps * self.h
         for bird in birds:
+            for vortex in bird.VORTICES_LEFT:
+                state = [time, vortex.pos[0], vortex.pos[1], vortex.pos[2], vortex.theta, vortex.phi, vortex.psi, vortex.gamma]
+                wr.writerow(state)
+
+
+    def log_birds(self):
+        file = open(self.bird_filename, "w")
+        wr = csv.writer(file)
+        birds = self.simulation.get_birds()
+        for ID, bird in enumerate(birds):
             state = []
-            ID = self.agents.index(self.agent_selection)
-            time = self.steps * self.h
             # clarify variables
-            state = [ID, time, bird.x, bird.y, bird.z, bird.phi, bird.theta, bird.psi, bird.alpha_l, bird.alpha_r, bird.beta_l, bird.beta_r]
-            self.data.append(state)
-            if np.any(self.dones):
-                wr = csv.writer(file)
-                wr.writerows(self.data)
+            print(int(self.t/self.h)-1)
+            for i in range(len(bird.X)):
+                time = i*self.h
+                state = [ID, time, bird.X[i], bird.Y[i], bird.Z[i], bird.PHI[i], bird.THETA[i], bird.PSI[i], bird.ALPHA_L[i], bird.ALPHA_R[i], bird.BETA_L[i], bird.BETA_R[i]]
+                wr.writerow(state)
