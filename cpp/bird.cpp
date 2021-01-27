@@ -101,7 +101,7 @@ struct Bird{
     double theta;
     double phi;
     double psi;
-    Vector3d angles()const{return Vector3d(theta,phi,psi);}
+    Vector3d angles()const{return Vector3d(phi, theta, psi);}
 
     /*
     position
@@ -248,7 +248,7 @@ struct Bird{
         up(self.p,self.q,self.r) = pqr;
 
         Vector3d angles = self.take_time_step(danglesdt, self.angles(), h);
-        up(self.theta,self.phi,self.psi) = angles;
+        up(self.phi,self.theta,self.psi) = angles;
 
         Vector3d xyz = self.take_time_step(dxyzdt, self.xyz(), h);
         up(self.x,self.y,self.z) = xyz;
