@@ -52,6 +52,7 @@ struct Bird{
     */
     static constexpr double g = -9.8;
     static constexpr double rho = 1.225;
+
     /*
     bird properties:
         m, mass
@@ -221,9 +222,9 @@ struct Bird{
                                     self.Ixz, 0.0, self.Izz);
 
 
-      //Total force and torque on this bird
-      self.F = Vector3d(0.0, 0.0, 0.0);
-    	self.T = Vector3d(0.0, 0.0, 0.0);
+        //Total force and torque on this bird
+        self.F = Vector3d(0.0, 0.0, 0.0);
+      	self.T = Vector3d(0.0, 0.0, 0.0);
 
         /*
         wing orientation angles alpha and beta for the left and right wings,
