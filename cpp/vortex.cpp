@@ -10,39 +10,64 @@ Vortex::Vortex(Bird & bird, double sign){
 
     /*
       orientation
+      -phi represents the angle rotated around the u axis,
+        the axis that points out through the birds nose.
+      -theta represents the angle rotated around the v axis,
+        the axis that points out the right wing of the bird.
+      -psi represents the angle rotated around the w axis,
+        the axis that points up through the center of the bird.
     */
     self.phi = bird.phi;
     self.theta = bird.theta;
     self.psi = bird.psi;
 
     /*
-      position
+      The angle of the vortex depends on the angle of the bird that produces
+      it, and also the angle of the bird's wing.
     */
     if (sign == 1) // right wing
-	self.phi += bird.beta_r;
-    else
-	self.phi -= bird.beta_l;
+       self.phi += bird.beta_r;
+    else //left wing
+       self.phi -= bird.beta_l;
+
+    //mat transforms vectors from the bird's frame to the earth's frame.
     Matrix3d mat = self.get_transform(self.phi, self.theta, self.psi);
 
-    Vector3d a = Vector3d(0.0, bird.Xl, 0.0);
-    if (sign == 1) // right wing
-	self.pos = bird.xyz() -  matmul(mat, a);
-    else //left wing
-	self.pos = bird.xyz() +  matmul(mat, a);
-
     /*
-      properties
+      We need to transform the position of the vortex produced from the bird's
+      frame into the earth's frame.
+      First we find where the vortex is dropped, from the left or right wing,
+      then use the frame change transformation.
     */
+    //end_of_wing is the coordinate of the right wing tip in the bird's frame.
+    Vector3d end_of_wing = Vector3d(0.0, bird.Xl, 0.0);
+    if (sign == 1) // right wing
+	     self.pos = bird.xyz() -  matmul(mat, end_of_wing);
+    else //left wing
+	     self.pos = bird.xyz() +  matmul(mat, end_of_wing);
+
+    //velocity of the vortex
     double vel = bird.uvw().norm();
+    /*
+      If the bird is moving too slowly, it's will not produce a vortex.
+      If it does produce a vortex, it's strength is inversely proportional
+      to the bird's velocity.
+    */
     if (abs(vel) > self.min_vel)
-	self.gamma = self.C * bird.m/(bird.Xl * vel);
+	   self.gamma = self.C * bird.m/(bird.Xl * vel);
     else
-	self.gamma = 0.0;
-    //print("Gamma ", self.gamma)
+	   self.gamma = 0.0;
+
+    //core represents the radius of the vortex's "core", the center of the
+    //vortex where no air is moving to prevent divide by zero issue.
     self.core = 0.05 * bird.Xl;
 }
 
-// vlocity of the vortex in the earth's frame
+/*
+  Returns the velocity of the air in a vortex at position (x,y,z)
+  in the earth's frame. This value can be used to calculate drag forces on
+  any birds this vortex interacts with.
+*/
 Vector3d Vortex::earth_vel(double x, double y, double z){
     Vortex & self = *this;
     double r = sqrt(sqr(y - self.pos[1]) + sqr(z - self.pos[2]));
