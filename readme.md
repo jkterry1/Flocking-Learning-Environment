@@ -134,7 +134,7 @@ Parameters:
 The local induction approximation (LIA) is a differential equation that describes how the vortex line induces motion in itself due to its own curvature.
 
 Here are the equations that describe this motion:
-![image](Images/lia-theory.jpeg)
+![image](Images/LIA-theory.jpeg)
 
 This is for the continuous case, but the vortices in the simulation are defined by discrete points, so a discretized version of these equations is used instead.
 
