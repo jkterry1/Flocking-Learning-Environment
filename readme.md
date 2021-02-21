@@ -78,7 +78,7 @@ A bird's position, orientation, and movement are defined by several variables.
 - **Velocity**: A bird's velocity is defined by **(u, v, w)**. These are the values for velocity along the 3 main axes in the bird frame. 
 ![image](Images/pos-ori-vel.jpeg)
 
-- **Rotaional Velocity**: A bird's angular velocity is defined by **(p, q, r)**. These are the rates of rotation around each of the 3 main axes in the bird's frame. 
+- **Rotational Velocity**: A bird's angular velocity is defined by **(p, q, r)**. These are the rates of rotation around each of the 3 main axes in the bird's frame. 
 
 - **Wing Orientation**: The wings can be adjusted in two ways, rotated forward and backward (**alpha**) or rotated up and down (**beta**).
 ![image](Images/wings.jpeg)
@@ -90,7 +90,7 @@ The position, velocity, Euler angles, and angular velocity are calculated every 
 
 **Position**
 
-The "E" subscript indicates that this value is in the earth's frame. Unless ptherwise stated, all other values are in the bird's frame
+The "E" subscript indicates that this value is in the earth's frame. Unless otherwise stated, all other values are in the bird's frame
 The equations are shortened, s is sine,c is cosine, and t is tangent.
 ![image](Images/diffeq-pos.jpeg)
 
