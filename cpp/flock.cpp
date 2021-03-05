@@ -209,6 +209,7 @@ struct Flock{
 	        Bird & other = *otherp;
             extend(obs, {other.x - bird.x, other.y - bird.y, other.z - bird.z});
             extend(obs, {other.u - bird.u, other.v - bird.v, other.w - bird.w});
+            extend(obs, {other.phi - bird.psi, other.theta - bird.theta, other.psi - bird.psi});
         }
         return obs;
     }
