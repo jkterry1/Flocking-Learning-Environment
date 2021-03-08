@@ -84,6 +84,7 @@ class raw_env(AECEnv):
         # the limit on how many degrees a bird can twist or lift its wings
         # per time step.
         wing_action_limit = 0.01
+        thrust_limit = 10.0
 
         '''
         Action space is a 5-vector where each index represents:
@@ -94,7 +95,7 @@ class raw_env(AECEnv):
         4: beta rotation of right wing (in degrees)
         '''
         self.action_spaces = {i: spaces.Box(low=np.array([0.0, -wing_action_limit, -wing_action_limit, -wing_action_limit, -wing_action_limit]).astype(np.float32),
-                                        high=np.array([10.0, wing_action_limit, wing_action_limit, wing_action_limit, wing_action_limit]).astype(np.float32)) for i in self.agents}
+                                        high=np.array([thrust_limit, wing_action_limit, wing_action_limit, wing_action_limit, wing_action_limit]).astype(np.float32)) for i in self.agents}
 
         '''
         Observation space is a vector with
@@ -112,13 +113,14 @@ class raw_env(AECEnv):
         20-21:  Right wing orientation (alpha, beta)
 
         Following this, starting at observation 22, there will be
-        6-dimension vectors for each bird the current bird can observe.
+        9-dimension vectors for each bird the current bird can observe.
         Each of these vectors contains
         0-2:    Relative position to the current bird
         3-5:    Relative velocity to the current bird
+        6-8:    Other bord's orientation (phi, theta, psi)
         '''
-        low = -10000.0 * np.ones(22 + 6*min(self.N-1, self.max_observable_birds),).astype(np.float32)
-        high = 10000.0 * np.ones(22 + 6*min(self.N-1, self.max_observable_birds),).astype(np.float32)
+        low = -10000.0 * np.ones(22 + 9*min(self.N-1, self.max_observable_birds),).astype(np.float32)
+        high = 10000.0 * np.ones(22 + 9*min(self.N-1, self.max_observable_birds),).astype(np.float32)
         observation_space = spaces.Box(low=low, high=high, dtype=np.float32)
         self.observation_spaces = {i: observation_space for i in self.agents}
 
@@ -210,7 +212,7 @@ class raw_env(AECEnv):
     and red points that represent the centers of active vortices.
 
     if the vortices parameter is true, then arrows showing the rotation of
-    the vortices will be plotted as well. 
+    the vortices will be plotted as well.
     '''
     def plot_birds(self, vortices=False):
         plotting.plot_birds(self.simulation.get_birds(), plot_vortices = vortices)
