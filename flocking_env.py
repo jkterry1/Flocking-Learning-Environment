@@ -35,7 +35,7 @@ class raw_env(AECEnv):
                  bird_inits=None,
                  LIA=False,
                  bird_filename="bird_log_1.csv",
-                 vortex_filename = "vortex_log_1.csv",
+                 vortex_filename="vortex_log_1.csv",
                  vortex_update_frequency=100
                  ):
         '''

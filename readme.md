@@ -15,7 +15,7 @@ Python:
 * `flocking_env.py`: The PettingZoo environment.
 * `plotting.py`: Plot utilities
 * `solver_tester.py`: Tests bird flocking
-* `test_flocking_api.py`: Tests the PettingZoo environment API
+* `test_flocking_api.py`: Tests the PettingZoo environment API (unmaintained as of Mar 7)
 
 C++:
 
