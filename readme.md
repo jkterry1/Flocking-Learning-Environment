@@ -155,7 +155,7 @@ If a bird is close enough to a vortex line to be affected by its vortex, it sear
 The velocity of air caused by the vortex is defined by the Burnham-Hallock model. This is a velocity in the direction of air motion (tangent velocity).
 
 Parameters:
-- Gamma: the strength of the vortex
+- gamma_0: the strength of the vortex
 - r: the distance from the center of the vortex
 - rc: the size of the "vortex core", an area with no motion at the center of the vortex.
 
@@ -182,6 +182,10 @@ This diagram shows the values needed from each point.
 Using these calculated values, the final velocity of a point on the vortex line is:
 
 <img src="Images/lia-discrete.jpeg" alt="drawing" width="200"/>
+
+.
+
+<img src="Images/lia-extras.jpeg" alt="drawing" width="300"/>
 
 Where epsilon is the distance between points.
 
