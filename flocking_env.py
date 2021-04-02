@@ -31,12 +31,16 @@ class raw_env(AECEnv):
                  energy_reward=-2.0,
                  forward_reward=5.0,
                  crash_reward=-100.0,
-                 max_observable_birds=7,
                  bird_inits=None,
                  LIA=False,
                  bird_filename="bird_log_1.csv",
                  vortex_filename="vortex_log_1.csv",
-                 vortex_update_frequency=100
+                 vortex_update_frequency=100,
+                 log = False,
+                 num_neighbors=7,
+                 derivatives_in_obs=True,
+                 thrust_limit = 10.0,
+                 wing_action_limit = 0.01
                  ):
         '''
         N: number of birds (if bird_inits is None)
@@ -45,12 +49,16 @@ class raw_env(AECEnv):
         energy_reward: the reward for a bird using energy (negative to incentivize limiting energy use)
         forward_reward: the reward for a bird moving forward
         crash_reward: the reward for a bird crashing into another bird or the ground
-        max_observable_birds: the number of neighboring birds a bird can see
         bird_inits: initial positions of the birds (None for default random sphere)
         LIA: boolean choice to include Local approximation for vortice movement
         bird_filename: the file you want to log the bird states in
         vortex_filename: the file you want to log the vortex states in
         vortex_update_frequency: Period of adding new points on the vortex line.
+        log: True/False whether to log all values or not
+        num_neighbors: How many neightbors each bird can see
+        derivatives_in_obs: True if derivatives should be included in the observation.
+        thrust_limit: The forward thrust limit of the bird (in Newtons)
+        wing_action_limit: The limit on how far a wing can rotate (in degrees)
         '''
 
         # default birds are spaced 3m apart, 50m up,
@@ -70,7 +78,7 @@ class raw_env(AECEnv):
         if self.bird_inits is not None:
             assert self.N == len(self.bird_inits)
         self.max_frames = int(t/h)
-        self.max_observable_birds = max_observable_birds
+        self.num_neighbors= num_neighbors
         self.vortex_update_frequency = vortex_update_frequency
 
         self.agents = [f"b_{i}" for i in range(self.N)]
@@ -80,11 +88,7 @@ class raw_env(AECEnv):
         self._agent_selector = agent_selector(self.agents)
 
         self.LIA = LIA
-
-        # the limit on how many degrees a bird can twist or lift its wings
-        # per time step.
-        wing_action_limit = 0.01
-        thrust_limit = 10.0
+        self.derivatives_in_obs = derivatives_in_obs
 
         '''
         Action space is a 5-vector where each index represents:
@@ -99,33 +103,42 @@ class raw_env(AECEnv):
 
         '''
         Observation space is a vector with
-        22 dimensions for the current bird's state and
-        6 dimensions for each of the birds the current bird can observe.
+        If including derivatives, 20 dimensions for the current bird's state and
+        9 dimensions for each of the birds the current bird can observe.
+        If not including derivatives, 14 dimensions for the current bird's
+        state and 6 dimensions for each bird the current bird can observe.
 
         Bird's state observations:
         0-2:    Force on the bird in each direction (fu, fv, fw)
         3-5:    Torque on the bird in each direction (Tu, Tv, Tw)
-        6-8:    Bird's position in each dimension (x, y, z)
-        9-11:   Bird's velocity in each direction (u, v, w)
-        12-14:  Bird's angular velocity in each direction (p, q, r)
-        15-17:  Bird's orientation (phi, theta, psi)
-        18-19:  Left wing orientation (alpha, beta)
-        20-21:  Right wing orientation (alpha, beta)
+        6:      Bird's height (z)
+        7-9:  Bird's orientation (phi, theta, psi)
+        10-11:  Left wing orientation (alpha, beta)
+        12-13:  Right wing orientation (alpha, beta)
+        (The following dimensions are only included if derivatives are included)
+        14-16:    Bird's velocity in each direction (u, v, w)
+        17-19:  Bird's angular velocity in each direction (p, q, r)
 
-        Following this, starting at observation 22, there will be
+        Following this, starting at observation 20, there will be
         9-dimension vectors for each bird the current bird can observe.
         Each of these vectors contains
         0-2:    Relative position to the current bird
-        3-5:    Relative velocity to the current bird
-        6-8:    Other bord's orientation (phi, theta, psi)
+        3-5:    Other bird's orientation relative to current bird (phi, theta, psi)
+        (The following dimension is only included if derivatives are included)
+        6-8:    Relative velocity to the current bird
         '''
-        low = -10000.0 * np.ones(22 + 9*min(self.N-1, self.max_observable_birds),).astype(np.float32)
-        high = 10000.0 * np.ones(22 + 9*min(self.N-1, self.max_observable_birds),).astype(np.float32)
+        if self.derivatives_in_obs:
+            low = -np.ones(20 + 9*min(self.N-1, self.num_neighbors),).astype(np.float32)
+            high = np.ones(20 + 9*min(self.N-1, self.num_neighbors),).astype(np.float32)
+        else:
+            low = -np.ones(14 + 6*min(self.N-1, self.num_neighbors),).astype(np.float32)
+            high = np.ones(14 + 6*min(self.N-1, self.num_neighbors),).astype(np.float32)
         observation_space = spaces.Box(low=low, high=high, dtype=np.float32)
         self.observation_spaces = {i: observation_space for i in self.agents}
 
         self.vortex_file = open(vortex_filename, "w")
         self.bird_filename = bird_filename
+        self.log = log
 
     def step(self, action):
         if self.dones[self.agent_selection]:
@@ -156,7 +169,7 @@ class raw_env(AECEnv):
         if self.agent_selection == self.agents[-1]:
             if self.steps % self.vortex_update_frequency == 0:
                 self.simulation.update_vortices(self.vortex_update_frequency)
-                if(log):
+                if(self.log):
                     self.log_vortices()
             self.steps += 1
 
@@ -169,11 +182,11 @@ class raw_env(AECEnv):
         self._dones_step_first()  # this handles the agent death logic. It is necessary here, but I guess it probably should not be necessary here because there is no non-trivial death mechanics here. If you want, you can create an issue of this, and I can fix it so that this call isn't necessary.
 
     def observe(self, agent):
-        return self.simulation.get_observation(self._agent_idxs[agent], self.max_observable_birds)
+        return self.simulation.get_observation(self._agent_idxs[agent], self.num_neighbors)
 
     def reset(self):
         # creates c++ environment with initial birds
-        self.simulation = flocking_cpp.Flock(self.N, self.h, self.t, self.energy_reward, self.forward_reward, self.crash_reward, self.bird_inits, self.LIA)
+        self.simulation = flocking_cpp.Flock(self.N, self.h, self.t, self.energy_reward, self.forward_reward, self.crash_reward, self.bird_inits, self.LIA, self.derivatives_in_obs)
 
         self.agents = self.possible_agents[:]
         self._agent_selector.reinit(self.agents)

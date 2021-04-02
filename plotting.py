@@ -65,7 +65,7 @@ def plot_values(birds):
         for _ in birds:
             leg += ['u', 'v', 'w']
         plt4.legend(leg)
-
+    plt.show()
 
 '''
 Creates a 3d plot of the path of all birds through space.
@@ -96,7 +96,7 @@ def plot_birds(birds, plot_vortices=False):
                     [v.pos[2] for v in bird.VORTICES_RIGHT],
                     color='red', s=.5)
         ax.scatter([bird.X[0]], [bird.Y[0]], [bird.Z[0]], 'blue')
-
+    plt.show()
     x = []; y = []; z = []
     u = []; v = []; w = []
     r = 0.25

@@ -5,11 +5,15 @@
 #include "vortex.hpp"
 #include "utils.hpp"
 #include "DiffEqs.hpp"
+#include <iostream>
+#include <cmath>
 
 using PrevValues = std::vector<double>;
 using VortexForces = std::array<double,6>;
 using Vorticies = std::vector<Vortex>;
 typedef Vector3d (DiffEqType)(Vector3d uvw, Bird & bird);
+
+using namespace std;
 
 struct BirdInit{
     //velocities in the u (forward), v (out from the right wing), and w (up) directions
@@ -25,6 +29,7 @@ struct BirdInit{
     double theta;
     double phi;
     double psi;
+
     using dbl = double;
     BirdInit(dbl x, dbl y, dbl z, dbl u, dbl v, dbl w, dbl p, dbl q, dbl r, dbl theta, dbl phi, dbl psi){
         BirdInit & self = *this;
@@ -68,7 +73,9 @@ struct Bird{
     static constexpr double S = 0.62;
     static constexpr double Xl = 0.80;     //approximate dimensions
     static constexpr double Yl = 0.35;
-    static constexpr double Zl = 0.15;
+    static constexpr double Zl = 0.8;
+
+    double pi = 2.0 * acos(0.0);
 
     /*
       Broken is used to keep track of whether the bird has reached extreme
@@ -251,6 +258,7 @@ struct Bird{
         Bird & self = *this;
         self.thrust = thrust;
 
+
         /*
           Get the values of force and torque due to any vortices the
           bird is interacting with
@@ -266,6 +274,7 @@ struct Bird{
         //Calculate and update velocities for the next time step using the diffeq solver
         Vector3d uvw = self.take_time_step(duvwdt, self.uvw(), h);
         up(self.u,self.v,self.w) = uvw;
+        //cout<<self.w << " ";
 
         //Calculate and update angular velocities for the next time step
         Vector3d pqr = self.take_time_step(dpqrdt, self.pqr(), h);
@@ -273,7 +282,10 @@ struct Bird{
 
         //calculate and update orientation for the next time step
         Vector3d angles = self.take_time_step(danglesdt, self.angles(), h);
-        up(self.phi,self.theta,self.psi) = angles;
+        angles[0] = fmod(angles[0], (2.0*self.pi));
+        angles[1] = fmod(angles[1], (2.0*self.pi));
+        angles[2] = fmod(angles[2], (2.0*self.pi));
+        up(self.phi, self.theta, self.psi) = angles;
 
         //calculate and update position for the next time step
         Vector3d xyz = self.take_time_step(dxyzdt, self.xyz(), h);

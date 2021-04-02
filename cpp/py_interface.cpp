@@ -25,7 +25,7 @@ PYBIND11_MODULE(flocking_cpp, m) {
         // .def(.def(py::init([](std::string arg) {
         //     return std::unique_ptr<Example>(new Example(arg));
         // })))
-        .def(py::init<int,double,double,double,double,double,BirdInits,bool>())
+        .def(py::init<int,double,double,double,double,double,BirdInits,bool,bool>())
         .def("reset",&Flock::reset)
         .def("update_bird",&Flock::update_bird)
         .def("get_done_reward",&Flock::get_done_reward)
@@ -108,8 +108,7 @@ PYBIND11_MODULE(flocking_cpp, m) {
     #define expose_vortex_var(var) def_readonly(#var, &Vortex::var)
     py::class_<Vortex>(m, "Vortex")
         .def(py::init<double, double, double, double, double, double, double>())
-        //.def_property_readonly("pos",[](Vortex & vortex){return return_vec(vortex.pos);})
-        //.def("pos",[](Vortex & vortex){return return_vec(vortex.pos);})
+        .def_property_readonly("pos",[](Vortex & vortex){return return_vec(vortex.pos);})
         .expose_vortex_var(sign)
         .expose_vortex_var(C)
         .expose_vortex_var(min_vel)

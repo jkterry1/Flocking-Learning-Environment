@@ -5,6 +5,9 @@
 #include "bird.cpp"
 #include "DiffEqs.cpp"
 #include "vortex.cpp"
+#include <iostream>
+
+using namespace std;
 
 using Birds = std::vector<Bird>;
 struct Flock{
@@ -19,6 +22,8 @@ struct Flock{
     double crash_reward;
     Birds birds;
     BirdInits starting_conditions;
+    bool derivatives;
+    std::vector<double> limits;
     Flock(  int N,
             double h,
             double t,
@@ -26,7 +31,8 @@ struct Flock{
             double forward_reward,
             double crash_reward,
             BirdInits init_vals,
-            bool LIA
+            bool LIA,
+            bool derivatives
          ){
         Flock & self = *this;
 
@@ -47,6 +53,59 @@ struct Flock{
             self.birds.emplace_back(init_vals[i]);
         }
         self.starting_conditions = init_vals;
+
+        self.derivatives = derivatives;
+
+        //force limit
+        self.limits.push_back(20.0*9.8*birds[0].m);
+        self.limits.push_back(20.0*9.8*birds[0].m);
+        self.limits.push_back(20.0*9.8*birds[0].m);
+
+        //Torque limit
+        self.limits.push_back(10.0*birds[0].Xl);
+        self.limits.push_back(10.0*birds[0].Xl);
+        self.limits.push_back(10.0*birds[0].Xl);
+
+        //Height limit, 500 m
+        self.limits.push_back(500.0);
+
+        //Orientation Limits,  2pi rad
+        self.limits.push_back(6.3);
+        self.limits.push_back(6.3);
+        self.limits.push_back(6.3);
+
+        //left Wing orientation limits, pi/2 rad
+        self.limits.push_back(1.6);
+        self.limits.push_back(1.6);
+
+        //right Wing orientation limits, pi/2 rad
+        self.limits.push_back(1.6);
+        self.limits.push_back(1.6);
+
+        //velocity limit, 50 m/s
+        self.limits.push_back(50.0);
+        self.limits.push_back(50.0);
+        self.limits.push_back(50.0);
+
+        //angular velocity limits,rad/s
+        self.limits.push_back(10.0);
+        self.limits.push_back(10.0);
+        self.limits.push_back(10.0);
+
+        //other bird relative position
+        self.limits.push_back(100.0);
+        self.limits.push_back(100.0);
+        self.limits.push_back(100.0);
+
+        //other bird's relative orientation
+        self.limits.push_back(6.3);
+        self.limits.push_back(6.3);
+        self.limits.push_back(6.3);
+
+        //other bird's relative velocity
+        self.limits.push_back(50.0);
+        self.limits.push_back(50.0);
+        self.limits.push_back(50.0);
     }
 
     //Restores birds to their initial conditions
@@ -85,9 +144,13 @@ struct Flock{
         }
 
         /*
-        Energy used by the bird is proportional to the birds thrust.
+        Energy used by the bird is proportional to the birds thrust and the net force on the bird
+         times the distance it travelled (work = force * distance)
         */
-        reward += self.energy_reward * action[0];
+        reward += self.energy_reward * action[0] * self.h * bird.u;
+        reward += self.energy_reward * bird.F[0] * sqr(bird.u);
+        reward += self.energy_reward * bird.F[1] * sqr(bird.v);
+        reward += self.energy_reward * bird.F[2] * sqr(bird.w);
 
         //If the bird has crashed, we consider it done and punish it for crashing.
         if (self.crashed(bird)){
@@ -111,7 +174,7 @@ struct Flock{
         Flock & self = *this;
 
         //Checks if bird ahs hit the ground, or gone too high
-        if (bird.z <= 0 || bird.z >= 100){
+        if (bird.z <= 0 || bird.z > 500){
             return true;
         }
 
@@ -150,6 +213,7 @@ struct Flock{
             const Bird & bird = self.birds[b];
 
             if (&bird != &curr){
+              //cout << bird.VORTICES_LEFT.size();
                 for (const Vorticies & vorts : {bird.VORTICES_LEFT, bird.VORTICES_RIGHT}){
                     size_t i = 0;
                     /*
@@ -175,7 +239,9 @@ struct Flock{
                         //Determine if the bird is too far from the
                         //center of this vortex to be affected.
                         double r = sqrt(sqr(curr.y - v.y()) + sqr(curr.z - v.z()));
+                        //cout << "failed range " << r;
                         if (r < self.max_r){
+                          //cout << "added vortex";
                             vortices.push_back(v);
                         }
                     }
@@ -197,19 +263,28 @@ struct Flock{
 
         Bird & bird = self.birds[agent];
         Observation obs;
-        extend(obs, force);
-        extend(obs, torque);
-        extend(obs, {bird.x, bird.y, bird.z});
-        extend(obs, {bird.u, bird.v, bird.w});
-        extend(obs, {bird.p, bird.q, bird.r});
-        extend(obs, {bird.phi, bird.theta, bird.psi});
-        extend(obs, {bird.alpha_l, bird.beta_l, bird.alpha_r, bird.beta_r});
+        extend(obs, force/self.limits[0]);
+        extend(obs, torque/self.limits[3]);
+        extend(obs, {bird.z/self.limits[6]});
+        extend(obs, {bird.phi/self.limits[7], bird.theta/self.limits[8], bird.psi/self.limits[9]});
+        extend(obs, {bird.alpha_l/self.limits[10], bird.beta_l/self.limits[11],
+                      bird.alpha_r/self.limits[12], bird.beta_r/self.limits[13]});
+        if(derivatives){
+          //cout << "w: " << bird.w << " " << bird.w/self.limits[16];
+          extend(obs, {bird.u/self.limits[14], bird.v/self.limits[15], bird.w/self.limits[16]});
+          extend(obs, {bird.p/self.limits[17], bird.q/self.limits[18], bird.r/self.limits[19]});
+        }
         std::vector<Bird *> nearest = bird.n_nearest(self.birds, max_observable_birds);
         for (Bird * otherp : nearest){
 	        Bird & other = *otherp;
-            extend(obs, {other.x - bird.x, other.y - bird.y, other.z - bird.z});
-            extend(obs, {other.u - bird.u, other.v - bird.v, other.w - bird.w});
-            extend(obs, {other.phi - bird.psi, other.theta - bird.theta, other.psi - bird.psi});
+            extend(obs, {(other.x - bird.x)/self.limits[20], (other.y - bird.y)/self.limits[21],
+                          (other.z - bird.z)/self.limits[22]});
+            extend(obs, {(other.phi - bird.psi)/self.limits[23], (other.theta - bird.theta)/self.limits[24],
+                          (other.psi - bird.psi)/self.limits[25]});
+            if(derivatives){
+              extend(obs, {(other.u - bird.u)/self.limits[26], (other.v - bird.v)/self.limits[27],
+                            (other.w - bird.w)/self.limits[28]});
+            }
         }
         return obs;
     }
