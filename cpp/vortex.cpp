@@ -1,5 +1,41 @@
 #include "vortex.hpp"
 
+Vortex::Vortex(double x, double y, double z, double phi, double theta, double psi, double sign){
+    Vortex & self = *this;
+    self.sign = sign;
+    self.C = 15.0;
+    self.min_vel = 1.0;
+    self.max_r = 1.0;
+    self.dist_travelled = 0.0;
+
+    self.phi = phi;
+    self.theta = theta;
+    self.psi = psi;
+
+    //mat transforms vectors from the bird's frame to the earth's frame.
+    Matrix3d mat = self.get_transform(self.phi, self.theta, self.psi);
+
+    self.pos = Vector3d(x,y,z);
+    self.X = pos[0];
+    self.Y = pos[1];
+    self.Z = pos[2];
+
+    //velocity of the vortex
+    double vel = 0.0;
+
+    self.gamma_0 = 5.0;
+    self.gamma = self.gamma_0;
+    self.decay_std_dev = 10.0;
+    self.decay_time_mean = 3.0 * self.decay_std_dev;
+    self.decay_exponent = 2.0;
+    self.t_decay = 0.0;
+    self.t = 0.0;
+
+    //core represents the radius of the vortex's "core", the center of the
+    //vortex where no air is moving to prevent divide by zero issue.
+    self.core = 0.05;
+}
+
 Vortex::Vortex(Bird & bird, double sign){
     Vortex & self = *this;
     self.sign = sign;
@@ -62,6 +98,7 @@ Vortex::Vortex(Bird & bird, double sign){
     //vortex where no air is moving to prevent divide by zero issue.
     self.core = 0.05 * bird.Xl;
 }
+
 
 /*
   Returns the velocity of the air in a vortex at position (x,y,z)

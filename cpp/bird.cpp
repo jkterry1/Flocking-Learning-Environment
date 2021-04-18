@@ -384,8 +384,19 @@ struct Bird{
                 b = b/b.norm();
             }
 
-            //strength of the vortex
-            double gamma = vortices[i].gamma;
+            //Update vortex strength based on decay equation
+            Vortex vor = vortices[i];
+            vor.t ++;
+            if(vor.decaying){
+              vor.gamma = vor.gamma_0 * pow((vor.t_decay/vor.t), vor.decay_exponent);
+            }
+            //Replace with probability if we decide not to make it deterministic
+            else{
+              if(vor.t > vor.t_decay){
+                vor.decaying = true;
+              }
+            }
+            double gamma = vor.gamma;
             //distance from last point
             double epsilon = l_t_minus;
 
