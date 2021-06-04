@@ -40,7 +40,8 @@ class raw_env(AECEnv):
                  num_neighbors=7,
                  derivatives_in_obs=True,
                  thrust_limit = 10.0,
-                 wing_action_limit = 0.01
+                 wing_action_limit_beta = 0.08,
+                 wing_action_limit_alpha =0.01
                  ):
         '''
         N: number of birds (if bird_inits is None)
@@ -98,8 +99,8 @@ class raw_env(AECEnv):
         3: alpha rotation of right wing (in degrees)
         4: beta rotation of right wing (in degrees)
         '''
-        self.action_spaces = {i: spaces.Box(low=np.array([0.0, -wing_action_limit, -wing_action_limit, -wing_action_limit, -wing_action_limit]).astype(np.float32),
-                                        high=np.array([thrust_limit, wing_action_limit, wing_action_limit, wing_action_limit, wing_action_limit]).astype(np.float32)) for i in self.agents}
+        self.action_spaces = {i: spaces.Box(low=np.array([0.0, -wing_action_limit_alpha, -wing_action_limit_beta, -wing_action_limit_alpha, -wing_action_limit_beta]).astype(np.float32),
+                                        high=np.array([thrust_limit, wing_action_limit_alpha, wing_action_limit_beta, wing_action_limit_alpha, wing_action_limit_beta]).astype(np.float32)) for i in self.agents}
 
         '''
         Observation space is a vector with
@@ -128,10 +129,10 @@ class raw_env(AECEnv):
         6-8:    Relative velocity to the current bird
         '''
         if self.derivatives_in_obs:
-            low = -np.ones(20 + 9*min(self.N-1, self.num_neighbors),).astype(np.float32)
+            low = np.zeros(20 + 9*min(self.N-1, self.num_neighbors),).astype(np.float32)
             high = np.ones(20 + 9*min(self.N-1, self.num_neighbors),).astype(np.float32)
         else:
-            low = -np.ones(14 + 6*min(self.N-1, self.num_neighbors),).astype(np.float32)
+            low = np.zeros(14 + 6*min(self.N-1, self.num_neighbors),).astype(np.float32)
             high = np.ones(14 + 6*min(self.N-1, self.num_neighbors),).astype(np.float32)
         observation_space = spaces.Box(low=low, high=high, dtype=np.float32)
         self.observation_spaces = {i: observation_space for i in self.agents}
@@ -179,7 +180,7 @@ class raw_env(AECEnv):
         self.agent_selection = self._agent_selector.next()
 
         self._accumulate_rewards()  # this function adds everything in the rewards dict into the _cumulative_rewards dict
-        self._dones_step_first()  # this handles the agent death logic. It is necessary here, but I guess it probably should not be necessary here because there is no non-trivial death mechanics here. If you want, you can create an issue of this, and I can fix it so that this call isn't necessary.
+        #self._dones_step_first()  # this handles the agent death logic. It is necessary here, but I guess it probably should not be necessary here because there is no non-trivial death mechanics here. If you want, you can create an issue of this, and I can fix it so that this call isn't necessary.
 
     def observe(self, agent):
         return self.simulation.get_observation(self._agent_idxs[agent], self.num_neighbors)

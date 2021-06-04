@@ -76,11 +76,11 @@ A bird's position, orientation, and movement are defined by several variables.
 - **Position**: A bird's position vector is defined by **(x, y, z)**. This is the bird's x, y, and z position in the Earth's frame. The position of the center of the bird is always (0,0,0) in the bird's frame.
 
 - **Orientation**: A bird's orientation is defined by 3 Euler angles, **(phi, theta, psi)**.  Each of these angles is a rotation (in degrees) around an axis in the bird frame.
-- **Velocity**: A bird's velocity is defined by **(u, v, w)**. These are the values for velocity along the 3 main axes in the bird frame. 
+- **Velocity**: A bird's velocity is defined by **(u, v, w)**. These are the values for velocity along the 3 main axes in the bird frame.
 
 <img src="Images/pos-ori-vel.jpeg" alt="drawing" width="300"/>
 
-- **Rotaional Velocity**: A bird's angular velocity is defined by **(p, q, r)**. These are the rates of rotation around each of the 3 main axes in the bird's frame. 
+- **Rotaional Velocity**: A bird's angular velocity is defined by **(p, q, r)**. These are the rates of rotation around each of the 3 main axes in the bird's frame.
 
 - **Wing Orientation**: The wings can be adjusted in two ways, rotated forward and backward (**alpha**) or rotated up and down (**beta**).
 
@@ -89,7 +89,7 @@ A bird's position, orientation, and movement are defined by several variables.
 
 ### Simulation Equations
 
-The position, velocity, Euler angles, and angular velocity are calculated every time step using a numerical differential equations solver. Each of these properties is described by a differential equation in time. Here are the equations that describe each type of motion. 
+The position, velocity, Euler angles, and angular velocity are calculated every time step using a numerical differential equations solver. Each of these properties is described by a differential equation in time. Here are the equations that describe each type of motion.
 
 **Position**
 
@@ -104,8 +104,8 @@ Matrix Form:
 <img src="Images/diffeq-pos.jpeg" alt="drawing" width="500"/>
 
 **Velocity**
-The differential equation for velocity is 
-m is the bird's mass. 
+The differential equation for velocity is
+m is the bird's mass.
 (X, Y, Z) is the force the bird experiences in each direction.
 
 Differential Equation:
@@ -155,7 +155,7 @@ If a bird is close enough to a vortex line to be affected by its vortex, it sear
 The velocity of air caused by the vortex is defined by the Burnham-Hallock model. This is a velocity in the direction of air motion (tangent velocity).
 
 Parameters:
-- gamma_0: the strength of the vortex
+- gamma: the strength of the vortex
 - r: the distance from the center of the vortex
 - rc: the size of the "vortex core", an area with no motion at the center of the vortex.
 
@@ -165,9 +165,9 @@ Parameters:
 
 **Local Induction Approximation**
 
-The local induction approximation (LIA) is a differential equation that describes how the vortex line induces motion in itself due to its own curvature. 
+The local induction approximation (LIA) is a differential equation that describes how the vortex line induces motion in itself due to its own curvature.
 
-The simulation calculates new values for points from oldest to newest, using the last calculated point to determine the value of the next point. 
+The simulation calculates new values for points from oldest to newest, using the last calculated point to determine the value of the next point.
 
 This diagram shows the values needed from each point.
 - n is the last point calculated on the line
@@ -189,4 +189,4 @@ Using these calculated values, the final velocity of a point on the vortex line 
 
 Where epsilon is the distance between points.
 
-This velocity is then used to calculate position using the same numerical differential equation solver as used in the rest of the project. 
+This velocity is then used to calculate position using the same numerical differential equation solver as used in the rest of the project.

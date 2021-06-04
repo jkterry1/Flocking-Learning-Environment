@@ -22,14 +22,27 @@ class Vortex:
         self.Y = self.pos[1];
         self.Z = self.pos[2];
 
+        self.gamma_0 = 10.0;
+        self.gamma = self.gamma_0;
+        self.decay_std_dev = 10.0;
+        self.decay_time_mean = 1000.0 * 3.0 * self.decay_std_dev;
+        self.decay_exponent = 2.0;
+        self.t_decay = 1000.0 * 1.0;
+        self.t = 0.0;
+
+        self.decaying = False
+
         #velocity of the vortex
         vel = 0.0;
 
-        self.gamma = 15.0;
+        #self.gamma = 15.0;
 
         #core represents the radius of the vortex's "core", the center of the
         #vortex where no air is moving to prevent divide by zero issue.
         self.core = 0.05;
+
+        self.B = []
+
 
 
 
@@ -37,13 +50,13 @@ def drdt(gamma, epsilon, b, theta):
     return (gamma/(4.0* np.pi * epsilon)) * b * math.tan(theta/2.0);
 
 
-def take_vortex_time_step(pos, sign, gamma, epsilon, b, theta, h):
+def take_vortex_time_step(B, pos, sign, gamma, epsilon, b, theta, h):
     k1 = h * drdt(gamma, epsilon, b, theta)
     k2 = h * drdt(gamma, epsilon, b, theta)
     k3 = h * drdt(gamma, epsilon, b, theta)
     k4 = h * drdt(gamma, epsilon, b, theta)
-    delta = (1.0 / 6.0)*(k1 + (2.0 * k2) + (2.0 * k3) + k4) + [0.0,0.0,0.1]
-
+    delta = (1.0 / 6.0)*(k1 + (2.0 * k2) + (2.0 * k3) + k4)
+    B.append(delta[2])
     return pos + delta
 
 def update_vortex_positions(vortices, h):
@@ -88,7 +101,9 @@ def update_vortex_positions(vortices, h):
             #print("theta ",theta)
 
         #normal vector
-        n = (np.cross(t, t_plus)/(1 + np.dot(t, t_plus))) - (np.cross(t_minus, t)/(1 + np.dot(t_minus, t)))
+        #n = (np.cross(t, t_plus)/(1 + np.dot(t, t_plus))) - (np.cross(t_minus, t)/(1 + np.dot(t_minus, t)))
+        n = (t - t_minus)
+        n = n/norm(n)
         #binormal vector
         b = np.cross(t, n);
 
@@ -110,7 +125,22 @@ def update_vortex_positions(vortices, h):
 
         sign = 1.0
         #vortex's new position after LIA calculation
-        new_vals.append(take_vortex_time_step(pos, sign, gamma, epsilon, b, theta, h))
+        new_vals.append(take_vortex_time_step(vortices[i].B, pos, sign, gamma, epsilon, b, theta, h))
+
+        #Update vortex strength based on decay equation
+        vor = vortices[i]
+        vor.t += 1
+        if vor.decaying:
+            #print(" val ", (float(vor.t_decay)/float(vor.t)))
+            vor.gamma = vor.gamma_0 * pow((float(vor.t_decay)/float(vor.t)), float(vor.decay_exponent))
+
+        #Replace with probability if we decide not to make it deterministic
+        else:
+            if vor.t > vor.t_decay:
+                vor.decaying = True
+
+        #distance from last point
+        epsilon = l_t_minus
 
     for i in range(len(vortices)):
         #update distance travelled and position for this time step
@@ -152,7 +182,7 @@ for i in range(0, N):
 
 plt.plot(X, Y)
 
-s = 5
+s = 3
 t = int(1000.0)
 for i in range(s):
     for _ in range(t):
@@ -160,4 +190,9 @@ for i in range(s):
     plot_vortices(vortices)
 legend = [str(i) + " seconds" for i in range(0, s+1)]
 
+plt.show()
+plt.plot(vortices[0].B)
+plt.xlabel("Time (ms)")
+plt.ylabel("Forward velocity (m/s)")
+plt.title("Vortex Ring Forward Velocity \n radius = 1m, initial vortex strength = 10.0 m^2/s")
 plt.show()

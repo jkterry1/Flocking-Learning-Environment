@@ -286,6 +286,7 @@ struct Bird{
         angles[1] = fmod(angles[1], (2.0*self.pi));
         angles[2] = fmod(angles[2], (2.0*self.pi));
         up(self.phi, self.theta, self.psi) = angles;
+        //cout<<"angles "<<angles<<"\n";
 
         //calculate and update position for the next time step
         Vector3d xyz = self.take_time_step(dxyzdt, self.xyz(), h);
@@ -372,7 +373,9 @@ struct Bird{
             }
 
             //normal vector
-            Vector3d n = (cross(t, t_plus)/(1 * dot(t, t_plus))) - (cross(t_minus, t)/(1 + dot(t_minus, t)));
+            //Vector3d n = (cross(t, t_plus)/(1 * dot(t, t_plus))) - (cross(t_minus, t)/(1 + dot(t_minus, t)));
+            Vector3d n = (t - t_minus);
+            n = n/n.norm();
             //binormal vector
             Vector3d b = cross(t, n);
 
