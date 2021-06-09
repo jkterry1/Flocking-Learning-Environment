@@ -169,8 +169,18 @@ X = []
 Y = []
 Z = []
 vortices = []
+vortices2 = []
+vortices3 = []
+vortices4 = []
+vortices5 = []
+vortices6 = []
+vortices7 = []
+vortices8 = []
+vortices9 = []
+vortices10 = []
 
 N = 20
+rad = 1.0
 for i in range(0, N):
     x = np.cos((2.0*np.pi/float(N)) * float(i))
     y = np.sin((2.0*np.pi/float(N)) * float(i))
@@ -179,20 +189,95 @@ for i in range(0, N):
     X.append(x)
     Y.append(y)
     Z.append(z)
-
 plt.plot(X, Y)
+
+rad = 1.5
+for i in range(0, N):
+    x = np.cos((2.0*np.pi/float(N)) * float(i)) * rad
+    y = np.sin((2.0*np.pi/float(N)) * float(i)) * rad
+    z = 0.0
+    vortices2.append(Vortex(x,y,0.0,0.0,0.0,0.0,-1.0))
+
+rad = 2.0
+for i in range(0, N):
+    x = np.cos((2.0*np.pi/float(N)) * float(i)) * rad
+    y = np.sin((2.0*np.pi/float(N)) * float(i)) * rad
+    z = 0.0
+    vortices3.append(Vortex(x,y,0.0,0.0,0.0,0.0,-1.0))
+
+rad = 2.5
+for i in range(0, N):
+    x = np.cos((2.0*np.pi/float(N)) * float(i)) * rad
+    y = np.sin((2.0*np.pi/float(N)) * float(i)) * rad
+    z = 0.0
+    vortices4.append(Vortex(x,y,0.0,0.0,0.0,0.0,-1.0))
+
+rad = 3.0
+for i in range(0, N):
+    x = np.cos((2.0*np.pi/float(N)) * float(i)) * rad
+    y = np.sin((2.0*np.pi/float(N)) * float(i)) * rad
+    z = 0.0
+    vortices5.append(Vortex(x,y,0.0,0.0,0.0,0.0,-1.0))
+
+rad = 3.5
+for i in range(0, N):
+    x = np.cos((2.0*np.pi/float(N)) * float(i)) * rad
+    y = np.sin((2.0*np.pi/float(N)) * float(i)) * rad
+    z = 0.0
+    vortices6.append(Vortex(x,y,0.0,0.0,0.0,0.0,-1.0))
+
+rad = 4.0
+for i in range(0, N):
+    x = np.cos((2.0*np.pi/float(N)) * float(i)) * rad
+    y = np.sin((2.0*np.pi/float(N)) * float(i)) * rad
+    z = 0.0
+    vortices7.append(Vortex(x,y,0.0,0.0,0.0,0.0,-1.0))
+
+rad = 4.5
+for i in range(0, N):
+    x = np.cos((2.0*np.pi/float(N)) * float(i)) * rad
+    y = np.sin((2.0*np.pi/float(N)) * float(i)) * rad
+    z = 0.0
+    vortices8.append(Vortex(x,y,0.0,0.0,0.0,0.0,-1.0))
+
+rad = 5.0
+for i in range(0, N):
+    x = np.cos((2.0*np.pi/float(N)) * float(i)) * rad
+    y = np.sin((2.0*np.pi/float(N)) * float(i)) * rad
+    z = 0.0
+    vortices9.append(Vortex(x,y,0.0,0.0,0.0,0.0,-1.0))
+
+rad = 5.5
+for i in range(0, N):
+    x = np.cos((2.0*np.pi/float(N)) * float(i)) * rad
+    y = np.sin((2.0*np.pi/float(N)) * float(i)) * rad
+    z = 0.0
+    vortices10.append(Vortex(x,y,0.0,0.0,0.0,0.0,-1.0))
+
 
 s = 3
 t = int(1000.0)
 for i in range(s):
     for _ in range(t):
         update_vortex_positions(vortices, 0.001)
+        update_vortex_positions(vortices2, 0.001)
+        update_vortex_positions(vortices3, 0.001)
+        update_vortex_positions(vortices4, 0.001)
+        update_vortex_positions(vortices5, 0.001)
+        update_vortex_positions(vortices6, 0.001)
+        update_vortex_positions(vortices7, 0.001)
+        update_vortex_positions(vortices8, 0.001)
+        update_vortex_positions(vortices9, 0.001)
+        update_vortex_positions(vortices10, 0.001)
     plot_vortices(vortices)
 legend = [str(i) + " seconds" for i in range(0, s+1)]
 
 plt.show()
-plt.plot(vortices[0].B)
-plt.xlabel("Time (ms)")
+X = [1,1.5,2,2.5,3,3.5,4,4.5,5, 5.5]
+Y = [vortices[0].B[0],vortices2[0].B[0],vortices3[0].B[0],vortices4[0].B[0],vortices5[0].B[0],
+    vortices6[0].B[0],vortices7[0].B[0],vortices8[0].B[0],vortices9[0].B[0],vortices10[0].B[0]]
+plt.plot(X, Y)
+plt.xlabel("Ring Radius (m)")
 plt.ylabel("Forward velocity (m/s)")
-plt.title("Vortex Ring Forward Velocity \n radius = 1m, initial vortex strength = 10.0 m^2/s")
+plt.title("Relationship Between Ring Radius and Forward Velocity")
 plt.show()
