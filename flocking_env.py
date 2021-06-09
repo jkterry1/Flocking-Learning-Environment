@@ -1,6 +1,7 @@
 from pettingzoo import AECEnv
 from pettingzoo.utils import agent_selector
 from pettingzoo.utils import wrappers
+from pettingzoo.utils.conversions import parallel_wrapper_fn
 from gym import spaces
 import numpy as np
 
@@ -20,6 +21,8 @@ def make_bird(x=0., y=0., z=0., u=0., v=0., w=0., p=0., q=0., r=0., theta=0., ph
     # a comment is needed defining all of these, including their units
     return flocking_cpp.BirdInit(x, y, z, u, v, w, p, q, r, theta, phi, psi)
 
+
+parallel_env = parallel_wrapper_fn(env)
 
 class raw_env(AECEnv):
     metadata = {'render.modes': ['human']}
