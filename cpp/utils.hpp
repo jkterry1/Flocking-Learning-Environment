@@ -148,3 +148,11 @@ inline void extend(Observation & obs, Vector3d vec){
         obs.push_back(vec[i]);
     }
 }
+
+inline Vector3d operator + (const Vector3d & vec, double d){
+      return Vector3d{vec.x()+d,vec.y()+d,vec.z()+d};
+}
+
+inline Vector3d operator + ( double d, const Vector3d & vec){
+      return Vector3d{vec.x()+d,vec.y()+d,vec.z()+d};
+}
