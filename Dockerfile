@@ -1,4 +1,4 @@
-FROM python:3.8
+FROM nvidia/cuda:11.1.1-cudnn8-devel-ubuntu20.04
 
 COPY requirements.txt /
 
