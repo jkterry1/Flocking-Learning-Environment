@@ -24,6 +24,9 @@ struct Flock{
     Birds birds;
     BirdInits starting_conditions;
     bool derivatives;
+    double thrust_limit;
+    double wing_action_limit_alpha;
+    double wing_action_limit_beta;
     std::vector<double> limits;
     Flock(  int N,
             double h,
@@ -33,7 +36,10 @@ struct Flock{
             double crash_reward,
             BirdInits init_vals,
             bool LIA,
-            bool derivatives
+            bool derivatives,
+            double thrust_limit,
+            double wing_action_limit_alpha,
+            double wing_action_limit_beta
          ){
         Flock & self = *this;
 
@@ -48,6 +54,10 @@ struct Flock{
         self.energy_reward = energy_reward;
         self.forward_reward = forward_reward;
         self.crash_reward = crash_reward;
+
+        self.thrust_limit = thrust_limit;
+        self.wing_action_limit_alpha = wing_action_limit_alpha;
+        self.wing_action_limit_beta = wing_action_limit_beta;
 
 
         for (size_t i : range(N)){
@@ -340,12 +350,21 @@ struct Flock{
         Flock & self = *this;
         Bird & bird = self.birds[agent];
 
+        //Denormalize action
+        action[0] = action[0] * 2.0 - self.thrust_limit;
+        action[1] = action[1] * 2.0 - self.wing_action_limit_alpha;
+        action[2] = action[2] * 2.0 - self.wing_action_limit_beta;
+        action[3] = action[3] * 2.0 - self.wing_action_limit_alpha;
+        action[4] = action[4] * 2.0 - self.wing_action_limit_beta;
+
         //The limits for wing rotation in radians
         //Starling:
         // double limit_alpha_low = -25.0 * PI/180.0;
         // double limit_alpha_high = 15.0 * PI/18.0;
         // double limit_beta_low = -30.0 * PI/180.0;
         // double limit_beta_high = 40.0 * PI/180.0;
+
+        //Geese
         double limit_alpha_low = -90.0 * PI/180.0;
         double limit_alpha_high = 90.0 * PI/18.0;
         double limit_beta_low = -90.0 * PI/180.0;

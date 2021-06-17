@@ -42,7 +42,7 @@ class raw_env(AECEnv):
                  log = False,
                  num_neighbors=7,
                  derivatives_in_obs=True,
-                 thrust_limit = 10.0,
+                 thrust_limit = 200.0,
                  wing_action_limit_beta = 0.08,
                  wing_action_limit_alpha =0.01
                  ):
@@ -94,6 +94,10 @@ class raw_env(AECEnv):
         self.LIA = LIA
         self.derivatives_in_obs = derivatives_in_obs
 
+        self.thrust_limit = thrust_limit
+        self.wing_action_limit_beta = wing_action_limit_beta
+        self.wing_action_limit_alpha = wing_action_limit_alpha
+
         '''
         Action space is a 5-vector where each index represents:
         0: Thrust, a forward push on the bird
@@ -102,8 +106,11 @@ class raw_env(AECEnv):
         3: alpha rotation of right wing (in degrees)
         4: beta rotation of right wing (in degrees)
         '''
-        self.action_spaces = {i: spaces.Box(low=np.array([0.0, -wing_action_limit_alpha, -wing_action_limit_beta, -wing_action_limit_alpha, -wing_action_limit_beta]).astype(np.float32),
-                                        high=np.array([thrust_limit, wing_action_limit_alpha, wing_action_limit_beta, wing_action_limit_alpha, wing_action_limit_beta]).astype(np.float32)) for i in self.agents}
+        self.action_spaces = {i: spaces.Box(low=np.zeros(5).astype(np.float32),
+                                         high=np.ones(5).astype(np.float32)) for i in self.agents}
+
+        # self.action_spaces = {i: spaces.Box(low=np.array([0.0, -wing_action_limit_alpha, -wing_action_limit_beta, -wing_action_limit_alpha, -wing_action_limit_beta]).astype(np.float32),
+        #                                 high=np.array([thrust_limit, wing_action_limit_alpha, wing_action_limit_beta, wing_action_limit_alpha, wing_action_limit_beta]).astype(np.float32)) for i in self.agents}
 
         '''
         Observation space is a vector with
@@ -190,7 +197,12 @@ class raw_env(AECEnv):
 
     def reset(self):
         # creates c++ environment with initial birds
-        self.simulation = flocking_cpp.Flock(self.N, self.h, self.t, self.energy_reward, self.forward_reward, self.crash_reward, self.bird_inits, self.LIA, self.derivatives_in_obs)
+        self.simulation = flocking_cpp.Flock(self.N, self.h, self.t,
+                                            self.energy_reward, self.forward_reward,
+                                            self.crash_reward, self.bird_inits,
+                                            self.LIA, self.derivatives_in_obs,
+                                            self.thrust_limit, self.wing_action_limit_alpha,
+                                            self.wing_action_limit_beta)
 
         self.agents = self.possible_agents[:]
         self._agent_selector.reinit(self.agents)
