@@ -1,6 +1,5 @@
 pettingzoo
 pybind11
 matplotlib
-pip3 install torch==1.8.1+cu111
-supersuit==2.6.6
+supersuit
 git+https://github.com/DLR-RM/stable-baselines3.git@master

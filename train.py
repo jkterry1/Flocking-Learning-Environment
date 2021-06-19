@@ -44,4 +44,6 @@ model.learn(total_timesteps=n_timesteps, callback=eval_callback)
 What sticky actions to use?
 What observation delay to use?
 What frame stacking to use?
+
+Control GPU allocation and the OMP num thing?
 """
