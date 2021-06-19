@@ -350,12 +350,13 @@ struct Flock{
         Flock & self = *this;
         Bird & bird = self.birds[agent];
 
-        //Denormalize action
-        action[0] = action[0] * 2.0 - self.thrust_limit;
-        action[1] = action[1] * 2.0 - self.wing_action_limit_alpha;
-        action[2] = action[2] * 2.0 - self.wing_action_limit_beta;
-        action[3] = action[3] * 2.0 - self.wing_action_limit_alpha;
-        action[4] = action[4] * 2.0 - self.wing_action_limit_beta;
+        
+
+        // cout << "action 0 " << action[0];
+        // cout << " action 1 " << action[1];
+        // cout << " action 2 " << action[2];
+        // cout << " action 3 " << action[3];
+        // cout << " action 4 " << action[4] << "\n";
 
         //The limits for wing rotation in radians
         //Starling:

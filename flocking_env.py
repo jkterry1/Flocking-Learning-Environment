@@ -42,7 +42,7 @@ class raw_env(AECEnv):
                  log = False,
                  num_neighbors=7,
                  derivatives_in_obs=True,
-                 thrust_limit = 200.0,
+                 thrust_limit = 100.0,
                  wing_action_limit_beta = 0.08,
                  wing_action_limit_alpha =0.01
                  ):
@@ -157,9 +157,17 @@ class raw_env(AECEnv):
             # checking that the action is None and removing the agent from the agents list
             return self._was_done_step(action)
 
+        #denormalize the action
+        denorm_action = np.zeros(5)
+        denorm_action[0] = action[0] * self.thrust_limit
+        denorm_action[1] = action[1] * 2.0 * self.wing_action_limit_alpha - self.wing_action_limit_alpha
+        denorm_action[2] = action[2] * 2.0 * self.wing_action_limit_beta - self.wing_action_limit_beta
+        denorm_action[3] = action[3] * 2.0 * self.wing_action_limit_alpha - self.wing_action_limit_alpha
+        denorm_action[4] = action[4] * 2.0 * self.wing_action_limit_beta - self.wing_action_limit_beta
+
         # update the current bird's properties and generate it's vortices
         # for the next time step using the given action
-        self.simulation.update_bird(action, self._agent_idxs[self.agent_selection])
+        self.simulation.update_bird(denorm_action, self._agent_idxs[self.agent_selection])
 
         done, reward = self.simulation.get_done_reward(action, self._agent_idxs[self.agent_selection])
 
