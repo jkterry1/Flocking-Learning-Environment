@@ -35,7 +35,7 @@ eval_callback = EvalCallback(eval_env, best_model_save_path='./logs/', log_path=
 model.learn(total_timesteps=n_timesteps, callback=eval_callback)
 
 """
-What sticky actions to use?
+What sticky actions to use? how does timesteps in env work with that?
 What observation delay to use?
 What frame stacking to use?
 
