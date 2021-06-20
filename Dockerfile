@@ -15,4 +15,4 @@ COPY . /birdflocking
 
 RUN ./build.sh
 
-CMD ["python"3, "train.py"]
+CMD ["python3", "train.py"]
