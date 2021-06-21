@@ -4,6 +4,7 @@ from pettingzoo.utils import wrappers
 from pettingzoo.utils.conversions import parallel_wrapper_fn
 from gym import spaces
 import numpy as np
+from gym.utils import seeding, EzPickle
 
 import plotting
 import csv
@@ -24,7 +25,7 @@ def make_bird(x=0., y=0., z=0., u=0., v=0., w=0., p=0., q=0., r=0., theta=0., ph
 
 parallel_env = parallel_wrapper_fn(env)
 
-class raw_env(AECEnv):
+class raw_env(AECEnv, EzPickle):
     metadata = {'render.modes': ['human']}
 
     def __init__(self,
