@@ -150,18 +150,21 @@ struct Flock{
         If the bird has moved forward (in the x direction) in the last time step,
         it is rewarded.
         */
-        if (len(bird.X) >= 2 && bird.x > bird.X[len(bird.X)-2]){
-            reward += self.forward_reward;
-        }
+        // if (len(bird.X) >= 2 && bird.x > bird.X[len(bird.X)-2]){
+        //     reward += self.forward_reward;
+        // }
 
         /*
         Energy used by the bird is proportional to the birds thrust and the net force on the bird
          times the distance it travelled (work = force * distance)
         */
         reward += self.energy_reward * action[0] * self.h * bird.u;
-        reward += self.energy_reward * bird.F[0] * sqr(bird.u);
-        reward += self.energy_reward * bird.F[1] * sqr(bird.v);
-        reward += self.energy_reward * bird.F[2] * sqr(bird.w);
+        // reward += self.energy_reward * (bird.F[0] - bird.vortex_force_u) * sqr(bird.u);
+        // reward += self.energy_reward * (bird.F[1] - bird.vortex_force_v) * sqr(bird.v);
+        // reward += self.energy_reward * (bird.F[2] - bird.vortex_force_w) * sqr(bird.w);
+        reward += self.energy_reward * (bird.F[0] - bird.vortex_force_u) * bird.u * self.h;
+        reward += self.energy_reward * (bird.F[1] - bird.vortex_force_v) * bird.v * self.h;
+        reward += self.energy_reward * (bird.F[2] - bird.vortex_force_w) * bird.w * self.h;
 
         //If the bird has crashed, we consider it done and punish it for crashing.
         if (self.crashed(bird)){
@@ -280,7 +283,7 @@ struct Flock{
         Observation obs;
         extend(obs, (force/self.limits[0]) + Vector3d{1.0,1.0,1.0}/2.0 + noise(.01)); //0,1,2
         extend(obs, (torque/self.limits[3]) + Vector3d{1.0,1.0,1.0}/2.0 + noise(.01));//3,4,5
-        extend(obs, {(bird.z/self.limits[6] + 1.0)/2.0 + noise(.01)});//6
+        extend(obs, {(bird.z/self.limits[6])+ noise(.01)});//6
         extend(obs, {(bird.phi/self.limits[7] + 1.0)/2.0 + noise(.01),//7
                       (bird.theta/self.limits[8] + 1.0)/2.0 + noise(.01),//8
                       (bird.psi/self.limits[9] + 1.0)/2.0 + noise(.01)});//9
@@ -350,7 +353,6 @@ struct Flock{
         Flock & self = *this;
         Bird & bird = self.birds[agent];
 
-        
 
         // cout << "action 0 " << action[0];
         // cout << " action 1 " << action[1];

@@ -180,6 +180,7 @@ double TL(Bird & bird, double P){
     //torque due to vortices, this is pre calculated
     T += bird.vortex_torque_u;
 
+    T = 0.0;
     bird.T[0] = T;
     return T;
 }
@@ -203,6 +204,8 @@ double TM(Bird & bird, double Q){
     //Both wings contribute D drag
     T += 2.0 * D;
     T += bird.vortex_torque_v;
+
+    T = 0.0;
     bird.T[1] = T;
     return T;
 }
@@ -265,6 +268,7 @@ double TN(Bird & bird, double R){
     //torque due to drag from vortices
     T += bird.vortex_torque_w;
 
+    T = 0.0;
     bird.T[2] = T;
     return T;
 }

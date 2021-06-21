@@ -273,11 +273,11 @@ for i in range(s):
 legend = [str(i) + " seconds" for i in range(0, s+1)]
 
 plt.show()
-X = [1,1.5,2,2.5,3,3.5,4,4.5,5, 5.5]
+X = [1.0/1.0, 1.0/1.5, 1.0/2.0, 1.0/2.5, 1.0/3.0, 1.0/3.5, 1.0/4.0, 1.0/4.5, 1.0/5.0, 1.0/5.5]
 Y = [vortices[0].B[0],vortices2[0].B[0],vortices3[0].B[0],vortices4[0].B[0],vortices5[0].B[0],
     vortices6[0].B[0],vortices7[0].B[0],vortices8[0].B[0],vortices9[0].B[0],vortices10[0].B[0]]
 plt.plot(X, Y)
-plt.xlabel("Ring Radius (m)")
+plt.xlabel(" 1 / Ring Radius (m^-1)")
 plt.ylabel("Forward velocity (m/s)")
 plt.title("Relationship Between Ring Radius and Forward Velocity")
 plt.show()
