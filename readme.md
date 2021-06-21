@@ -41,7 +41,7 @@ C++:
 - **vortex_update_frequency**: Period of adding new points on the vortex line.
 
 ### Actions
-An action is a 5-vector where each index represents:
+An action is a normalized 0-1 5-vector where each index represents:
    - 0: Thrust, a forward force on the bird, 0 N to 10 N
    - 1: alpha rotation of left wing (in degrees), -0.01 deg to 0.01 deg
    - 2: beta rotation of left wing (in degrees), -0.01 deg to 0.01 deg
@@ -50,25 +50,31 @@ An action is a 5-vector where each index represents:
 
 ### Observations
 Observation space is a vector with
-    22 dimensions for the current bird's state and
-    6 dimensions for each of the birds the current bird can observe.
+    20 dimensions for the current bird's state and
+    9 dimensions for each of the birds the current bird can observe.
 
    Bird's state observations:
   - 0-2:    Force (N) on the bird in each direction (fu, fv, fw)
   - 3-5:    Torque (N m) on the bird in each direction (Tu, Tv, Tw)
-   - 6-8:    Bird's height (z)
-   - 9-11:   Bird's velocity (m/s) in each direction (u, v, w)
-   - 12-14:  Bird's angular velocity (degrees/s) in each direction (p, q, r)
-   - 15-17:  Bird's orientation (degrees) (phi, theta, psi)
-   - 18-19:  Left wing orientation (degrees) (alpha, beta)
-   - 20-21:  Right wing orientation (degrees) (alpha, beta)
+   - 6:    Bird's height (z)
+   - 7-9:  Bird's orientation (degrees) (phi, theta, psi)
+   - 10-11:  Left wing orientation (degrees) (alpha, beta)
+   - 12-13:  Right wing orientation (degrees) (alpha, beta)
 
- Following this, starting at observation 22, there will be
- 6-dimension vectors for each bird the current bird can observe.
+   The following velocity and angular velocity observations are only included if derivative_in_obs is set to True.
+
+   - 14-16:   Bird's velocity (m/s) in each direction (u, v, w)
+   - 17-19:  Bird's angular velocity (degrees/s) in each direction (p, q, r)
+
+ Following this, starting at observation 20, there will be
+ 9-dimension vectors for each bird the current bird can observe.
 Each of these vectors contains:
 - 0-2:    Relative position to the current bird
-- 3-5:    Relative velocity to the current bird
-- 6-8:   Other bird's orientation (phi, theta, psi)
+- 3-5:   Other bird's orientation (phi, theta, psi)
+
+The following velocity observation is only included if derivative_in_obs is set to True.
+
+- 6-8:  Other bird's relative velocity (u, v, w)
 
 ### Bird Values
 A bird's position, orientation, and movement are defined by several variables.
