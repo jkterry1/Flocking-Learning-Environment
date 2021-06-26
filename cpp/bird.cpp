@@ -258,7 +258,6 @@ struct Bird{
         Bird & self = *this;
         self.thrust = thrust;
 
-
         /*
           Get the values of force and torque due to any vortices the
           bird is interacting with
@@ -352,7 +351,7 @@ struct Bird{
             //tangent vectors
             Vector3d t_minus = vortices[i].pos - vortices[i-1].pos;
             Vector3d t = vortices[i+1].pos - vortices[i].pos;
-            Vector3d t_plus = vortices[i+2].pos - vortices[i+1].pos;
+            //Vector3d t_plus = vortices[i+2].pos - vortices[i+1].pos;
 
             //length of tangent vectors
             double l_t_minus = t_minus.norm();
@@ -461,6 +460,8 @@ struct Bird{
             tu += D * self.Xl/2.0;
         }
         //return forces and torques in each direction
+        //cout << fu << " " << fv << " " << fw << "\n";
+        //cout << tu << " " << tv << " " << tw << "\n";
         return VortexForces{fu, fv, fw, tu, tv, tw};
     }
 

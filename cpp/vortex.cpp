@@ -13,7 +13,7 @@ Vortex::Vortex(double x, double y, double z, double phi, double theta, double ps
     self.psi = psi;
 
     //mat transforms vectors from the bird's frame to the earth's frame.
-    Matrix3d mat = self.get_transform(self.phi, self.theta, self.psi);
+    //Matrix3d mat = self.get_transform(self.phi, self.theta, self.psi);
 
     self.pos = Vector3d(x,y,z);
     self.X = pos[0];
@@ -21,7 +21,7 @@ Vortex::Vortex(double x, double y, double z, double phi, double theta, double ps
     self.Z = pos[2];
 
     //velocity of the vortex
-    double vel = 0.0;
+    //double vel = 0.0;
 
     self.gamma_0 = 5.0;
     self.gamma = self.gamma_0;

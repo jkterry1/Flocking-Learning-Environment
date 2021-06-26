@@ -337,10 +337,15 @@ double Fw(double w, Bird & bird){
     //This depends on the orientaion (alpha, beta) of each wing
     //(which changes the angle of attack)
     up(cl, cr) = C_lift(bird);
+    // cout << "u: " << bird.u << "\n";
+    // cout << "cl " << cl << " cr " << cr << "\n";
+    // cout << "alpha l " << bird.alpha_l << " alpha_r " << bird.alpha_r << "\n";
+    // cout << "beta l " << bird.beta_l << " beta_r " << bird.beta_r << "\n";
 
     //Lift due to left and right wing
     double L_left = cl * A * (bird.rho * sqr(bird.u))/2.0;
     double L_right = cr * A * (bird.rho * sqr(bird.u))/2.0;
+    //cout << "left lift " << L_left << " right " << L_right << "\n";
 
     //Drag force on the bird
     double D = -sign(w) * bird.Cd * A * (bird.rho * sqr(w))/2.0;
@@ -374,7 +379,7 @@ Vector2d C_lift(Bird & bird){
         d = PI/2.0;
     }
     else{
-        d = arctan(bird.w/bird.u);
+        d = 0.0;
     }
 
     //Angle of attack on the left and right wings.
