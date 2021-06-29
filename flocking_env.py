@@ -25,6 +25,7 @@ def make_bird(x=0., y=0., z=0., u=0., v=0., w=0., p=0., q=0., r=0., theta=0., ph
 
 parallel_env = parallel_wrapper_fn(env)
 
+
 class raw_env(AECEnv, EzPickle):
     metadata = {'render.modes': ['human']}
 
@@ -40,13 +41,32 @@ class raw_env(AECEnv, EzPickle):
                  bird_filename="bird_log_1.csv",
                  vortex_filename="vortex_log_1.csv",
                  vortex_update_frequency=100,
-                 log = False,
+                 log=False,
                  num_neighbors=7,
                  derivatives_in_obs=True,
-                 thrust_limit = 100.0,
-                 wing_action_limit_beta = 0.08,
-                 wing_action_limit_alpha =0.01
+                 thrust_limit=100.0,
+                 wing_action_limit_beta=0.08,
+                 wing_action_limit_alpha=0.01,
                  ):
+        EzPickle.__init__(self,
+                          N,
+                          h,
+                          t,
+                          energy_reward,
+                          forward_reward,
+                          crash_reward,
+                          bird_inits,
+                          LIA,
+                          bird_filename,
+                          vortex_filename,
+                          vortex_update_frequency,
+                          log,
+                          num_neighbors,
+                          derivatives_in_obs,
+                          thrust_limit,
+                          wing_action_limit_beta,
+                          wing_action_limit_alpha,
+                          )
         '''
         N: number of birds (if bird_inits is None)
         h: seconds per frame (step size)
