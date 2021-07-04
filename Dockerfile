@@ -6,6 +6,8 @@ RUN apt update
 RUN apt install -y python3-pip
 RUN apt install -y git
 
+RUN pip3 install --upgrade pip
+
 RUN DEBIAN_FRONTEND="noninteractive" apt install -y python3-opencv
 
 RUN pip3 install torch==1.9.0+cu111 -f https://download.pytorch.org/whl/torch_stable.html
