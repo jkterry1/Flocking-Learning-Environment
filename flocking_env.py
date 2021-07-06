@@ -28,7 +28,7 @@ class raw_env(AECEnv):
     metadata = {'render.modes': ['human']}
 
     def __init__(self,
-                 N=10,
+                 N=14,
                  h=0.001,
                  t=60.0,
                  energy_reward=-2.0,
