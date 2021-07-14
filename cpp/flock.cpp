@@ -158,13 +158,20 @@ struct Flock{
         Energy used by the bird is proportional to the birds thrust and the net force on the bird
          times the distance it travelled (work = force * distance)
         */
-        reward += self.energy_reward * action[0] * self.h * bird.u;
+        reward += self.energy_reward * action[0] * self.h * abs(bird.u);
         // reward += self.energy_reward * (bird.F[0] - bird.vortex_force_u) * sqr(bird.u);
         // reward += self.energy_reward * (bird.F[1] - bird.vortex_force_v) * sqr(bird.v);
         // reward += self.energy_reward * (bird.F[2] - bird.vortex_force_w) * sqr(bird.w);
-        reward += self.energy_reward * (bird.F[0] - bird.vortex_force_u) * bird.u * self.h;
-        reward += self.energy_reward * (bird.F[1] - bird.vortex_force_v) * bird.v * self.h;
-        reward += self.energy_reward * (bird.F[2] - bird.vortex_force_w) * bird.w * self.h;
+        reward += self.energy_reward * (abs(bird.F[0]) - abs(bird.vortex_force_u)) * abs(bird.u) * self.h;
+        reward += self.energy_reward * (abs(bird.F[1]) - abs(bird.vortex_force_v)) * abs(bird.v) * self.h;
+        reward += self.energy_reward * (abs(bird.F[2]) - abs(bird.vortex_force_w)) * abs(bird.w) * self.h;
+
+        // double drag = bird.F[0] - bird.vortex_force_u + bird.F[1] - bird.vortex_force_v + bird.F[2] - bird.vortex_force_w;
+        // double thrust = action[0];
+        // cout << "Drag: " << drag << "\n";
+        // cout << "Thrust: " << thrust << "\n";
+        // cout << "Reward: " << reward << "\n\n";
+
 
         //If the bird has crashed, we consider it done and punish it for crashing.
         if (self.crashed(bird)){
