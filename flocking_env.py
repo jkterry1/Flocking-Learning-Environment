@@ -190,7 +190,7 @@ class raw_env(AECEnv, EzPickle):
         # for the next time step using the given action
         self.simulation.update_bird(denorm_action, self._agent_idxs[self.agent_selection])
 
-        done, reward = self.simulation.get_done_reward(action, self._agent_idxs[self.agent_selection])
+        done, reward = self.simulation.get_done_reward(denorm_action, self._agent_idxs[self.agent_selection])
 
         self._clear_rewards()
         self.rewards[self.agent_selection] = reward

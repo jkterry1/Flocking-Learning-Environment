@@ -158,10 +158,10 @@ struct Flock{
         Energy used by the bird is proportional to the birds thrust and the net force on the bird
          times the distance it travelled (work = force * distance)
         */
-        reward += self.energy_reward * action[0] * self.h * bird.u;
-        reward += self.energy_reward * bird.F[0] * sqr(bird.u);
-        reward += self.energy_reward * bird.F[1] * sqr(bird.v);
-        reward += self.energy_reward * bird.F[2] * sqr(bird.w);
+        reward += self.energy_reward * action[0] * self.h * abs(bird.u);
+        reward += self.energy_reward * (abs(bird.F[0]) - abs(bird.vortex_force_u)) * abs(bird.u) * self.h;
+        reward += self.energy_reward * (abs(bird.F[1]) - abs(bird.vortex_force_v)) * abs(bird.v) * self.h;
+        reward += self.energy_reward * (abs(bird.F[2]) - abs(bird.vortex_force_w)) * abs(bird.w) * self.h;;
 
         //If the bird has crashed, we consider it done and punish it for crashing.
         if (self.crashed(bird)){
@@ -350,7 +350,7 @@ struct Flock{
         Flock & self = *this;
         Bird & bird = self.birds[agent];
 
-        
+
 
         // cout << "action 0 " << action[0];
         // cout << " action 1 " << action[1];
