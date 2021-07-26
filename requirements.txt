@@ -1,5 +1,4 @@
 pettingzoo
 pybind11
-matplotlib
 supersuit
 git+https://github.com/DLR-RM/stable-baselines3.git@master

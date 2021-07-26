@@ -12,24 +12,25 @@ total_distance_m = 870
 hz = 500
 crash_reward = -10
 episodes = 300
-skipped_frames = 0
+nerve_impulse_hz = 100
 reaction_frames = 0
 
 n_timesteps = hz*60*n_agents*episodes
 print("n_timesteps: " + str(n_timesteps))
 distance_reward_per_m = 100/total_distance_m
 energy_reward_per_j = -10/total_energy_j
+print("skip_frames: " + str(hz/nerve_impulse_hz))
 
 env = flocking_env.parallel_env(N=n_agents, h=1/hz, energy_reward=energy_reward_per_j, forward_reward=distance_reward_per_m, crash_reward=crash_reward, LIA=True)
 env = ss.delay_observations_v0(env, reaction_frames)
-env = ss.frame_skip_v0(env, skipped_frames)
+env = ss.frame_skip_v0(env, hz/nerve_impulse_hz)
 env = ss.pettingzoo_env_to_vec_env_v0(env)
 env = ss.concat_vec_envs_v0(env, n_envs, num_cpus=1, base_class='stable_baselines3')
 env = VecMonitor(env)
 
 eval_env = flocking_env.parallel_env(N=n_agents, h=1/hz, energy_reward=energy_reward_per_j, forward_reward=distance_reward_per_m, crash_reward=crash_reward, LIA=True)
 eval_env = ss.delay_observations_v0(eval_env, reaction_frames)
-eval_env = ss.frame_skip_v0(eval_env, skipped_frames)
+eval_env = ss.frame_skip_v0(eval_env, hz/nerve_impulse_hz)
 eval_env = ss.pettingzoo_env_to_vec_env_v0(eval_env)
 eval_env = ss.concat_vec_envs_v0(eval_env, 1, num_cpus=1, base_class='stable_baselines3')
 eval_env = VecMonitor(eval_env)
@@ -42,13 +43,10 @@ eval_callback = EvalCallback(eval_env, best_model_save_path='./logs/', log_path=
 model.learn(total_timesteps=n_timesteps, callback=eval_callback)
 
 """
-Observation delay value
-Frame skip value
-Black death?
-
-
 Future things to worry about:
 Currently no frame stacking since derivatives in obs?
 Try agent indication?
 Have Caroline make sure preprocessing is functioning as intended
+Crash ends simulation?
+Add obs delay
 """
