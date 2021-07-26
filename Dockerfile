@@ -15,5 +15,6 @@ WORKDIR /birdflocking
 
 COPY . /birdflocking
 
+RUN ./build.sh
 
 CMD ["python3", "train.py"]
