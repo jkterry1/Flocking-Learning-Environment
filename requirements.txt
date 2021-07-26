@@ -1,4 +1,4 @@
 pettingzoo
 pybind11
-supersuit
+supersuit==2.6.6
 git+https://github.com/DLR-RM/stable-baselines3.git@master
