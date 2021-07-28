@@ -2,7 +2,7 @@ import numpy as np
 import flocking_env
 import matplotlib.pyplot as plt
 import plotting
-from v_policy import basic_flying_policy
+#from v_policy import basic_flying_policy
 import time
 import random
 
@@ -18,11 +18,11 @@ def run():
     u = 15.0
     z = 400.0
 
-    # birds = [flocking_env.make_bird(y = 0.0, x = 0.0, z=z, u = u),
-    #         flocking_env.make_bird(y = 1.25, x = 1.0, z=z, u = u),
-    #         flocking_env.make_bird(y = 2.5, x = 0.0, z=z, u = u)]
+    birds = [flocking_env.make_bird(y = 0.0, x = 0.0, z=z, u = u),
+            flocking_env.make_bird(y = 1.25, x = 1.0, z=z, u = u),
+            flocking_env.make_bird(y = 2.5, x = 0.0, z=z, u = u)]
 
-    birds = [flocking_env.make_bird(y = 0.0, x = 0.0, z=z, u = u, p = 2.0)]
+    #birds = [flocking_env.make_bird(y = 0.0, x = 0.0, z=z, u = u, p = 2.0)]
 
     # birds = [flocking_env.make_bird(y = 0.0, x = 0.0, z=z, u = u),
     #         flocking_env.make_bird(y = 1.25, x = 1.0, z=z, u = u),
@@ -46,31 +46,25 @@ def run():
     energies = {i:0.0 for i in env.agents}
     flaps = {i:0 for i in env.agents}
 
-    for i in range(n):
-        #print(i)
+    for agent in env.agent_iter():
+        obs, reward, done, info = env.last()
+        energies[env.agent_selection] += reward
+        steps += 1
+        # a = [0.0,0.5,0.5,0.5,0.5]
+        a = None
         if not done:
-            for j in range(N):
-                if not done:
-                    energies[env.agent_selection] += reward
-                    steps += 1
-                    a = [0.0,0.5,0.5,0.5,0.5]
-                    a = [random.uniform(0, 1), random.uniform(0, 1), random.uniform(0, 1), random.uniform(0, 1), random.uniform(0, 1)]
-                    #a[0] = basic_flying_policy(obs)
-                    if a[0] > 0:
-                        #print("flap")
-                        flaps[env.agent_selection] += 1
-                    # print(env.agent_selection)
-                    # print("y: ", obs[20])
-                    # print("x: ", obs[19])
+            a = [0.0,0.0,0.0,0.0,0.0]
+            if a[0] > 0:
+                flaps[env.agent_selection] += 1
+            a = np.array(a)
+        #a = [random.uniform(0, 1), random.uniform(0, 1), random.uniform(0, 1), random.uniform(0, 1), random.uniform(0, 1)]
+        #a[0] = basic_flying_policy(obs)
 
-                    env.step(np.array(a))
-                    obs, reward, done, info = env.last()
-                else:
-                    break
-        else:
-            # env.reset()
-            done = False
-            break
+        # print(env.agent_selection)
+        # print("y: ", obs[20])
+        # print("x: ", obs[19])
+
+        env.step(a)
 
     #time end:
     end = time.time()
