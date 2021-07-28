@@ -35,8 +35,6 @@ def run():
     N = len(birds)
     env = flocking_env.raw_env(t = t, thrust_limit = 50.0, N = N, LIA = LIA, bird_inits = birds, log=True)
 
-    #time measurement:
-    start = time.time()
 
     env.reset()
     done = False
@@ -46,36 +44,40 @@ def run():
     energies = {i:0.0 for i in env.agents}
     flaps = {i:0 for i in env.agents}
 
-    for agent in env.agent_iter():
-        obs, reward, done, info = env.last()
-        energies[env.agent_selection] += reward
-        steps += 1
-        # a = [0.0,0.5,0.5,0.5,0.5]
-        a = None
-        if not done:
-            a = [0.0,0.0,0.0,0.0,0.0]
-            if a[0] > 0:
-                flaps[env.agent_selection] += 1
-            a = np.array(a)
-        #a = [random.uniform(0, 1), random.uniform(0, 1), random.uniform(0, 1), random.uniform(0, 1), random.uniform(0, 1)]
-        #a[0] = basic_flying_policy(obs)
+    for _ in range(20):
+        #time measurement:
+        start = time.time()
+        
+        for agent in env.agent_iter():
+            obs, reward, done, info = env.last()
+            energies[env.agent_selection] += reward
+            steps += 1
+            # a = [0.0,0.5,0.5,0.5,0.5]
+            a = None
+            if not done:
+                a = [0.0,0.0,0.0,0.0,0.0]
+                if a[0] > 0:
+                    flaps[env.agent_selection] += 1
+                a = np.array(a)
+            #a = [random.uniform(0, 1), random.uniform(0, 1), random.uniform(0, 1), random.uniform(0, 1), random.uniform(0, 1)]
+            #a[0] = basic_flying_policy(obs)
 
-        # print(env.agent_selection)
-        # print("y: ", obs[20])
-        # print("x: ", obs[19])
+            # print(env.agent_selection)
+            # print("y: ", obs[20])
+            # print("x: ", obs[19])
 
-        env.step(a)
+            env.step(a)
 
-    #time end:
-    end = time.time()
-    print("time elapsed: ", end - start)
+        #time end:
+        end = time.time()
+        print("time elapsed: ", end - start)
 
     #print(energies)
     # print(flaps)
 
     #env.log_birds()
     #env.log_vortices()
-    env.plot_birds()
+    #env.plot_birds()
     # env.plot_values()
 
 if __name__ == "__main__":
