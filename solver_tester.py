@@ -46,31 +46,28 @@ def run():
 
     #time measurement:
     start = time.time()
+    for _ in range(500):
+        env.reset()
+        print("reset")
+        for agent in env.agent_iter():
+            obs, reward, done, info = env.last()
+            energies[env.agent_selection] += reward
+            steps += 1
+            # a = [0.0,0.5,0.5,0.5,0.5]
+            a = None
+            if not done:
+                a = [0.0,0.0,0.0,0.0,0.0]
+                if a[0] > 0:
+                    flaps[env.agent_selection] += 1
+                a = np.array(a)
+            #a = [random.uniform(0, 1), random.uniform(0, 1), random.uniform(0, 1), random.uniform(0, 1), random.uniform(0, 1)]
+            #a[0] = basic_flying_policy(obs)
 
-    for agent in env.agent_iter():
-        print(agent)
-        obs, reward, done, info = env.last()
-        energies[env.agent_selection] += reward
-        steps += 1
-        # a = [0.0,0.5,0.5,0.5,0.5]
-        a = None
-        if not done:
-            a = [0.0,0.0,0.0,0.0,0.0]
-            if a[0] > 0:
-                flaps[env.agent_selection] += 1
-            a = np.array(a)
-        #a = [random.uniform(0, 1), random.uniform(0, 1), random.uniform(0, 1), random.uniform(0, 1), random.uniform(0, 1)]
-        #a[0] = basic_flying_policy(obs)
+            # print(env.agent_selection)
+            # print("y: ", obs[20])
+            # print("x: ", obs[19])
 
-        # print(env.agent_selection)
-        # print("y: ", obs[20])
-        # print("x: ", obs[19])
-
-        env.step(a)
-
-        #time end:
-        end = time.time()
-        print("time elapsed: ", end - start)
+            env.step(a)
 
     #print(energies)
     # print(flaps)
