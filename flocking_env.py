@@ -231,7 +231,7 @@ class raw_env(AECEnv, EzPickle):
 
         # move on to the next bird
         if self._agent_selector.agent_order:
-            self.agent_selection = self._agent_selector.next()
+            self._agent_selection = self._agent_selector.next()
 
     def observe(self, agent):
         return self.simulation.get_observation(self._agent_idxs[agent], self.num_neighbors)
