@@ -48,7 +48,6 @@ def run():
     start = time.time()
     for _ in range(500):
         env.reset()
-        print("reset ---------------------------------------")
         for agent in env.agent_iter():
             obs, reward, done, info = env.last()
             energies[env.agent_selection] += reward
