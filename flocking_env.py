@@ -229,7 +229,7 @@ class raw_env(AECEnv, EzPickle):
             self._agent_selection = self._agent_selector.next()
 
         self._accumulate_rewards()  # this function adds everything in the rewards dict into the _cumulative_rewards dict
-        self._dones_step_first()  # this handles the agent death logic.
+        #self._dones_step_first()  # this handles the agent death logic.
 
     def observe(self, agent):
         return self.simulation.get_observation(self._agent_idxs[agent], self.num_neighbors)
