@@ -173,6 +173,7 @@ class raw_env(AECEnv, EzPickle):
         self.log = log
 
     def step(self, action):
+        print("step")
         if self.dones[self.agent_selection]:
             # this function handles agent termination logic like
             # checking that the action is None and removing the agent from the agents list
@@ -233,7 +234,6 @@ class raw_env(AECEnv, EzPickle):
         return self.simulation.get_observation(self._agent_idxs[agent], self.num_neighbors)
 
     def reset(self):
-        print("reset")
         # creates c++ environment with initial birds
         self.simulation = flocking_cpp.Flock(self.N, self.h, self.t,
                                             self.energy_reward, self.forward_reward,
