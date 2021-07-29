@@ -215,13 +215,12 @@ class raw_env(AECEnv, EzPickle):
 
         self._cumulative_rewards[self.agent_selection] = 0
 
+        if done:
+            self.agent_selector.reinit([])
+
         # move on to the next bird
         if self._agent_selector.agent_order:
             self.agent_selection = self._agent_selector.next()
-
-        print(self.agent_selection)
-        print(self.dones)
-        print()
 
         self._accumulate_rewards()  # this function adds everything in the rewards dict into the _cumulative_rewards dict
         self._dones_step_first()  # this handles the agent death logic.
