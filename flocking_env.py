@@ -179,6 +179,8 @@ class raw_env(AECEnv, EzPickle):
             # checking that the action is None and removing the agent from the agents list
             return self._was_done_step(action)
 
+        self._cumulative_rewards[self.agent_selection] = 0
+
         #denormalize the action
         denorm_action = np.zeros(5)
         denorm_action[0] = action[0] * self.thrust_limit
@@ -199,7 +201,7 @@ class raw_env(AECEnv, EzPickle):
         # End this episode if it has exceeded the maximum time allowed.
         if self.steps >= self.max_frames:
             done = True
-        self.dones = {agent: done for agent in self.agents}
+        # self.dones = {agent: done for agent in self.agents}
 
         '''
         If we have cycled through all of the birds for one time step,
@@ -214,9 +216,8 @@ class raw_env(AECEnv, EzPickle):
                     self.log_vortices()
             self.steps += 1
 
-        self._cumulative_rewards[self.agent_selection] = 0
-
         if self._agent_selector.is_last():
+            self.dones = {agent: done for agent in self.agents}
             iter_agents = self.agents[:]
             for a, d in self.dones.items():
                 if d:
