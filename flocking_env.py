@@ -216,7 +216,7 @@ class raw_env(AECEnv, EzPickle):
 
         self._cumulative_rewards[self.agent_selection] = 0
 
-        if done:
+        if self.agent_iter.last():
             iter_agents = self.agents[:]
             for a, d in self.dones.items():
                 if d:
