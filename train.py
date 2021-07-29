@@ -6,7 +6,7 @@ from stable_baselines3.common.callbacks import EvalCallback
 
 n_evaluations = 20
 n_agents = 9
-n_envs = 4
+n_envs = 1
 total_energy_j = 46000
 total_distance_m = 870
 hz = 500
