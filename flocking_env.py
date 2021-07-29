@@ -176,7 +176,7 @@ class raw_env(AECEnv, EzPickle):
         print("top")
         print(self.agent_selection)
         print(self.dones)
-        print()
+
         if self.dones[self.agent_selection]:
             # this function handles agent termination logic like
             # checking that the action is None and removing the agent from the agents list
