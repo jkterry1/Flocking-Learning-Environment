@@ -47,6 +47,7 @@ def run():
     for _ in range(20):
         #time measurement:
         start = time.time()
+        env.reset()
 
         for agent in env.agent_iter():
             print(agent)
