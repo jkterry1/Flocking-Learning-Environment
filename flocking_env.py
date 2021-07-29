@@ -216,7 +216,11 @@ class raw_env(AECEnv, EzPickle):
         self._cumulative_rewards[self.agent_selection] = 0
 
         if done:
-            self._agent_selector.reinit(None)
+            iter_agents = self.agents[:]
+            for a, d in self.dones.items():
+                if d:
+                    iter_agents.remove(a)
+            self._agent_selector.reinit(iter_agents)
 
         # move on to the next bird
         if self._agent_selector.agent_order:
