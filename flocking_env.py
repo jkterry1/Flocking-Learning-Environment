@@ -227,6 +227,7 @@ class raw_env(AECEnv, EzPickle):
         self._agent_selector.reinit(iter_agents)
 
         # move on to the next bird
+        print("agent order ", self._agent_selector.agent_order)
         if self._agent_selector.agent_order:
             self.agent_selection = self._agent_selector.next()
             print("next agent ")
