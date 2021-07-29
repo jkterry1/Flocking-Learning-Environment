@@ -173,9 +173,6 @@ class raw_env(AECEnv, EzPickle):
         self.log = log
 
     def step(self, action):
-        print("top")
-        print(self.agent_selection)
-        print(self.dones)
 
         if self.dones[self.agent_selection]:
             # this function handles agent termination logic like
@@ -228,18 +225,13 @@ class raw_env(AECEnv, EzPickle):
 
         # move on to the next bird
         print("agent order ", self._agent_selector.agent_order)
+        print("current agent ", self.agent_selection)
         if self._agent_selector.agent_order:
             self.agent_selection = self._agent_selector.next()
-            print("next agent ")
-            print(self.agent_selection)
+            print("next agent ", self.agent_selection)
 
         self._accumulate_rewards()  # this function adds everything in the rewards dict into the _cumulative_rewards dict
         self._dones_step_first()  # this handles the agent death logic.
-
-        print("bottom")
-        print(self.agent_selection)
-        print(self.dones)
-        print()
 
     def observe(self, agent):
         return self.simulation.get_observation(self._agent_idxs[agent], self.num_neighbors)
