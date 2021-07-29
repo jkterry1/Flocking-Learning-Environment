@@ -173,6 +173,9 @@ class raw_env(AECEnv, EzPickle):
         self.log = log
 
     def step(self, action):
+        print(self.agent_selection)
+        print(self.dones)
+        print()
         if self.dones[self.agent_selection]:
             # this function handles agent termination logic like
             # checking that the action is None and removing the agent from the agents list
