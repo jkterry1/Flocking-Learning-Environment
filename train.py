@@ -22,7 +22,8 @@ energy_reward_per_j = -10/total_energy_j
 skip_frames = int(hz/nerve_impulse_hz)
 print("skip_frames: " + str(skip_frames))
 
-env = flocking_env.parallel_env(N=n_agents, h=1/hz, energy_reward=energy_reward_per_j, forward_reward=distance_reward_per_m, crash_reward=crash_reward, LIA=True)
+env = flocking_env.env(N=n_agents, h=1/hz, energy_reward=energy_reward_per_j, forward_reward=distance_reward_per_m, crash_reward=crash_reward, LIA=True)
+#env = flocking_env.parallel_env(N=n_agents, h=1/hz, energy_reward=energy_reward_per_j, forward_reward=distance_reward_per_m, crash_reward=crash_reward, LIA=True)
 env = ss.delay_observations_v0(env, reaction_frames)
 env = ss.frame_skip_v0(env, skip_frames)
 env = ss.pettingzoo_env_to_vec_env_v0(env)
