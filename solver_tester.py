@@ -47,8 +47,9 @@ def run():
     for _ in range(20):
         #time measurement:
         start = time.time()
-        
+
         for agent in env.agent_iter():
+            print(agent)
             obs, reward, done, info = env.last()
             energies[env.agent_selection] += reward
             steps += 1
