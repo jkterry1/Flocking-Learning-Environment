@@ -202,6 +202,7 @@ class raw_env(AECEnv, EzPickle):
         if self.steps >= self.max_frames:
             done = True
         # self.dones = {agent: done for agent in self.agents}
+        self.dones = {agent: done for agent in self.agents}
 
         '''
         If we have cycled through all of the birds for one time step,
@@ -217,7 +218,6 @@ class raw_env(AECEnv, EzPickle):
             self.steps += 1
 
         if self._agent_selector.is_last():
-            self.dones = {agent: done for agent in self.agents}
             iter_agents = self.agents[:]
             for a, d in self.dones.items():
                 if d:
@@ -229,7 +229,7 @@ class raw_env(AECEnv, EzPickle):
             self._agent_selection = self._agent_selector.next()
 
         self._accumulate_rewards()  # this function adds everything in the rewards dict into the _cumulative_rewards dict
-        #self._dones_step_first()  # this handles the agent death logic.
+        self._dones_step_first()  # this handles the agent death logic.
 
     def observe(self, agent):
         return self.simulation.get_observation(self._agent_idxs[agent], self.num_neighbors)
