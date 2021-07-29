@@ -215,13 +215,6 @@ class raw_env(AECEnv, EzPickle):
 
         self._cumulative_rewards[self.agent_selection] = 0
 
-        #added to fix agent order after death of an agent
-        iter_agents = self.agents[:]
-        for a, d in self.dones.items():
-            if d:
-                iter_agents.remove(a)
-        self._agent_selector.reinit(iter_agents)
-
         # move on to the next bird
         if self._agent_selector.agent_order:
             self.agent_selection = self._agent_selector.next()
