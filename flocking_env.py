@@ -173,7 +173,6 @@ class raw_env(AECEnv, EzPickle):
         self.log = log
 
     def step(self, action):
-        print("step")
         if self.dones[self.agent_selection]:
             # this function handles agent termination logic like
             # checking that the action is None and removing the agent from the agents list
@@ -201,8 +200,7 @@ class raw_env(AECEnv, EzPickle):
         # End this episode if it has exceeded the maximum time allowed.
         if self.steps >= self.max_frames:
             done = True
-        # self.dones = {agent: done for agent in self.agents}
-        self.dones = {agent: done for agent in self.agents}
+        self.done = done or self.done
 
         '''
         If we have cycled through all of the birds for one time step,
@@ -216,20 +214,13 @@ class raw_env(AECEnv, EzPickle):
                 if(self.log):
                     self.log_vortices()
             self.steps += 1
-
-        if self._agent_selector.is_last():
-            iter_agents = self.agents[:]
-            for a, d in self.dones.items():
-                if d:
-                    iter_agents.remove(a)
-            self._agent_selector.reinit(iter_agents)
+            self.dones = {agent: done for agent in self.agents}
 
         # move on to the next bird
-        if self._agent_selector.agent_order:
-            self._agent_selection = self._agent_selector.next()
+        self.agent_selection = self._agent_selector.next()
 
         self._accumulate_rewards()  # this function adds everything in the rewards dict into the _cumulative_rewards dict
-        self._dones_step_first()  # this handles the agent death logic.
+        # self._dones_step_first()  # this handles the agent death logic.
 
     def observe(self, agent):
         return self.simulation.get_observation(self._agent_idxs[agent], self.num_neighbors)
@@ -253,6 +244,7 @@ class raw_env(AECEnv, EzPickle):
         self.rewards = {i: 0 for i in self.agents}
         self.dones = {i: False for i in self.agents}
         self.infos = {i: {} for i in self.agents}
+        self.done = False
         self.steps = 0
 
     def render(self, mode='human', plot_vortices=False):
