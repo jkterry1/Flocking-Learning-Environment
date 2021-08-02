@@ -52,11 +52,9 @@ def test_delay(delay = 2, n = 10):
         if i >= n:
             break
 
-    #print(obs1)
-    #print(obs2)
+    print(obs1)
+    print(obs2)
     for i in range(delay, n):
-        print(obs2[i])
-        print(obs1[i-delay])
         assert list(obs2[i]) == list(obs1[i-delay])
 
 test_delay()
