@@ -47,23 +47,8 @@ model.learn(total_timesteps=n_timesteps, callback=combined_callback)
 
 
 
-render_env = flocking_env.env(N=n_agents, h=1/hz, energy_reward=energy_reward_per_j, forward_reward=distance_reward_per_m, crash_reward=crash_reward, LIA=True)
-render_env = ss.delay_observations_v0(render_env, reaction_frames)
-render_env = ss.frame_skip_v0(render_env, skip_frames)
-
-i = 0
-render_env.reset()
 
 
-while True:
-    for agent in render_env.agent_iter():
-        observation, _, done, _ = render_env.last()
-        action = model.predict(observation, deterministic=True)[0] if not done else None
-        render_env.step(action)
-
-    render_env.
-    break
-"""
 
 """
 Future things to worry about:
