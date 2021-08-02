@@ -2,7 +2,7 @@ from stable_baselines3 import PPO
 import flocking_env
 import supersuit as ss
 from stable_baselines3.common.vec_env import VecMonitor
-from stable_baselines3.common.callbacks import EvalCallback
+from stable_baselines3.common.callbacks import CallbackList, CheckpointCallback, EvalCallback
 
 n_evaluations = 20
 n_agents = 9
@@ -39,9 +39,12 @@ eval_env = VecMonitor(eval_env)
 eval_freq = int(n_timesteps / n_evaluations)
 eval_freq = max(eval_freq // (n_envs*n_agents), 1)
 
+
 model = PPO("MlpPolicy", env, verbose=3, batch_size=64, n_steps=512, gamma=0.99, learning_rate=0.00018085932590331433, ent_coef=0.09728964435428247, clip_range=0.4, n_epochs=10, vf_coef=0.27344752686795376, gae_lambda=0.9, max_grad_norm=5)
 eval_callback = EvalCallback(eval_env, best_model_save_path='./logs/', log_path='./logs/', eval_freq=eval_freq, deterministic=True, render=False)
-model.learn(total_timesteps=n_timesteps, callback=eval_callback)
+checkpoint_callback = CheckpointCallback(save_freq=eval_freq, save_path='./logs/eval_callback/')
+combined_callback = CallbackList([checkpoint_callback, eval_callback])
+model.learn(total_timesteps=n_timesteps, callback=combined_callback)
 
 """
 Future things to worry about:
