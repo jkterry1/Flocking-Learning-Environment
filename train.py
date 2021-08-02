@@ -12,7 +12,7 @@ total_distance_m = 870
 hz = 500
 crash_reward = -10
 episodes = 300
-nerve_impulse_hz = 100
+nerve_impulse_hz = 200
 reaction_frames = 0
 
 n_timesteps = hz*60*n_agents*episodes
