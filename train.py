@@ -39,18 +39,37 @@ eval_env = VecMonitor(eval_env)
 eval_freq = int(n_timesteps / n_evaluations)
 eval_freq = max(eval_freq // (n_envs*n_agents), 1)
 
-
 model = PPO("MlpPolicy", env, verbose=3, batch_size=64, n_steps=512, gamma=0.99, learning_rate=0.00018085932590331433, ent_coef=0.09728964435428247, clip_range=0.4, n_epochs=10, vf_coef=0.27344752686795376, gae_lambda=0.9, max_grad_norm=5)
 eval_callback = EvalCallback(eval_env, best_model_save_path='./logs/', log_path='./logs/', eval_freq=eval_freq, deterministic=True, render=False)
 checkpoint_callback = CheckpointCallback(save_freq=eval_freq, save_path='./logs/eval_callback/')
 combined_callback = CallbackList([checkpoint_callback, eval_callback])
 model.learn(total_timesteps=n_timesteps, callback=combined_callback)
 
+
+
+render_env = flocking_env.env(N=n_agents, h=1/hz, energy_reward=energy_reward_per_j, forward_reward=distance_reward_per_m, crash_reward=crash_reward, LIA=True)
+render_env = ss.delay_observations_v0(render_env, reaction_frames)
+render_env = ss.frame_skip_v0(render_env, skip_frames)
+
+i = 0
+render_env.reset()
+
+
+while True:
+    for agent in render_env.agent_iter():
+        observation, _, done, _ = render_env.last()
+        action = model.predict(observation, deterministic=True)[0] if not done else None
+        render_env.step(action)
+
+    render_env.
+    break
+"""
+
 """
 Future things to worry about:
 Currently no frame stacking since derivatives in obs?
 Try agent indication?
 Have Caroline make sure preprocessing is functioning as intended
-Crash ends simulation?
+Crash ends simulation instead of just death?
 Add obs delay
 """

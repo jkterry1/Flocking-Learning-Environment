@@ -38,8 +38,6 @@ class raw_env(AECEnv, EzPickle):
                  crash_reward=-100.0,
                  bird_inits=None,
                  LIA=False,
-                 bird_filename="bird_log_1.csv",
-                 vortex_filename="vortex_log_1.csv",
                  vortex_update_frequency=100,
                  log=False,
                  num_neighbors=7,
@@ -57,8 +55,6 @@ class raw_env(AECEnv, EzPickle):
                           crash_reward,
                           bird_inits,
                           LIA,
-                          bird_filename,
-                          vortex_filename,
                           vortex_update_frequency,
                           log,
                           num_neighbors,
@@ -76,8 +72,6 @@ class raw_env(AECEnv, EzPickle):
         crash_reward: the reward for a bird crashing into another bird or the ground
         bird_inits: initial positions of the birds (None for default random sphere)
         LIA: boolean choice to include Local approximation for vortice movement
-        bird_filename: the file you want to log the bird states in
-        vortex_filename: the file you want to log the vortex states in
         vortex_update_frequency: Period of adding new points on the vortex line.
         log: True/False whether to log all values or not
         num_neighbors: How many neightbors each bird can see
@@ -168,8 +162,6 @@ class raw_env(AECEnv, EzPickle):
         observation_space = spaces.Box(low=low, high=high, dtype=np.float32)
         self.observation_spaces = {i: observation_space for i in self.agents}
 
-        self.vortex_file = open(vortex_filename, "w")
-        self.bird_filename = bird_filename
         self.log = log
 
     def step(self, action):
@@ -275,8 +267,7 @@ class raw_env(AECEnv, EzPickle):
     the vortices will be plotted as well.
     '''
     def plot_birds(self, vortices=False):
-        plotting.plot_birds(self.simulation.get_birds(), plot_vortices = vortices)
-
+        plotting.plot_birds(self.simulation.get_birds(), plot_vortices=vortices)
 
     '''
     Writes the vortex states to a csv file that can go into the Unity animation.
@@ -287,8 +278,8 @@ class raw_env(AECEnv, EzPickle):
     4-6:    The voretex's orientation (theta, phi, psi)
     7:      The current strength of the vortex
     '''
-    def log_vortices(self):
-        file = self.vortex_file
+    def log_vortices(self, file_name):
+        file = open(file_name, "w")
         wr = csv.writer(file)
         birds = self.simulation.get_birds()
         time = self.steps * self.h
@@ -299,7 +290,7 @@ class raw_env(AECEnv, EzPickle):
             for vortex in bird.VORTICES_RIGHT:
                 state = [time, vortex.pos[0], vortex.pos[1], vortex.pos[2], vortex.theta, vortex.phi, vortex.psi, vortex.gamma]
                 wr.writerow(state)
-
+        wr.close()
 
     '''
     Writes the bird states to a csv file that can be used in the Unity animation
@@ -311,8 +302,8 @@ class raw_env(AECEnv, EzPickle):
     8-9:    The bird's left and right wing alpha angles
     10-11:  The bird's left and right wing beta angles
     '''
-    def log_birds(self):
-        file = open(self.bird_filename, "w")
+    def log_birds(self, file_name):
+        file = open(file_name, "w")
         wr = csv.writer(file)
         birds = self.simulation.get_birds()
         for ID, bird in enumerate(birds):
@@ -321,3 +312,4 @@ class raw_env(AECEnv, EzPickle):
                 time = i*self.h
                 state = [ID, time, bird.X[i], bird.Y[i], bird.Z[i], bird.PHI[i], bird.THETA[i], bird.PSI[i], bird.ALPHA_L[i], bird.ALPHA_R[i], bird.BETA_L[i], bird.BETA_R[i]]
                 wr.writerow(state)
+        wr.close()
