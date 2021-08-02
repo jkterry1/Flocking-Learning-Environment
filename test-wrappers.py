@@ -9,7 +9,7 @@ total_distance_m = 870
 hz = 500
 crash_reward = -10
 episodes = 300
-nerve_impulse_hz = 100
+nerve_impulse_hz = 200
 reaction_frames = 0
 
 n_timesteps = hz*60*n_agents*episodes
@@ -52,12 +52,13 @@ def test_delay(delay = 2, n = 10):
         if i >= n:
             break
 
-    print(obs1)
-    print(obs2)
+    #print(obs1)
+    #print(obs2)
     for i in range(delay, n):
-        assert obs2[i] == obs1[i-delay]
+        assert list(obs2[i]) == list(obs1[i-delay])
 
 test_delay()
+
 '''
 env = ss.frame_skip_v0(env, skip_frames)
 env = ss.pettingzoo_env_to_vec_env_v0(env)
