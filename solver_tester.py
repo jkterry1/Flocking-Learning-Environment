@@ -44,10 +44,10 @@ def run():
     energies = {i:0.0 for i in env.agents}
     flaps = {i:0 for i in env.agents}
 
-    for _ in range(20):
-        #time measurement:
-        start = time.time()
-        
+    #time measurement:
+    start = time.time()
+    for _ in range(500):
+        env.reset()
         for agent in env.agent_iter():
             obs, reward, done, info = env.last()
             energies[env.agent_selection] += reward
@@ -67,10 +67,6 @@ def run():
             # print("x: ", obs[19])
 
             env.step(a)
-
-        #time end:
-        end = time.time()
-        print("time elapsed: ", end - start)
 
     #print(energies)
     # print(flaps)
