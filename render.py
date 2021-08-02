@@ -3,6 +3,7 @@ import flocking_env
 import supersuit as ss
 from stable_baselines3.common.vec_env import VecMonitor
 from stable_baselines3.common.callbacks import CallbackList, CheckpointCallback, EvalCallback
+import os
 
 n_evaluations = 20
 n_agents = 9
@@ -26,9 +27,12 @@ render_env = flocking_env.env(N=n_agents, h=1/hz, energy_reward=energy_reward_pe
 render_env = ss.delay_observations_v0(render_env, reaction_frames)
 render_env = ss.frame_skip_v0(render_env, skip_frames)
 
-i = 0
-render_env.reset()
+policies = os.listdir('./logs/eval_callback/')
 
+for policy in policies:
+    model = PPO.load('./logs/eval_callback/')
+
+render_env.reset()
 
 while True:
     for agent in render_env.agent_iter():
