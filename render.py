@@ -29,17 +29,17 @@ render_env = ss.frame_skip_v0(render_env, skip_frames)
 
 policies = os.listdir('./logs/eval_callback/')
 
-for policy in policies:
+for i, policy in enumerate(policies):
     model = PPO.load('./logs/eval_callback/')
 
-render_env.reset()
+    render_env.reset()
 
-while True:
-    for agent in render_env.agent_iter():
-        observation, _, done, _ = render_env.last()
-        action = model.predict(observation, deterministic=True)[0] if not done else None
-        render_env.step(action)
+    while True:
+        for agent in render_env.agent_iter():
+            observation, _, done, _ = render_env.last()
+            action = model.predict(observation, deterministic=True)[0] if not done else None
+            render_env.step(action)
 
-    render_env.log_vortices('./sim_logs/log_vortices_1.csv')
-    render_env.log_birds('./sim_logs/log_birds_1.csv')
-    break
+        render_env.log_vortices('./sim_logs/log_vortices_' + str(i) + '.csv')
+        render_env.log_birds('./sim_logs/log_birds_' + str(i) + '.csv')
+        break
