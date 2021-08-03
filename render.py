@@ -27,10 +27,10 @@ render_env = flocking_env.env(N=n_agents, h=1/hz, energy_reward=energy_reward_pe
 render_env = ss.delay_observations_v0(render_env, reaction_frames)
 render_env = ss.frame_skip_v0(render_env, skip_frames)
 
-policies = os.listdir('./logs/eval_callback/')
+policies = os.listdir(os.getcwd() + '/logs/eval_callback/')
 
 for i, policy in enumerate(policies):
-    model = PPO.load('./logs/eval_callback/')
+    model = PPO.load(os.getcwd() + '/logs/eval_callback/' + policy)
 
     render_env.reset()
 
