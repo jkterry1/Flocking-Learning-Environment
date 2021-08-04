@@ -263,7 +263,7 @@ struct Flock{
     }
 
     double noise(double max){
-      return (max * (rand()) / (RAND_MAX));
+      return 0.0;
     }
 
     /*
