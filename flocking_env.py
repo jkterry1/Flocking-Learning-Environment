@@ -290,7 +290,6 @@ class raw_env(AECEnv, EzPickle):
             for vortex in bird.VORTICES_RIGHT:
                 state = [time, vortex.pos[0], vortex.pos[1], vortex.pos[2], vortex.theta, vortex.phi, vortex.psi, vortex.gamma]
                 wr.writerow(state)
-        wr.close()
 
     '''
     Writes the bird states to a csv file that can be used in the Unity animation
@@ -312,4 +311,3 @@ class raw_env(AECEnv, EzPickle):
                 time = i*self.h
                 state = [ID, time, bird.X[i], bird.Y[i], bird.Z[i], bird.PHI[i], bird.THETA[i], bird.PSI[i], bird.ALPHA_L[i], bird.ALPHA_R[i], bird.BETA_L[i], bird.BETA_R[i]]
                 wr.writerow(state)
-        wr.close()
