@@ -97,7 +97,7 @@ class raw_env(AECEnv, EzPickle):
         if self.bird_inits is not None:
             assert self.N == len(self.bird_inits)
         self.max_frames = int(t/h)
-        self.num_neighbors= num_neighbors
+        self.num_neighbors = num_neighbors
         self.vortex_update_frequency = vortex_update_frequency
 
         self.agents = [f"b_{i}" for i in range(self.N)]
