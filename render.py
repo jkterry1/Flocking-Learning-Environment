@@ -40,6 +40,6 @@ for i, policy in enumerate(policies):
             action = model.predict(observation, deterministic=True)[0] if not done else None
             render_env.step(action)
 
-        render_env.unwrapped().log_vortices('./sim_logs/log_vortices_' + str(i) + '.csv')
-        render_env.unwrapped().log_birds('./sim_logs/log_birds_' + str(i) + '.csv')
+        render_env.unwrapped.log_vortices('./sim_logs/log_vortices_' + str(i) + '.csv')
+        render_env.unwrapped.log_birds('./sim_logs/log_birds_' + str(i) + '.csv')
         break
