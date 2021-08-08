@@ -367,7 +367,7 @@ struct Flock{
 
         //Geese
         double limit_alpha_low = -90.0 * PI/180.0;
-        double limit_alpha_high = 90.0 * PI/18.0;
+        double limit_alpha_high = 90.0 * PI/180.0;
         double limit_beta_low = -90.0 * PI/180.0;
         double limit_beta_high = 90.0 * PI/180.0;
 
