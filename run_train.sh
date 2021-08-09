@@ -1,5 +1,5 @@
-rmdir -rf logs
-rmdir -rf sim_logs
+rm -rf logs
+rm -rf sim_logs
 mkdir logs
 mkdir sim_logs
 ./build.sh
