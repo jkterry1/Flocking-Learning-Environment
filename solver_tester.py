@@ -7,7 +7,7 @@ import time
 import random
 
 
-t = 60.0
+t = 5.0
 h = 0.001
 n = (int)(t/h)
 LIA = False
@@ -16,13 +16,16 @@ plt.plot([0],[0])
 def run():
     #gliding - birds = [solver.make_bird(z=200.0, u=18.0)]
     u = 15.0
-    z = 400.0
+    z = 40.0
 
-    birds = [flocking_env.make_bird(y = 0.0, x = 0.0, z=z, u = u),
-            flocking_env.make_bird(y = 1.25, x = 1.0, z=z, u = u),
-            flocking_env.make_bird(y = 2.5, x = 0.0, z=z, u = u)]
+    # birds = [flocking_env.make_bird(y = 0.0, x = 0.0, z=z, u = u),
+    #         flocking_env.make_bird(y = 1.25, x = 1.0, z=z, u = u),
+    #         flocking_env.make_bird(y = 2.5, x = 0.0, z=z, u = u)]
 
-    #birds = [flocking_env.make_bird(y = 0.0, x = 0.0, z=z, u = u, p = 2.0)]
+    birds = [flocking_env.make_bird(y = 0.0, x = 0.0, z=z, u = u, p = 0.0),
+                flocking_env.make_bird(y = 2.0, x = 0.0, z=z, u = u, p = 0.0),
+                flocking_env.make_bird(y = 4.0, x = 0.0, z=z, u = u, p = 0.0),
+                flocking_env.make_bird(y = 6.0, x = 0.0, z=z, u = u, p = 0.0)]
 
     # birds = [flocking_env.make_bird(y = 0.0, x = 0.0, z=z, u = u),
     #         flocking_env.make_bird(y = 1.25, x = 1.0, z=z, u = u),
@@ -55,11 +58,14 @@ def run():
             # a = [0.0,0.5,0.5,0.5,0.5]
             a = None
             if not done:
-                a = [0.0,0.0,0.0,0.0,0.0]
+                a = [0.0,0.5,0.5,0.5,0.5]
+                #if agent == env.agents[0]:
+                a = [0.0,0.5,0.5,1.0,0.5]
+                #a = [random.uniform(0, 1), random.uniform(0, 1), random.uniform(0, 1), random.uniform(0, 1), random.uniform(0, 1)]
+                #print(a)
                 if a[0] > 0:
                     flaps[env.agent_selection] += 1
                 a = np.array(a)
-            #a = [random.uniform(0, 1), random.uniform(0, 1), random.uniform(0, 1), random.uniform(0, 1), random.uniform(0, 1)]
             #a[0] = basic_flying_policy(obs)
 
             # print(env.agent_selection)
@@ -71,9 +77,9 @@ def run():
     #print(energies)
     # print(flaps)
 
-    #env.log_birds()
+    env.log_birds()
     #env.log_vortices()
-    #env.plot_birds()
+    env.plot_birds()
     # env.plot_values()
 
 if __name__ == "__main__":
