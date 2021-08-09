@@ -11,4 +11,4 @@ COPY . /birdflocking
 
 RUN ./build.sh
 
-CMD ["python", "test_flocking_api.py"]
+CMD ["python", "train.py"]
