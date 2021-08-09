@@ -4,7 +4,7 @@ import supersuit as ss
 from stable_baselines3.common.vec_env import VecMonitor
 from stable_baselines3.common.callbacks import CallbackList, CheckpointCallback, EvalCallback
 
-n_evaluations = 20
+n_evaluations = 100
 n_agents = 9
 n_envs = 4
 total_energy_j = 46000
