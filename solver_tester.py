@@ -22,10 +22,14 @@ def run():
     #         flocking_env.make_bird(y = 1.25, x = 1.0, z=z, u = u),
     #         flocking_env.make_bird(y = 2.5, x = 0.0, z=z, u = u)]
 
+<<<<<<< Updated upstream
     birds = [flocking_env.make_bird(y = 0.0, x = 0.0, z=z, u = u, p = 0.0),
                 flocking_env.make_bird(y = 2.0, x = 0.0, z=z, u = u, p = 0.0),
                 flocking_env.make_bird(y = 4.0, x = 0.0, z=z, u = u, p = 0.0),
                 flocking_env.make_bird(y = 6.0, x = 0.0, z=z, u = u, p = 0.0)]
+=======
+    birds = [flocking_env.make_bird(y = 0.0, x = 0.0, z=z, u = u, p = 0.5)]
+>>>>>>> Stashed changes
 
     # birds = [flocking_env.make_bird(y = 0.0, x = 0.0, z=z, u = u),
     #         flocking_env.make_bird(y = 1.25, x = 1.0, z=z, u = u),
