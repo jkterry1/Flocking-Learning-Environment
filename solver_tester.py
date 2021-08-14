@@ -15,21 +15,15 @@ LIA = False
 plt.plot([0],[0])
 def run():
     #gliding - birds = [solver.make_bird(z=200.0, u=18.0)]
-    u = 15.0
-    z = 40.0
+    #u = 15.0
+    u = 0.0
+    z = 50.0
 
     # birds = [flocking_env.make_bird(y = 0.0, x = 0.0, z=z, u = u),
     #         flocking_env.make_bird(y = 1.25, x = 1.0, z=z, u = u),
     #         flocking_env.make_bird(y = 2.5, x = 0.0, z=z, u = u)]
 
-<<<<<<< Updated upstream
-    birds = [flocking_env.make_bird(y = 0.0, x = 0.0, z=z, u = u, p = 0.0),
-                flocking_env.make_bird(y = 2.0, x = 0.0, z=z, u = u, p = 0.0),
-                flocking_env.make_bird(y = 4.0, x = 0.0, z=z, u = u, p = 0.0),
-                flocking_env.make_bird(y = 6.0, x = 0.0, z=z, u = u, p = 0.0)]
-=======
-    birds = [flocking_env.make_bird(y = 0.0, x = 0.0, z=z, u = u, p = 0.5)]
->>>>>>> Stashed changes
+    birds = [flocking_env.make_bird(y = 0.0, x = 0.0, z=z, u = u, p = 0.0)]
 
     # birds = [flocking_env.make_bird(y = 0.0, x = 0.0, z=z, u = u),
     #         flocking_env.make_bird(y = 1.25, x = 1.0, z=z, u = u),
@@ -40,7 +34,8 @@ def run():
     #         flocking_env.make_bird(y = 7.5, x = 0.0, z=z, u = u)]
 
     N = len(birds)
-    env = flocking_env.raw_env(t = t, thrust_limit = 50.0, N = N, LIA = LIA, bird_inits = birds, log=True)
+    env = flocking_env.raw_env(t = t,N = N, LIA = LIA, bird_inits = birds, log=True)
+    env = flocking_env.raw_env(t = t,N = N, LIA = LIA, log=True)
 
 
     env.reset()
@@ -62,9 +57,9 @@ def run():
             # a = [0.0,0.5,0.5,0.5,0.5]
             a = None
             if not done:
-                a = [0.0,0.5,0.5,0.5,0.5]
+                a = [1.0,0.5,0.5,0.5,0.5]
                 #if agent == env.agents[0]:
-                a = [0.0,0.5,0.5,1.0,0.5]
+                a = [1.0,1.0,1.0,0.0,0.0]
                 #a = [random.uniform(0, 1), random.uniform(0, 1), random.uniform(0, 1), random.uniform(0, 1), random.uniform(0, 1)]
                 #print(a)
                 if a[0] > 0:
