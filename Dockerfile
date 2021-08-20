@@ -5,7 +5,7 @@ COPY requirements.txt /
 
 RUN pip3 install -r /requirements.txt
 
-WORKDIR /birdflocking
+WORKDIR /birdflocking/fle
 
 COPY . /birdflocking
 
