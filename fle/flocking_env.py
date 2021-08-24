@@ -311,8 +311,8 @@ class raw_env(AECEnv, EzPickle):
     8-9:    The bird's left and right wing alpha angles
     10-11:  The bird's left and right wing beta angles
     '''
-    def log_birds(self):
-        file = open(self.bird_filename, "w")
+    def log_birds(self, file_name):
+        file = open(file_name, "w")
         wr = csv.writer(file)
         birds = self.simulation.get_birds()
         for ID, bird in enumerate(birds):
