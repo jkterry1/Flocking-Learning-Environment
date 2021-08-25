@@ -287,8 +287,8 @@ class raw_env(AECEnv, EzPickle):
     4-6:    The voretex's orientation (theta, phi, psi)
     7:      The current strength of the vortex
     '''
-    def log_vortices(self):
-        file = self.vortex_file
+    def log_vortices(self, file_name):
+        file = open(file_name, "w")
         wr = csv.writer(file)
         birds = self.simulation.get_birds()
         time = self.steps * self.h
