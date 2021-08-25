@@ -318,7 +318,6 @@ class raw_env(AECEnv, EzPickle):
         for ID, bird in enumerate(birds):
             state = []
             for i in range(len(bird.X)):
-                if i%10 == 0:
-                    time = i*self.h
-                    state = [ID, time, bird.X[i], bird.Y[i], bird.Z[i], bird.PHI[i], bird.THETA[i], bird.PSI[i], bird.ALPHA_L[i], bird.ALPHA_R[i], bird.BETA_L[i], bird.BETA_R[i]]
-                    wr.writerow(state)
+                time = i*self.h
+                state = [ID, time, bird.X[i], bird.Y[i], bird.Z[i], bird.PHI[i], bird.THETA[i], bird.PSI[i], bird.ALPHA_L[i], bird.ALPHA_R[i], bird.BETA_L[i], bird.BETA_R[i]]
+                wr.writerow(state)
