@@ -288,7 +288,7 @@ class raw_env(AECEnv, EzPickle):
     7:      The current strength of the vortex
     '''
     def log_vortices(self, file_name):
-        file = open(file_name, "a")
+        file = open(file_name, "w")
         wr = csv.writer(file)
         birds = self.simulation.get_birds()
         time = self.steps * self.h

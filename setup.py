@@ -30,7 +30,8 @@ def getListOfFiles(dirName):
 #print(s)
 module1 = Pybind11Extension('flocking_cpp',
                     #sources = s)
-                    sources = ['fle/cpp/py_interface.cpp'])
+                    sources = ['fle/cpp/py_interface.cpp'],
+                    extra_compile_args = ["-O3"])
 
 setup(
     name='fle',
