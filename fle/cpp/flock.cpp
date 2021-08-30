@@ -24,6 +24,7 @@ struct Flock{
     Birds birds;
     BirdInits starting_conditions;
     bool derivatives;
+    double max_dist;
     double thrust_limit;
     double wing_action_limit_alpha;
     double wing_action_limit_beta;
@@ -67,56 +68,72 @@ struct Flock{
 
         self.derivatives = derivatives;
 
+        self.max_dist = 0.0;
+
         //force limit
-        self.limits.push_back(20.0*9.8*birds[0].m);
-        self.limits.push_back(20.0*9.8*birds[0].m);
-        self.limits.push_back(20.0*9.8*birds[0].m);
+        self.limits.push_back(20.0*9.8*birds[0].m); //0
+        self.limits.push_back(20.0*9.8*birds[0].m); //1
+        self.limits.push_back(20.0*9.8*birds[0].m); //2
 
         //Torque limit
-        self.limits.push_back(10.0*birds[0].Xl);
-        self.limits.push_back(10.0*birds[0].Xl);
-        self.limits.push_back(10.0*birds[0].Xl);
+        self.limits.push_back(100.0*birds[0].Xl); //3
+        self.limits.push_back(100.0*birds[0].Xl); //4
+        self.limits.push_back(100.0*birds[0].Xl); //5
 
         //Height limit, 500 m
-        self.limits.push_back(500.0);
+        self.limits.push_back(500.0); //6
 
         //Orientation Limits, 2pi rad
-        self.limits.push_back(6.3);
-        self.limits.push_back(6.3);
-        self.limits.push_back(6.3);
+        self.limits.push_back(6.3); //7
+        self.limits.push_back(6.3); //8
+        self.limits.push_back(6.3); //9
 
+        /*
         //left Wing orientation limits, pi/2 rad
         self.limits.push_back(1.6);
         self.limits.push_back(1.6);
-
         //right Wing orientation limits, pi/2 rad
         self.limits.push_back(1.6);
         self.limits.push_back(1.6);
+        */
+
+        double limit_alpha_low = -25.0 * PI/180.0;
+        double limit_alpha_high = 15.0 * PI/180.0;
+        double limit_beta_low = -30.0 * PI/180.0;
+        double limit_beta_high = 40.0 * PI/180.0;
+
+        //wing alpha low/high
+        self.limits.push_back(limit_alpha_low); //10
+        self.limits.push_back(limit_alpha_high); //11
+
+        //wing beta low/high
+        self.limits.push_back(limit_beta_low); //12
+        self.limits.push_back(limit_beta_high); //13
 
         //velocity limit, 50 m/s
-        self.limits.push_back(50.0);
-        self.limits.push_back(50.0);
-        self.limits.push_back(50.0);
+        self.limits.push_back(50.0); //14
+        self.limits.push_back(50.0); //15
+        self.limits.push_back(50.0); //16
 
         //angular velocity limits,rad/s
-        self.limits.push_back(10.0);
-        self.limits.push_back(10.0);
-        self.limits.push_back(10.0);
+        self.limits.push_back(20.0); //17
+        self.limits.push_back(20.0); //18
+        self.limits.push_back(20.0); //19
 
         //other bird relative position
-        self.limits.push_back(100.0);
-        self.limits.push_back(100.0);
-        self.limits.push_back(100.0);
+        self.limits.push_back(500.0); //20
+        self.limits.push_back(500.0); //21
+        self.limits.push_back(500.0); //22
 
         //other bird's relative orientation
-        self.limits.push_back(6.3);
-        self.limits.push_back(6.3);
-        self.limits.push_back(6.3);
+        self.limits.push_back(2.0 * 6.3); //23
+        self.limits.push_back(2.0 * 6.3); //24
+        self.limits.push_back(2.0 * 6.3); //25
 
         //other bird's relative velocity
-        self.limits.push_back(50.0);
-        self.limits.push_back(50.0);
-        self.limits.push_back(50.0);
+        self.limits.push_back(100.0); //26
+        self.limits.push_back(100.0); //27
+        self.limits.push_back(100.0); //28
     }
 
     //Restores birds to their initial conditions
@@ -150,8 +167,9 @@ struct Flock{
         If the bird has moved forward (in the x direction) in the last time step,
         it is rewarded.
         */
-        if (len(bird.X) >= 2 && bird.x > bird.X[len(bird.X)-2]){
+        if (bird.x > self.max_dist){
             reward += self.forward_reward;
+            self.max_dist = bird.x;
         }
 
         /*
@@ -278,38 +296,40 @@ struct Flock{
 
         Bird & bird = self.birds[agent];
         Observation obs;
-        extend(obs, (force/self.limits[0]) + Vector3d{1.0,1.0,1.0}/2.0 + noise(.01)); //0,1,2
-        extend(obs, (torque/self.limits[3]) + Vector3d{1.0,1.0,1.0}/2.0 + noise(.01));//3,4,5
-        extend(obs, {(bird.z/self.limits[6] + 1.0)/2.0 + noise(.01)});//6
-        extend(obs, {(bird.phi/self.limits[7] + 1.0)/2.0 + noise(.01),//7
-                      (bird.theta/self.limits[8] + 1.0)/2.0 + noise(.01),//8
-                      (bird.psi/self.limits[9] + 1.0)/2.0 + noise(.01)});//9
-        extend(obs, {(bird.alpha_l/self.limits[10] + 1.0)/2.0 + noise(.01),//10
-                      (bird.beta_l/self.limits[11] + 1.0)/2.0 + noise(.01),//11
-                      (bird.alpha_r/self.limits[12] + 1.0)/2.0 + noise(.01),//12
-                      (bird.beta_r/self.limits[13] + 1.0)/2.0 + noise(.01)});//13
+        extend(obs, ((force)/self.limits[0]) + Vector3d{1.0,1.0,1.0}/2.0); //0,1,2
+        //cout<<"torque: " << torque << "\n";
+        extend(obs, (torque + self.limits[3])/(2.0 * self.limits[3]));//3,4,5
+        extend(obs, {((bird.z)/self.limits[6] + 1.0)/2.0});//6
+        extend(obs, {((bird.phi)/self.limits[7] + 1.0)/2.0,//7
+                      ((bird.theta)/self.limits[8] + 1.0)/2.0,//8
+                      ((bird.psi)/self.limits[9] + 1.0)/2.0});//9
+        extend(obs, {(((bird.alpha_l) - self.limits[10])/(self.limits[11] - self.limits[10])),//10
+                      (((bird.beta_l) - self.limits[12])/(self.limits[13] - self.limits[12])),//11
+                      (((bird.alpha_r) - self.limits[10])/(self.limits[11] - self.limits[10])),//12
+                      (((bird.beta_r) - self.limits[12])/(self.limits[13] - self.limits[12]))});//13
         if(derivatives){
           //cout << "w: " << bird.w << " " << bird.w/self.limits[16];
-          extend(obs, {(bird.u/self.limits[14] + 1.0)/2.0 + noise(.01),//14
-                        (bird.v/self.limits[15] + 1.0)/2.0 + noise(.01),//15
-                        (bird.w/self.limits[16] + 1.0)/2.0 + noise(.01)});//16
-          extend(obs, {(bird.p/self.limits[17] + 1.0)/2.0 + noise(.01),//17
-                        (bird.q/self.limits[18] + 1.0)/2.0 + noise(.01),//18
-                        (bird.r/self.limits[19] + 1.0)/2.0 + noise(.01)});//19
+          extend(obs, {((bird.u+noise(.01))/self.limits[14] + 1.0)/2.0,//14
+                        ((bird.v+noise(.01))/self.limits[15] + 1.0)/2.0,//15
+                        ((bird.w+noise(.01))/self.limits[16] + 1.0)/2.0});//16
+          extend(obs, {((bird.p+noise(.01))/self.limits[17] + 1.0)/2.0,//17
+                        ((bird.q+noise(.01))/self.limits[18] + 1.0)/2.0,//18
+                        ((bird.r+noise(.01))/self.limits[19] + 1.0)/2.0});//19
         }
         std::vector<Bird *> nearest = bird.n_nearest(self.birds, max_observable_birds);
         for (Bird * otherp : nearest){
 	        Bird & other = *otherp;
-            extend(obs, {((other.x - bird.x)/self.limits[20] + 1.0)/2.0 + noise(.01),//20
-                          ((other.y - bird.y)/self.limits[21] + 1.0)/2.0 + noise(.01),//21
-                          ((other.z - bird.z)/self.limits[22] + 1.0)/2.0 + noise(.01)});//22
-            extend(obs, {((other.phi - bird.psi)/self.limits[23] + 1.0)/2.0 + noise(.01),//23
-                          ((other.theta - bird.theta)/self.limits[24] + 1.0)/2.0 + noise(.01),//24
-                          ((other.psi - bird.psi)/self.limits[25] + 1.0)/2.0 + noise(.01)});//25
+            //cout << "bird w: " << bird.w << "other's w: " << other.w;
+            extend(obs, {(((other.x - bird.x)+noise(.01))/self.limits[20] + 1.0)/2.0,//20
+                          (((other.y - bird.y)+noise(.01))/self.limits[21] + 1.0)/2.0,//21
+                          (((other.z - bird.z)+noise(.01))/self.limits[22] + 1.0)/2.0});//22
+            extend(obs, {(((other.phi - bird.psi)+noise(.01))/self.limits[23] + 1.0)/2.0,//23
+                          (((other.theta - bird.theta)+noise(.01))/self.limits[24] + 1.0)/2.0,//24
+                          (((other.psi - bird.psi)+noise(.01))/self.limits[25] + 1.0)/2.0});//25
             if(derivatives){
-              extend(obs, {((other.u - bird.u)/self.limits[26] + 1.0)/2.0 + noise(.01),//26
-                            ((other.v - bird.v)/self.limits[27] + 1.0)/2.0 + noise(.01),//27
-                            ((other.w - bird.w)/self.limits[28] + 1.0)/2.0 + noise(.01)});//28
+              extend(obs, {(((other.u - bird.u)+noise(.01))/self.limits[26] + 1.0)/2.0,//26
+                            (((other.v - bird.v)+noise(.01))/self.limits[27] + 1.0)/2.0,//27
+                            (((other.w - bird.w)+noise(.01))/self.limits[28] + 1.0)/2.0 });//28
             }
         }
 
@@ -360,16 +380,18 @@ struct Flock{
 
         //The limits for wing rotation in radians
         //Starling:
-        // double limit_alpha_low = -25.0 * PI/180.0;
-        // double limit_alpha_high = 15.0 * PI/18.0;
-        // double limit_beta_low = -30.0 * PI/180.0;
-        // double limit_beta_high = 40.0 * PI/180.0;
+        double limit_alpha_low = -25.0 * PI/180.0;
+        double limit_alpha_high = 15.0 * PI/180.0;
+        double limit_beta_low = -30.0 * PI/180.0;
+        double limit_beta_high = 40.0 * PI/180.0;
 
         //Geese
+        /*
         double limit_alpha_low = -90.0 * PI/180.0;
         double limit_alpha_high = 90.0 * PI/180.0;
         double limit_beta_low = -90.0 * PI/180.0;
         double limit_beta_high = 90.0 * PI/180.0;
+        */
 
         /*
         Calculate the new alpha angle for each wing, taking the limits into account.

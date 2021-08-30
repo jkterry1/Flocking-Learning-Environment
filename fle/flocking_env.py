@@ -168,7 +168,7 @@ class raw_env(AECEnv, EzPickle):
         observation_space = spaces.Box(low=low, high=high, dtype=np.float32)
         self.observation_spaces = {i: observation_space for i in self.agents}
 
-        self.vortex_file = open(vortex_filename, "w")
+        self.vortex_filename = vortex_filename
         self.bird_filename = bird_filename
         self.log = log
 
@@ -212,7 +212,7 @@ class raw_env(AECEnv, EzPickle):
             if self.steps % self.vortex_update_frequency == 0:
                 self.simulation.update_vortices(self.vortex_update_frequency)
                 if(self.log):
-                    self.log_vortices()
+                    self.log_vortices(self.vortex_filename)
             self.steps += 1
             self.dones = {agent: done for agent in self.agents}
 

@@ -168,7 +168,7 @@ class raw_env(AECEnv, EzPickle):
         observation_space = spaces.Box(low=low, high=high, dtype=np.float32)
         self.observation_spaces = {i: observation_space for i in self.agents}
 
-        self.vortex_file = open(vortex_filename, "w")
+        self.vortex_filename = vortex_filename
         self.bird_filename = bird_filename
         self.log = log
 
@@ -212,7 +212,7 @@ class raw_env(AECEnv, EzPickle):
             if self.steps % self.vortex_update_frequency == 0:
                 self.simulation.update_vortices(self.vortex_update_frequency)
                 if(self.log):
-                    self.log_vortices()
+                    self.log_vortices(self.vortex_filename)
             self.steps += 1
             self.dones = {agent: done for agent in self.agents}
 
@@ -288,7 +288,7 @@ class raw_env(AECEnv, EzPickle):
     7:      The current strength of the vortex
     '''
     def log_vortices(self, file_name):
-        file = open(file_name, "w")
+        file = open(file_name, "a")
         wr = csv.writer(file)
         birds = self.simulation.get_birds()
         time = self.steps * self.h
@@ -318,6 +318,7 @@ class raw_env(AECEnv, EzPickle):
         for ID, bird in enumerate(birds):
             state = []
             for i in range(len(bird.X)):
-                time = i*self.h
-                state = [ID, time, bird.X[i], bird.Y[i], bird.Z[i], bird.PHI[i], bird.THETA[i], bird.PSI[i], bird.ALPHA_L[i], bird.ALPHA_R[i], bird.BETA_L[i], bird.BETA_R[i]]
-                wr.writerow(state)
+                if i%10 == 0:
+                    time = i*self.h
+                    state = [ID, time, bird.X[i], bird.Y[i], bird.Z[i], bird.PHI[i], bird.THETA[i], bird.PSI[i], bird.ALPHA_L[i], bird.ALPHA_R[i], bird.BETA_L[i], bird.BETA_R[i]]
+                    wr.writerow(state)
