@@ -31,7 +31,7 @@ def getListOfFiles(dirName):
 module1 = Pybind11Extension('flocking_cpp',
                     #sources = s)
                     sources = ['fle/cpp/py_interface.cpp'],
-                    extra_compile_args = ["-O3", "-mavx2"])
+                    extra_compile_args = ["-march=native"])
 
 setup(
     name='fle',
