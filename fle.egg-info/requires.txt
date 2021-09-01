@@ -1,2 +1,0 @@
-pettingzoo
-pybind11
