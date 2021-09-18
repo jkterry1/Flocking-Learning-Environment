@@ -167,9 +167,10 @@ struct Flock{
         If the bird has moved forward (in the x direction) in the last time step,
         it is rewarded.
         */
-        if (bird.x > self.max_dist){
-            reward += self.forward_reward;
-            self.max_dist = bird.x;
+        if (bird.x > bird.max_dist){
+            //cout<<"ID: "<<agent<<"forward reward\n";
+            reward += self.forward_reward * abs(bird.u) * self.h;
+            bird.max_dist = bird.x;
         }
 
         /*
@@ -177,14 +178,14 @@ struct Flock{
          times the distance it travelled (work = force * distance)
         */
         reward += self.energy_reward * action[0] * self.h * abs(bird.u);
-        reward += self.energy_reward * (abs(bird.F[0]) - abs(bird.vortex_force_u)) * abs(bird.u) * self.h;
-        reward += self.energy_reward * (abs(bird.F[1]) - abs(bird.vortex_force_v)) * abs(bird.v) * self.h;
-        reward += self.energy_reward * (abs(bird.F[2]) - abs(bird.vortex_force_w)) * abs(bird.w) * self.h;;
+        // reward += self.energy_reward * abs(abs(bird.F[0]) - abs(bird.vortex_force_u)) * abs(bird.u) * self.h;
+        // reward += self.energy_reward * abs(abs(bird.F[1]) - abs(bird.vortex_force_v)) * abs(bird.v) * self.h;
+        // reward += self.energy_reward * abs(abs(bird.F[2]) - abs(bird.vortex_force_w)) * abs(bird.w) * self.h;
 
         //If the bird has crashed, we consider it done and punish it for crashing.
         if (self.crashed(bird)){
             done = true;
-            reward = self.crash_reward;
+            //reward = self.crash_reward;
         }
 
         //This can be changed depending on your goals.
@@ -370,8 +371,6 @@ struct Flock{
         Flock & self = *this;
         Bird & bird = self.birds[agent];
 
-
-
         // cout << "action 0 " << action[0];
         // cout << " action 1 " << action[1];
         // cout << " action 2 " << action[2];
@@ -428,6 +427,8 @@ struct Flock{
         if (new_br < limit_beta_low)
             new_br = limit_beta_low;
         bird.beta_r = new_br;
+
+        //cout << "al: " << bird.alpha_l << "bl: " << bird.beta_l << "ar: " << bird.alpha_r << "br: " << bird.beta_r<<'\n';
     }
 
 

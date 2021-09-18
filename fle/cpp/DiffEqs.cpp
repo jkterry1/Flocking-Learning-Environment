@@ -1,4 +1,4 @@
- #include "Eigen/Dense"
+#include "Eigen/Dense"
 #include "types.hpp"
 #include "utils.hpp"
 
@@ -17,22 +17,26 @@ Vector3d drdt(double gamma, double epsilon, Vector3d b, double theta){
 */
 Vector3d duvwdt(Vector3d uvw, Bird & bird){
     Vector3d pqr = bird.pqr();
+    Vector3d A;
     double u, v, w;
+    double p, q, r;
+    p = bird.p;q = bird.q;r = bird.r;
     up(u, v, w) = uvw;
     double m = bird.m;
     double g = bird.g;
 
-    //Force of gravity in each direction in the bird's frame
-    Vector3d grav = Vector3d(-g * sin(bird.theta),
-		  g * cos(bird.theta) * sin(bird.phi),
-		  g * cos(bird.theta) * cos(bird.phi));
-
-
     //F contains the force vector due to all other forces (drag, thrust, etc.)
     Vector3d F = Vector3d(Fu(u, bird), Fv(v, bird), Fw(w, bird));
+    //cout<<"F: "<<F[0]<<" "<<F[1]<<" "<<F[2]<<"\n";
+    //F = Vector3d(0.0,0.0,0.0);
 
-    //Return the total acceleration
+    Vector3d grav = Vector3d(-g * sin(bird.theta),
+                      g * cos(bird.theta) * sin(bird.phi),
+                      g * cos(bird.theta) * cos(bird.phi));
+
+
     return (1.0/m)*F - cross(pqr, uvw) + grav;
+
 }
 
 /*
@@ -41,24 +45,21 @@ Vector3d duvwdt(Vector3d uvw, Bird & bird){
   This is equivalent to calculatig the velocity.
 */
 Vector3d dxyzdt(Vector3d xyz, Bird & bird){
-    double theta = bird.theta;
-    double phi = bird.phi;
-    double psi = bird.psi;
-
+    double theta, phi, psi;
+    theta = bird.theta; phi = bird.phi; psi = bird.psi;
     /*
     These three matricies are rotations that converts the velocity values
     from the bird's frame to the earth frame
     */
     Matrix3d R3 = matrix(cos(psi), -sin(psi), 0.0,
-			 sin(psi), cos(psi), 0.0,
-			 0.0, 0.0, 1.0);
+			                   sin(psi), cos(psi), 0.0,
+			                   0.0, 0.0, 1.0);
     Matrix3d R2 = matrix(cos(theta), 0.0, sin(theta),
-			 0.0, 1.0, 0.0,
-			 -sin(theta), 0.0, cos(theta));
+			                   0.0, 1.0, 0.0,
+			                   -sin(theta), 0.0, cos(theta));
     Matrix3d R1 = matrix(1.0, 0.0, 0.0,
-			 0.0, cos(phi), -sin(phi),
-			 0.0, sin(phi), cos(phi));
-
+			                   0.0, cos(phi), -sin(phi),
+			                   0.0, sin(phi), cos(phi));
     //Apply all 3 rotations
     Vector3d output = matmul(R3, matmul(R2, matmul(R1, bird.uvw())));
     return output;
@@ -71,21 +72,24 @@ Vector3d dxyzdt(Vector3d xyz, Bird & bird){
 */
 Vector3d dpqrdt(Vector3d pqr, Bird & bird){
     double p, q, r;
+    Vector3d pqr_earth;
     up(p, q, r) = pqr;
-
-    //LMN is the rotation moments on the bird in each direction.
-    Vector3d LMN = Vector3d(TL(bird, p), TM(bird, q), TN(bird, r));
     Matrix3d inertia = bird.inertia;
+
+    Vector3d LMN = Vector3d(TL(bird, p), TM(bird, q), TN(bird, r));
+    //LMN = Vector3d(0.0,0.0,0.0);
+
     Matrix3d mat = matrix(0.0, -r, q,
-			                    r, 0.0, -p,
-			                    -q, p, 0.0);
+                 r, 0.0, -p,
+                 -q, p, 0.0);
+
+    Vector3d rhs = LMN - matmul(mat, matmul(inertia, pqr));
 
     /*
       Right hand side of the matrix equation that is used to
       calculate p-dot, q-dot, and r-dot.
       This needs to be inverted to find the final (p-dot, q-dot, and r-dot).
     */
-    Vector3d rhs = LMN - matmul(mat, matmul(inertia, pqr));
     return matmul(inertia.inverse(), rhs);
 }
 
@@ -97,13 +101,11 @@ Vector3d dpqrdt(Vector3d pqr, Bird & bird){
 Vector3d danglesdt(Vector3d angles, Bird & bird){
     double phi, theta, psi;
     up(phi, theta, psi) = angles;
-    Vector3d pqr = bird.pqr();
+    Vector3d pqr = Vector3d(bird.p, bird.q, bird.r);
 
-    //This matrix transofrmation converts the angular velocities
-    //in the bird frame to angular velocities in the earth frame.
     Matrix3d mat = matrix(1.0, sin(phi)*tan(theta), cos(phi)*tan(theta),
-			  0.0, cos(phi), -sin(phi),
-			  0.0, sin(phi)*(1.0/cos(theta)), cos(phi)*(1.0/cos(theta)));
+                      0.0, cos(phi), -sin(phi),
+                      0.0, sin(phi)*(1.0/cos(theta)), cos(phi)*(1.0/cos(theta)));
     Vector3d output = matmul(mat, pqr);
     return output;
 }
@@ -116,7 +118,9 @@ Vector3d danglesdt(Vector3d angles, Bird & bird){
 double TL(Bird & bird, double P){
     double T = 0;
     double v,A,r,Tl,Tr;
-    double cl, cr;
+    double cl, cr, cd;
+
+    cd = 1.5;
 
     //Finds the coefficient of lift for the bird.
     //This depends on angle of attack from the bird's wing orientation.
@@ -167,19 +171,20 @@ double TL(Bird & bird, double P){
     r = bird.Xl/2.0;
     A = bird.Xl * bird.Yl;
     check_A(bird, A, 0.0);
-    Tl = -sign(bird.p) * r * A * cl * (bird.rho * sqr(v))/2.0;
+    Tl = -sign(P) * r * A * cd * (bird.rho * sqr(v))/2.0;
     T += Tl;
 
     //drag due to rotation on right wing
     v = P * bird.Xl/2.0;
     r = bird.Xl/2.0;
     A = bird.Xl * bird.Yl;
-    Tr = -sign(bird.p) * r * A * cr* (bird.rho * sqr(v))/2.0;
+    Tr = -sign(P) * r * A * cd * (bird.rho * sqr(v))/2.0;
     T += Tr;
+
+    //cout<<"TL: "<<T<<" TL left wing: "<<Tl<<" right wing: "<<Tr<<"\n";
 
     //torque due to vortices, this is pre calculated
     T += bird.vortex_torque_u;
-
     bird.T[0] = T;
     return T;
 }
@@ -198,12 +203,15 @@ double TM(Bird & bird, double Q){
     double v = (Q * r)/2.0;
     double A = (bird.Xl * bird.Yl);
 
-    //Drag force sue to rotation
+    //Drag force due to rotation
     double D = -sign(v) * r * bird.Cd * A * (bird.rho * sqr(v))/2.0;
+
     //Both wings contribute D drag
     T += 2.0 * D;
     T += bird.vortex_torque_v;
     bird.T[1] = T;
+
+    //cout<< "TM: "<<D<<" Q: "<<Q<<"\n";
     return T;
 }
 
@@ -286,10 +294,12 @@ double Fu(double u, Bird & bird){
 
     //Force due to vortices. This is pre-calculated
     F += bird.vortex_force_u;
+    //cout<<"vortex force u: "<<bird.vortex_force_u<<'\n';
     //Force from the thrust. Thrust is determined solely by the action taken.
     F += bird.thrust;
 
     bird.F[0] = F;
+    //cout<<"Fu: "<<F<<'\n';
     return F;
 }
 
@@ -314,11 +324,13 @@ double Fv(double v, Bird & bird){
     //If the bird is moving forward, there is a lift contribution to the force
     //from each wing.
     if (bird.u > 0.0){
+        //cout<<"lift v \n";
         F += L_left * sin(bird.beta_l);
         F += -L_right * sin(bird.beta_r);
     }
     F += D;
     F += bird.vortex_force_v;
+    //cout<<"vortex force v: "<<bird.vortex_force_v<<'\n';
     bird.F[1] = F;
     return F;
 }
@@ -352,11 +364,13 @@ double Fw(double w, Bird & bird){
 
     //There is only lift if the bird is flying forwards.
     if (bird.u > 0.0){
+        //cout<<"lift w \n";
         F += L_left * cos(bird.beta_l);
         F += L_right * cos(bird.beta_r);
     }
     F += D;
     F += bird.vortex_force_w;
+    //cout<<"vortex force w: "<<bird.vortex_force_w<<'\n';
     bird.F[2] = F;
     return F;
 }

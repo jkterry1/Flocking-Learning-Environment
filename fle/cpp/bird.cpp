@@ -132,6 +132,9 @@ struct Bird{
     double x,y,z;
     Vector3d xyz()const{return Vector3d(x,y,z);}
 
+    //velocity in earth frame
+    double vx, vy, vz;
+
     /*
       wing orientation,
       alpha is how many degrees the wing is tilting forward or back
@@ -199,6 +202,8 @@ struct Bird{
     PrevValues BETA_L;
     PrevValues BETA_R;
 
+    double max_dist = 0.0;
+
     Bird() = default;
     Bird(const BirdInit & init){
         Bird & self = *this;
@@ -224,6 +229,7 @@ struct Bird{
         self.Iyy = self.m * sqr(self.Yl);
         self.Izz = self.m * sqr(self.Zl);
         self.Ixz = 0.5 * self.m * sqr(self.Zl);    //approximation
+        //self.Ixz = 0.0;
         self.inertia = matrix(self.Ixx, 0.0, self.Ixz,
                                     0.0, self.Iyy, 0.0,
                                     self.Ixz, 0.0, self.Izz);
@@ -272,24 +278,30 @@ struct Bird{
 
         //Calculate and update velocities for the next time step using the diffeq solver
         Vector3d uvw = self.take_time_step(duvwdt, self.uvw(), h);
-        up(self.u,self.v,self.w) = uvw;
-        //cout<<self.w << " ";
-
         //Calculate and update angular velocities for the next time step
         Vector3d pqr = self.take_time_step(dpqrdt, self.pqr(), h);
-        up(self.p,self.q,self.r) = pqr;
-
+        //calculate and update position for the next time step
+        Vector3d xyz = self.take_time_step(dxyzdt, self.xyz(), h);
         //calculate and update orientation for the next time step
         Vector3d angles = self.take_time_step(danglesdt, self.angles(), h);
         angles[0] = fmod(angles[0], (2.0*self.pi));
         angles[1] = fmod(angles[1], (2.0*self.pi));
         angles[2] = fmod(angles[2], (2.0*self.pi));
-        up(self.phi, self.theta, self.psi) = angles;
-        //cout<<"angles "<<angles<<"\n";
 
-        //calculate and update position for the next time step
-        Vector3d xyz = self.take_time_step(dxyzdt, self.xyz(), h);
+        //cout<<"angles: "<<self.phi<<" "<<self.theta<<" "<<self.psi<<'\n';
+        up(self.phi, self.theta, self.psi) = angles;
+        //cout<<"angles after: "<<self.phi<<" "<<self.theta<<" "<<self.psi<<"\n";
+        //cout<<"uvw before "<< self.u<<" "<<self.v<<" "<<self.w<<"\n";
+        up(self.u,self.v,self.w) = uvw;
+        //cout<<"uvw after "<< self.u<<" "<<self.v<<" "<<self.w<<"\n";
+        //cout<<"pqr before: "<<self.p<<" "<<self.q<<" "<<self.r<<'\n';
+        up(self.p,self.q,self.r) = pqr;
+        //cout<<"pqr after: "<<self.p<<" "<<self.q<<" "<<self.r<<'\n';
+        //cout<<"xyz before: "<<self.x<<" "<<self.y<<" "<<self.z<<'\n';
         up(self.x,self.y,self.z) = xyz;
+        //cout<<"xyz after: "<<self.x<<" "<<self.y<<" "<<self.z<<'\n';
+
+        //cout<<'\n';
 
         /*
           Check if the bird has crashed into the ground.
@@ -510,6 +522,7 @@ struct Bird{
         Vector3d k4 = h * ddt(y + k3, self);
 
         return y + (1.0 / 6.0)*(k1 + (2.0 * k2) + (2.0 * k3) + k4);
+        //return y + k1;
     }
 
     /*
