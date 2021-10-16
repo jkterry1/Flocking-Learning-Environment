@@ -31,7 +31,7 @@ def getListOfFiles(dirName):
 module1 = Pybind11Extension('flocking_cpp',
                     #sources = s)
                     sources = ['fle/cpp/py_interface.cpp'],
-                    extra_compile_args = ["-march=native"])
+                    extra_compile_args = [])
 
 setup(
     name='fle',
@@ -46,7 +46,7 @@ setup(
     packages=["fle"] + ["fle." + pkg for pkg in find_packages("fle")],
     include_package_data=True,
     install_requires=[
-        "pettingzoo",
+        "pettingzoo==1.12.0",
         "pybind11"
     ],
     setup_requires=['pybind11>=2.2'],
