@@ -322,3 +322,8 @@ class raw_env(AECEnv, EzPickle):
                     time = i*self.h
                     state = [ID, time, bird.X[i], bird.Y[i], bird.Z[i], bird.PHI[i], bird.THETA[i], bird.PSI[i], bird.ALPHA_L[i], bird.ALPHA_R[i], bird.BETA_L[i], bird.BETA_R[i]]
                     wr.writerow(state)
+
+    def action_space(self, agent):
+        return self.action_spaces[agent]
+    def observation_space(self, agent):
+        return self.observation_spaces[agent]
