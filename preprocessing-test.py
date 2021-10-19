@@ -100,6 +100,3 @@ print(rew/n_agents)
 #env.log_vortices()
 #env.plot_birds()
 #env.plot_values()
-
-if __name__ == "__main__":
-    run()
