@@ -27,13 +27,10 @@ Vector3d duvwdt(Vector3d uvw, Bird & bird){
 
     //F contains the force vector due to all other forces (drag, thrust, etc.)
     Vector3d F = Vector3d(Fu(u, bird), Fv(v, bird), Fw(w, bird));
-    //cout<<"F: "<<F[0]<<" "<<F[1]<<" "<<F[2]<<"\n";
-    //F = Vector3d(0.0,0.0,0.0);
 
     Vector3d grav = Vector3d(-g * sin(bird.theta),
                       g * cos(bird.theta) * sin(bird.phi),
                       g * cos(bird.theta) * cos(bird.phi));
-
 
     return (1.0/m)*F - cross(pqr, uvw) + grav;
 
@@ -77,7 +74,6 @@ Vector3d dpqrdt(Vector3d pqr, Bird & bird){
     Matrix3d inertia = bird.inertia;
 
     Vector3d LMN = Vector3d(TL(bird, p), TM(bird, q), TN(bird, r));
-    //LMN = Vector3d(0.0,0.0,0.0);
 
     Matrix3d mat = matrix(0.0, -r, q,
                  r, 0.0, -p,
@@ -294,12 +290,10 @@ double Fu(double u, Bird & bird){
 
     //Force due to vortices. This is pre-calculated
     F += bird.vortex_force_u;
-    //cout<<"vortex force u: "<<bird.vortex_force_u<<'\n';
     //Force from the thrust. Thrust is determined solely by the action taken.
     F += bird.thrust;
 
     bird.F[0] = F;
-    //cout<<"Fu: "<<F<<'\n';
     return F;
 }
 
@@ -349,28 +343,21 @@ double Fw(double w, Bird & bird){
     //This depends on the orientaion (alpha, beta) of each wing
     //(which changes the angle of attack)
     up(cl, cr) = C_lift(bird);
-    // cout << "u: " << bird.u << "\n";
-    // cout << "cl " << cl << " cr " << cr << "\n";
-    // cout << "alpha l " << bird.alpha_l << " alpha_r " << bird.alpha_r << "\n";
-    // cout << "beta l " << bird.beta_l << " beta_r " << bird.beta_r << "\n";
 
     //Lift due to left and right wing
     double L_left = cl * A * (bird.rho * sqr(bird.u))/2.0;
     double L_right = cr * A * (bird.rho * sqr(bird.u))/2.0;
-    //cout << "left lift " << L_left << " right " << L_right << "\n";
 
     //Drag force on the bird
     double D = -sign(w) * bird.Cd * A * (bird.rho * sqr(w))/2.0;
 
     //There is only lift if the bird is flying forwards.
     if (bird.u > 0.0){
-        //cout<<"lift w \n";
         F += L_left * cos(bird.beta_l);
         F += L_right * cos(bird.beta_r);
     }
     F += D;
     F += bird.vortex_force_w;
-    //cout<<"vortex force w: "<<bird.vortex_force_w<<'\n';
     bird.F[2] = F;
     return F;
 }

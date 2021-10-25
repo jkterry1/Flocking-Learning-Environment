@@ -20,14 +20,6 @@ def getListOfFiles(dirName):
 
     return allFiles
 
-# cpp_arr = os.listdir('fle/cpp')
-# s = ['fle/cpp/' + a for a in cpp_arr if a[-3:]=='cpp']
-# eigen_arr = os.listdir('fle/cpp/Eigen')
-# s += ['fle/cpp/Eigen/' + a for a in eigen_arr if len(a) > 1 ]
-
-#s = getListOfFiles('fle/cpp')
-#s.remove('fle/cpp/.gitignore')
-#print(s)
 module1 = Pybind11Extension('flocking_cpp',
                     #sources = s)
                     sources = ['fle/cpp/py_interface.cpp'],
@@ -42,7 +34,6 @@ setup(
     url="http://github.com/jkterry1/birdflocking",
     keywords=["Reinforcement Learning", "game", "RL", "AI", "gym"],
     options={"bdist_wheel": {"universal": True}},
-    #python_requires=">=3.6, <3.10",
     packages=["fle"] + ["fle." + pkg for pkg in find_packages("fle")],
     include_package_data=True,
     install_requires=[
@@ -50,8 +41,6 @@ setup(
         "pybind11"
     ],
     setup_requires=['pybind11>=2.2'],
-    # classifiers=[
-    #     'Programming Language :: Python :: 3'],
     cmdclass={"build_ext": build_ext},
     ext_modules = [module1]
 )

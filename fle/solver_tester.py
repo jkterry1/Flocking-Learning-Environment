@@ -42,7 +42,6 @@ def run():
     steps = 0
 
     energies = {i:0.0 for i in env.agents}
-    flaps = {i:0 for i in env.agents}
 
     #time measurement:
     start = time.time()
@@ -56,25 +55,16 @@ def run():
             a = None
             if not done:
                 a = [0.0,0.0,0.0,0.0,0.0]
-                if a[0] > 0:
-                    flaps[env.agent_selection] += 1
                 a = np.array(a)
-            #a = [random.uniform(0, 1), random.uniform(0, 1), random.uniform(0, 1), random.uniform(0, 1), random.uniform(0, 1)]
-            #a[0] = basic_flying_policy(obs)
-
-            # print(env.agent_selection)
-            # print("y: ", obs[20])
-            # print("x: ", obs[19])
 
             env.step(a)
 
     #print(energies)
-    # print(flaps)
 
     #env.log_birds()
     #env.log_vortices()
     #env.plot_birds()
-    # env.plot_values()
+    #env.plot_values()
 
 if __name__ == "__main__":
     run()

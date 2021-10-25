@@ -10,7 +10,6 @@ from . import plotting
 import csv
 import flocking_cpp
 
-
 def env(**kwargs):
     env = raw_env(**kwargs)
     env = wrappers.ClipOutOfBoundsWrapper(env)
@@ -19,7 +18,6 @@ def env(**kwargs):
 
 
 def make_bird(x=0., y=0., z=0., u=0., v=0., w=0., p=0., q=0., r=0., theta=0., phi=0., psi=0.):
-    # a comment is needed defining all of these, including their units
     return flocking_cpp.BirdInit(x, y, z, u, v, w, p, q, r, theta, phi, psi)
 
 
@@ -129,10 +127,6 @@ class raw_env(AECEnv, EzPickle):
         '''
         self.action_spaces = {i: spaces.Box(low=np.zeros(5).astype(np.float32),
                                          high=np.ones(5).astype(np.float32)) for i in self.agents}
-
-        # self.action_spaces = {i: spaces.Box(low=np.array([0.0, -wing_action_limit_alpha, -wing_action_limit_beta, -wing_action_limit_alpha, -wing_action_limit_beta]).astype(np.float32),
-        #                                 high=np.array([thrust_limit, wing_action_limit_alpha, wing_action_limit_beta, wing_action_limit_alpha, wing_action_limit_beta]).astype(np.float32)) for i in self.agents}
-
         '''
         Observation space is a vector with
         If including derivatives, 20 dimensions for the current bird's state and
@@ -179,7 +173,6 @@ class raw_env(AECEnv, EzPickle):
             return self._was_done_step(action)
 
         self._cumulative_rewards[self.agent_selection] = 0
-
         #denormalize the action
         denorm_action = np.zeros(5)
         denorm_action[0] = action[0] * self.thrust_limit
@@ -220,7 +213,6 @@ class raw_env(AECEnv, EzPickle):
         self.agent_selection = self._agent_selector.next()
 
         self._accumulate_rewards()  # this function adds everything in the rewards dict into the _cumulative_rewards dict
-        # self._dones_step_first()  # this handles the agent death logic.
 
     def observe(self, agent):
         return self.simulation.get_observation(self._agent_idxs[agent], self.num_neighbors)

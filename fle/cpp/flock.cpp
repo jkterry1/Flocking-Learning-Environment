@@ -228,7 +228,6 @@ struct Flock{
             const Bird & bird = self.birds[b];
 
             if (&bird != &curr){
-              //cout << bird.VORTICES_LEFT.size();
                 for (const Vorticies & vorts : {bird.VORTICES_LEFT, bird.VORTICES_RIGHT}){
                     size_t i = 0;
                     /*
@@ -281,7 +280,6 @@ struct Flock{
         Bird & bird = self.birds[agent];
         Observation obs;
         extend(obs, ((force)/self.limits[0]) + Vector3d{1.0,1.0,1.0}/2.0); //0,1,2
-        //cout<<"torque: " << torque << "\n";
         extend(obs, (torque + self.limits[3])/(2.0 * self.limits[3]));//3,4,5
         extend(obs, {((bird.z)/self.limits[6] + 1.0)/2.0});//6
         extend(obs, {((bird.phi)/self.limits[7] + 1.0)/2.0,//7
