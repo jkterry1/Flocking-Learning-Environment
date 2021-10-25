@@ -163,13 +163,19 @@ struct Flock{
         bool done = false;
         Bird & bird = self.birds[agent];
 
+        int i_last = len(bird.U)-2;
+        //double KE_before = 0.5 * bird.m * (sqr(bird.U[i_last]) + sqr(bird.V[i_last]) + sqr(bird.W[i_last]));
+        //double KE_after = 0.5 * bird.m * (sqr(bird.u)+sqr(bird.v)+sqr(bird.w));
+        //cout<<KE_after-KE_before<<'\n';
+        //double KE_in =
+
         /*
         If the bird has moved forward (in the x direction) in the last time step,
         it is rewarded.
         */
+        reward += self.forward_reward * (bird.x - bird.X[i_last]);
         if (bird.x > bird.max_dist){
             //cout<<"ID: "<<agent<<"forward reward\n";
-            reward += self.forward_reward * abs(bird.u) * self.h;
             bird.max_dist = bird.x;
         }
 
@@ -178,9 +184,6 @@ struct Flock{
          times the distance it travelled (work = force * distance)
         */
         reward += self.energy_reward * action[0] * self.h * abs(bird.u);
-        // reward += self.energy_reward * abs(abs(bird.F[0]) - abs(bird.vortex_force_u)) * abs(bird.u) * self.h;
-        // reward += self.energy_reward * abs(abs(bird.F[1]) - abs(bird.vortex_force_v)) * abs(bird.v) * self.h;
-        // reward += self.energy_reward * abs(abs(bird.F[2]) - abs(bird.vortex_force_w)) * abs(bird.w) * self.h;
 
         //If the bird has crashed, we consider it done and punish it for crashing.
         if (self.crashed(bird)){
