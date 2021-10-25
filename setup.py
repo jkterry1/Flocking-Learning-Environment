@@ -46,7 +46,7 @@ setup(
     packages=["fle"] + ["fle." + pkg for pkg in find_packages("fle")],
     include_package_data=True,
     install_requires=[
-        "pettingzoo==1.12.0",
+        "pettingzoo==1.13.1",
         "pybind11"
     ],
     setup_requires=['pybind11>=2.2'],
