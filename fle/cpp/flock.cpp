@@ -88,15 +88,6 @@ struct Flock{
         self.limits.push_back(6.3); //8
         self.limits.push_back(6.3); //9
 
-        /*
-        //left Wing orientation limits, pi/2 rad
-        self.limits.push_back(1.6);
-        self.limits.push_back(1.6);
-        //right Wing orientation limits, pi/2 rad
-        self.limits.push_back(1.6);
-        self.limits.push_back(1.6);
-        */
-
         double limit_alpha_low = -25.0 * PI/180.0;
         double limit_alpha_high = 15.0 * PI/180.0;
         double limit_beta_low = -30.0 * PI/180.0;
@@ -163,27 +154,18 @@ struct Flock{
         bool done = false;
         Bird & bird = self.birds[agent];
 
-        int i_last = len(bird.U)-2;
-        //double KE_before = 0.5 * bird.m * (sqr(bird.U[i_last]) + sqr(bird.V[i_last]) + sqr(bird.W[i_last]));
-        //double KE_after = 0.5 * bird.m * (sqr(bird.u)+sqr(bird.v)+sqr(bird.w));
-        //cout<<KE_after-KE_before<<'\n';
-        //double KE_in =
+        int i_last = len(bird.X)-2;
 
         /*
-        If the bird has moved forward (in the x direction) in the last time step,
-        it is rewarded.
+        The bird is rewarded for the distance it has travelled.
         */
         reward += self.forward_reward * (bird.x - bird.X[i_last]);
-        if (bird.x > bird.max_dist){
-            //cout<<"ID: "<<agent<<"forward reward\n";
-            bird.max_dist = bird.x;
-        }
 
         /*
         Energy used by the bird is proportional to the birds thrust and the net force on the bird
          times the distance it travelled (work = force * distance)
         */
-        reward += self.energy_reward * action[0] * self.h * abs(bird.u);
+        reward += self.energy_reward * action[0] * (bird.x - bird.X[i_last]);
 
         //If the bird has crashed, we consider it done and punish it for crashing.
         if (self.crashed(bird)){
@@ -272,9 +254,7 @@ struct Flock{
                         //Determine if the bird is too far from the
                         //center of this vortex to be affected.
                         double r = sqrt(sqr(curr.y - v.y()) + sqr(curr.z - v.z()));
-                        //cout << "failed range " << r;
                         if (r < self.max_r){
-                          //cout << "added vortex";
                             vortices.push_back(v);
                         }
                     }
@@ -312,7 +292,6 @@ struct Flock{
                       (((bird.alpha_r) - self.limits[10])/(self.limits[11] - self.limits[10])),//12
                       (((bird.beta_r) - self.limits[12])/(self.limits[13] - self.limits[12]))});//13
         if(derivatives){
-          //cout << "w: " << bird.w << " " << bird.w/self.limits[16];
           extend(obs, {((bird.u+noise(.01))/self.limits[14] + 1.0)/2.0,//14
                         ((bird.v+noise(.01))/self.limits[15] + 1.0)/2.0,//15
                         ((bird.w+noise(.01))/self.limits[16] + 1.0)/2.0});//16
@@ -323,7 +302,6 @@ struct Flock{
         std::vector<Bird *> nearest = bird.n_nearest(self.birds, max_observable_birds);
         for (Bird * otherp : nearest){
 	        Bird & other = *otherp;
-            //cout << "bird w: " << bird.w << "other's w: " << other.w;
             extend(obs, {(((other.x - bird.x)+noise(.01))/self.limits[20] + 1.0)/2.0,//20
                           (((other.y - bird.y)+noise(.01))/self.limits[21] + 1.0)/2.0,//21
                           (((other.z - bird.z)+noise(.01))/self.limits[22] + 1.0)/2.0});//22
@@ -374,12 +352,6 @@ struct Flock{
         Flock & self = *this;
         Bird & bird = self.birds[agent];
 
-        // cout << "action 0 " << action[0];
-        // cout << " action 1 " << action[1];
-        // cout << " action 2 " << action[2];
-        // cout << " action 3 " << action[3];
-        // cout << " action 4 " << action[4] << "\n";
-
         //The limits for wing rotation in radians
         //Starling:
         double limit_alpha_low = -25.0 * PI/180.0;
@@ -407,7 +379,6 @@ struct Flock{
         if (new_al < limit_alpha_low)
             new_al = limit_alpha_low;
         bird.alpha_l = new_al;
-        //cout<<"alpha l "<<bird.alpha_l<<"\t ";
 
         double new_bl = bird.beta_l + action[2];
         if (new_bl > limit_beta_high)
@@ -415,7 +386,6 @@ struct Flock{
         if (new_bl < limit_beta_low)
             new_bl = limit_beta_low;
         bird.beta_l = new_bl;
-        //cout<<"beta l"<<bird.beta_l<<"\n ";
 
         double new_ar = bird.alpha_r + action[3];
         if (new_ar > limit_alpha_high)
@@ -431,7 +401,6 @@ struct Flock{
             new_br = limit_beta_low;
         bird.beta_r = new_br;
 
-        //cout << "al: " << bird.alpha_l << "bl: " << bird.beta_l << "ar: " << bird.alpha_r << "br: " << bird.beta_r<<'\n';
     }
 
 
