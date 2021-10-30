@@ -288,20 +288,10 @@ struct Bird{
         angles[1] = fmod(angles[1], (2.0*self.pi));
         angles[2] = fmod(angles[2], (2.0*self.pi));
 
-        //cout<<"angles: "<<self.phi<<" "<<self.theta<<" "<<self.psi<<'\n';
         up(self.phi, self.theta, self.psi) = angles;
-        //cout<<"angles after: "<<self.phi<<" "<<self.theta<<" "<<self.psi<<"\n";
-        //cout<<"uvw before "<< self.u<<" "<<self.v<<" "<<self.w<<"\n";
         up(self.u,self.v,self.w) = uvw;
-        //cout<<"uvw after "<< self.u<<" "<<self.v<<" "<<self.w<<"\n";
-        //cout<<"pqr before: "<<self.p<<" "<<self.q<<" "<<self.r<<'\n';
         up(self.p,self.q,self.r) = pqr;
-        //cout<<"pqr after: "<<self.p<<" "<<self.q<<" "<<self.r<<'\n';
-        //cout<<"xyz before: "<<self.x<<" "<<self.y<<" "<<self.z<<'\n';
         up(self.x,self.y,self.z) = xyz;
-        //cout<<"xyz after: "<<self.x<<" "<<self.y<<" "<<self.z<<'\n';
-
-        //cout<<'\n';
 
         /*
           Check if the bird has crashed into the ground.
@@ -363,7 +353,6 @@ struct Bird{
             //tangent vectors
             Vector3d t_minus = vortices[i].pos - vortices[i-1].pos;
             Vector3d t = vortices[i+1].pos - vortices[i].pos;
-            //Vector3d t_plus = vortices[i+2].pos - vortices[i+1].pos;
 
             //length of tangent vectors
             double l_t_minus = t_minus.norm();
@@ -384,7 +373,6 @@ struct Bird{
             }
 
             //normal vector
-            //Vector3d n = (cross(t, t_plus)/(1 * dot(t, t_plus))) - (cross(t_minus, t)/(1 + dot(t_minus, t)));
             Vector3d n = (t - t_minus);
             n = n/n.norm();
             //binormal vector
@@ -472,8 +460,6 @@ struct Bird{
             tu += D * self.Xl/2.0;
         }
         //return forces and torques in each direction
-        //cout << fu << " " << fv << " " << fw << "\n";
-        //cout << tu << " " << tv << " " << tw << "\n";
         return VortexForces{fu, fv, fw, tu, tv, tw};
     }
 
@@ -522,7 +508,6 @@ struct Bird{
         Vector3d k4 = h * ddt(y + k3, self);
 
         return y + (1.0 / 6.0)*(k1 + (2.0 * k2) + (2.0 * k3) + k4);
-        //return y + k1;
     }
 
     /*
