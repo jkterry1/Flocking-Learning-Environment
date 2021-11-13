@@ -239,6 +239,9 @@ struct Bird{
         self.F = Vector3d(0.0, 0.0, 0.0);
       	self.T = Vector3d(0.0, 0.0, 0.0);
 
+        //Drag Force for use in reward calculation
+        self.Fd = Vector3d(0.0, 0.0, 0.0);
+
         /*
         wing orientation angles alpha and beta for the left and right wings,
         refer to diagrams for more explanation
