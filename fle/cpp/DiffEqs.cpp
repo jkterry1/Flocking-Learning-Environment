@@ -286,7 +286,7 @@ double Fu(double u, Bird & bird){
     double A = bird.Xl * bird.Zl + bird.Xl * bird.Yl * sin(alpha_l) +\
         bird.Xl * bird.Yl * sin(alpha_r);
     double D = -sign(u) * bird.Cd * A * (bird.rho * sqr(u))/2.0;
-    self.Fd[0] = D
+    bird.Fd[0] = D;
 
     F += D;
     //Force due to vortices. This is pre-calculated
@@ -315,7 +315,7 @@ double Fv(double v, Bird & bird){
     A = bird.Yl * bird.Zl;
     //Drag on the bird
     double D = -sign(v) * bird.Cd * A * (bird.rho * sqr(v))/2.0;
-    self.Fd[1] = D
+    bird.Fd[1] = D;
 
     //If the bird is moving forward, there is a lift contribution to the force
     //from each wing.
@@ -352,7 +352,7 @@ double Fw(double w, Bird & bird){
 
     //Drag force on the bird
     double D = -sign(w) * bird.Cd * A * (bird.rho * sqr(w))/2.0;
-    self.Fd[2] = D
+    bird.Fd[2] = D;
 
     //There is only lift if the bird is flying forwards.
     if (bird.u > 0.0){

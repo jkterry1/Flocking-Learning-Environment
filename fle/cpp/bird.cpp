@@ -152,6 +152,7 @@ struct Bird{
         T, net torque
     */
     Vector3d F;
+    Vector3d Fd;
     Vector3d T;
 
     /*
