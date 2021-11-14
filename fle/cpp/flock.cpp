@@ -163,7 +163,7 @@ struct Flock{
 
         /*
         Energy used by the bird is proportional to the birds thrust and the net force on the bird
-         times the distance it travelled (work = force * distance)
+         times the distance it traveled (work = force * distance)
         */
         //reward += self.energy_reward * action[0] * (bird.x - bird.X[i_last]);
         reward += self.energy_reward * (bird.Fd[0]*bird.u +\
