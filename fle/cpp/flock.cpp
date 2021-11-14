@@ -167,7 +167,7 @@ struct Flock{
         */
         //reward += self.energy_reward * action[0] * (bird.x - bird.X[i_last]);
         reward += self.energy_reward * (bird.Fd[0]*bird.u +\
-                                        bird.Fd[1]*bird.v + bird.Fd[2]*bird.w);
+                                        bird.Fd[1]*bird.v + bird.Fd[2]*bird.w)*self.h;
 
         //If the bird has crashed, we consider it done and punish it for crashing.
         if (self.crashed(bird)){
