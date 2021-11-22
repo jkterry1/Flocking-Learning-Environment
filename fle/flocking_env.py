@@ -86,12 +86,13 @@ class raw_env(AECEnv, EzPickle):
 
         # default birds are spaced 3m apart, 50m up,
         # and have an initial velocity of 5 m/s forward
+        print(bird_inits)
         if bird_inits is None:
             bird_inits = [make_bird(z=50.0, y=3.0*i, u=5.0) for i in range(N)]
 
         self.t = t
         self.h = h
-        self.N = N
+        self.N = len(bird_inits)
 
         self.energy_reward = energy_reward
         self.forward_reward = forward_reward
