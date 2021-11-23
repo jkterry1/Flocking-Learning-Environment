@@ -152,7 +152,7 @@ struct Bird{
         T, net torque
     */
     Vector3d F;
-    Vector3d Fd;
+    //Vector3d Fd;
     Vector3d T;
 
     /*
@@ -241,7 +241,7 @@ struct Bird{
       	self.T = Vector3d(0.0, 0.0, 0.0);
 
         //Drag Force for use in reward calculation
-        self.Fd = Vector3d(0.0, 0.0, 0.0);
+        //self.Fd = Vector3d(0.0, 0.0, 0.0);
 
         /*
         wing orientation angles alpha and beta for the left and right wings,

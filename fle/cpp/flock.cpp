@@ -165,8 +165,8 @@ struct Flock{
         Energy used by the bird is proportional to the birds thrust and the net force on the bird
          times the distance it traveled (work = force * distance)
         */
-        reward += self.energy_reward * action[0] * abs(bird.u) * self.h;
-        //reward += (bird.Fd[0]*bird.u + bird.Fd[1]*bird.v + bird.Fd[2]*bird.w)*self.h;
+        //reward += self.energy_reward * action[0] * abs(bird.u) * self.h;
+        reward += self.energy_reward * action[0] * self.h * abs(bird.u);
 
         //If the bird has crashed, we consider it done and punish it for crashing.
         if (self.crashed(bird)){
