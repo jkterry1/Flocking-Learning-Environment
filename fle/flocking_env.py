@@ -5,10 +5,11 @@ from pettingzoo.utils.conversions import parallel_wrapper_fn
 from gym import spaces
 import numpy as np
 from gym.utils import seeding, EzPickle
-
+import magent
 from . import plotting
 import csv
 import flocking_cpp
+
 
 def env(**kwargs):
     env = raw_env(**kwargs)
