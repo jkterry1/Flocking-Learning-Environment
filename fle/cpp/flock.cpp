@@ -165,7 +165,6 @@ struct Flock{
         Energy used by the bird is proportional to the birds thrust and the net force on the bird
          times the distance it traveled (work = force * distance)
         */
-        //reward += self.energy_reward * action[0] * abs(bird.u) * self.h;
         reward += self.energy_reward * action[0] * self.h * abs(bird.u);
 
         //If the bird has crashed, we consider it done and punish it for crashing.
@@ -176,9 +175,9 @@ struct Flock{
 
         //This can be changed depending on your goals.
         //Gives the bird a destination, flying 500m forward ends the simulation.
-        if (bird.x > 500.0){
-            done = true;
-        }
+        // if (bird.x > 500.0){
+        //     done = true;
+        // }
 
         return std::make_pair(done, reward);
     }

@@ -38,6 +38,7 @@ class raw_env(AECEnv, EzPickle):
                  LIA=False,
                  bird_filename="bird_log_1.csv",
                  vortex_filename="vortex_log_1.csv",
+                 action_filename="action_log_1.csv",
                  vortex_update_frequency=100,
                  log=False,
                  num_neighbors=7,
@@ -165,6 +166,8 @@ class raw_env(AECEnv, EzPickle):
 
         self.vortex_filename = vortex_filename
         self.bird_filename = bird_filename
+        action_log_file = open(action_filename, "w")
+        self.action_log = csv.writer(action_log_file)
         self.log = log
 
     def step(self, action):
@@ -187,6 +190,9 @@ class raw_env(AECEnv, EzPickle):
         self.simulation.update_bird(denorm_action, self._agent_idxs[self.agent_selection])
 
         done, reward = self.simulation.get_done_reward(denorm_action, self._agent_idxs[self.agent_selection])
+
+        #log the agent, action, and reward from this time step
+        self.action_log.writerow([self.agent_selection[2:], denorm_action, reward])
 
         self._clear_rewards()
         self.rewards[self.agent_selection] = reward
