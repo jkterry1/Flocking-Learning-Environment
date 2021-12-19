@@ -189,7 +189,7 @@ struct Flock{
         Flock & self = *this;
 
         //Checks if bird ahs hit the ground, or gone too high
-        if (bird.z <= 0 || bird.z > 500){
+        if (bird.z <= 0 || bird.z > 2000){
             return true;
         }
 
