@@ -175,9 +175,9 @@ struct Flock{
 
         //This can be changed depending on your goals.
         //Gives the bird a destination, flying 500m forward ends the simulation.
-        // if (bird.x > 500.0){
-        //     done = true;
-        // }
+         if (bird.x > 500.0){
+             done = true;
+         }
 
         return std::make_pair(done, reward);
     }
@@ -189,7 +189,7 @@ struct Flock{
         Flock & self = *this;
 
         //Checks if bird ahs hit the ground, or gone too high
-        if (bird.z <= 0 || bird.z > 2000){
+        if (bird.z <= 0 || bird.z > 500){
             return true;
         }
 
