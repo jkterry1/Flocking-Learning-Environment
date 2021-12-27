@@ -37,7 +37,7 @@ class raw_env(AECEnv, EzPickle):
                  crash_reward=-100.0,
                  bird_inits=None,
                  LIA=False,
-                 action_filename="action_log_1.csv",
+                 action_logging=False,
                  vortex_update_frequency=100,
                  log=False,
                  num_neighbors=7,
@@ -55,6 +55,7 @@ class raw_env(AECEnv, EzPickle):
                           crash_reward,
                           bird_inits,
                           LIA,
+                          action_logging,
                           vortex_update_frequency,
                           log,
                           num_neighbors,
@@ -100,7 +101,7 @@ class raw_env(AECEnv, EzPickle):
         if self.bird_inits is not None:
             assert self.N == len(self.bird_inits)
         self.max_frames = int(t/h)
-        self.num_neighbors= num_neighbors
+        self.num_neighbors = num_neighbors
         self.vortex_update_frequency = vortex_update_frequency
 
         self.agents = [f"b_{i}" for i in range(self.N)]
@@ -161,8 +162,8 @@ class raw_env(AECEnv, EzPickle):
         observation_space = spaces.Box(low=low, high=high, dtype=np.float32)
         self.observation_spaces = {i: observation_space for i in self.agents}
 
-        action_log_file = open(action_filename, "w")
-        self.action_log = csv.writer(action_log_file)
+        self.action_logging = action_logging
+        self.action_log = []
         self.log = log
 
     def step(self, action):
@@ -187,7 +188,8 @@ class raw_env(AECEnv, EzPickle):
         done, reward = self.simulation.get_done_reward(denorm_action, self._agent_idxs[self.agent_selection])
 
         # log the agent, action, and reward from this time step
-        self.action_log.writerow([self.agent_selection[2:], denorm_action, reward])
+        if self.action_logging is True:
+            self.action_log.append([self.agent_selection[2:], denorm_action, reward])
 
         self._clear_rewards()
         self.rewards[self.agent_selection] = reward
@@ -317,6 +319,13 @@ class raw_env(AECEnv, EzPickle):
 
     def log_actions(self, file_name):
         file = open(file_name, "w")
+        writer = csv.writer(file)
+
+        if self.action_logging is False:
+            print("action logging must be enabled at initialization to use this function")
+        else:
+            for row in self.action_log:
+                writer.writerow(row)
 
     def action_space(self, agent):
         return self.action_spaces[agent]
