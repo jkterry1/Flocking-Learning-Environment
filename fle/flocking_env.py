@@ -5,7 +5,7 @@ from pettingzoo.utils.conversions import parallel_wrapper_fn
 from gym import spaces
 import numpy as np
 from gym.utils import seeding, EzPickle
-import magent
+import magent  # test to throw error if I screw up virtual env config during experiments
 from . import plotting
 import csv
 import flocking_cpp
@@ -37,8 +37,6 @@ class raw_env(AECEnv, EzPickle):
                  crash_reward=-100.0,
                  bird_inits=None,
                  LIA=False,
-                 bird_filename="bird_log_1.csv",
-                 vortex_filename="vortex_log_1.csv",
                  action_filename="action_log_1.csv",
                  vortex_update_frequency=100,
                  log=False,
@@ -57,8 +55,6 @@ class raw_env(AECEnv, EzPickle):
                           crash_reward,
                           bird_inits,
                           LIA,
-                          bird_filename,
-                          vortex_filename,
                           vortex_update_frequency,
                           log,
                           num_neighbors,
@@ -165,8 +161,6 @@ class raw_env(AECEnv, EzPickle):
         observation_space = spaces.Box(low=low, high=high, dtype=np.float32)
         self.observation_spaces = {i: observation_space for i in self.agents}
 
-        self.vortex_filename = vortex_filename
-        self.bird_filename = bird_filename
         action_log_file = open(action_filename, "w")
         self.action_log = csv.writer(action_log_file)
         self.log = log
@@ -178,7 +172,7 @@ class raw_env(AECEnv, EzPickle):
             return self._was_done_step(action)
 
         self._cumulative_rewards[self.agent_selection] = 0
-        #denormalize the action
+        # denormalize the action
         denorm_action = np.zeros(5)
         denorm_action[0] = action[0] * self.thrust_limit
         denorm_action[1] = action[1] * 2.0 * self.wing_action_limit_alpha - self.wing_action_limit_alpha
@@ -192,7 +186,7 @@ class raw_env(AECEnv, EzPickle):
 
         done, reward = self.simulation.get_done_reward(denorm_action, self._agent_idxs[self.agent_selection])
 
-        #log the agent, action, and reward from this time step
+        # log the agent, action, and reward from this time step
         self.action_log.writerow([self.agent_selection[2:], denorm_action, reward])
 
         self._clear_rewards()
@@ -275,8 +269,7 @@ class raw_env(AECEnv, EzPickle):
     the vortices will be plotted as well.
     '''
     def plot_birds(self, vortices=False):
-        plotting.plot_birds(self.simulation.get_birds(), plot_vortices = vortices)
-
+        plotting.plot_birds(self.simulation.get_birds(), plot_vortices=vortices)
 
     '''
     Writes the vortex states to a csv file that can go into the Unity animation.
@@ -300,7 +293,6 @@ class raw_env(AECEnv, EzPickle):
                 state = [time, vortex.pos[0], vortex.pos[1], vortex.pos[2], vortex.theta, vortex.phi, vortex.psi, vortex.gamma]
                 wr.writerow(state)
 
-
     '''
     Writes the bird states to a csv file that can be used in the Unity animation
     Each line in the file contains 12 values:
@@ -318,12 +310,16 @@ class raw_env(AECEnv, EzPickle):
         for ID, bird in enumerate(birds):
             state = []
             for i in range(len(bird.X)):
-                if i%10 == 0:
+                if i % 10 == 0:
                     time = i*self.h
                     state = [ID, time, bird.X[i], bird.Y[i], bird.Z[i], bird.PHI[i], bird.THETA[i], bird.PSI[i], bird.ALPHA_L[i], bird.ALPHA_R[i], bird.BETA_L[i], bird.BETA_R[i]]
                     wr.writerow(state)
 
+    def log_actions(self, file_name):
+        file = open(file_name, "w")
+
     def action_space(self, agent):
         return self.action_spaces[agent]
+
     def observation_space(self, agent):
         return self.observation_spaces[agent]
