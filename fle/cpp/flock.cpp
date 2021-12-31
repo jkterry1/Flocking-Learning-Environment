@@ -28,6 +28,7 @@ struct Flock{
     double thrust_limit;
     double wing_action_limit_alpha;
     double wing_action_limit_beta;
+    double height_limit;
     std::vector<double> limits;
     Flock(  int N,
             double h,
@@ -70,6 +71,8 @@ struct Flock{
 
         self.max_dist = 0.0;
 
+        self.height_limit = 4000.0;
+
         //force limit
         self.limits.push_back(20.0*9.8*birds[0].m); //0
         self.limits.push_back(20.0*9.8*birds[0].m); //1
@@ -80,8 +83,8 @@ struct Flock{
         self.limits.push_back(100.0*birds[0].Xl); //4
         self.limits.push_back(100.0*birds[0].Xl); //5
 
-        //Height limit, 500 m
-        self.limits.push_back(500.0); //6
+        //Height limit
+        self.limits.push_back(self.height_limit); //6
 
         //Orientation Limits, 2pi rad
         self.limits.push_back(6.3); //7
@@ -189,7 +192,7 @@ struct Flock{
         Flock & self = *this;
 
         //Checks if bird ahs hit the ground, or gone too high
-        if (bird.z <= 0 || bird.z > 2000){
+        if (bird.z <= 0 || bird.z > self.height_limit){
             return true;
         }
 

@@ -8,7 +8,7 @@ from pettingzoo.test.save_obs_test import test_save_obs
 from pettingzoo.test.max_cycles_test import max_cycles_test
 from pettingzoo.test.parallel_test import parallel_api_test
 
-import flocking_env
+from fle import flocking_env
 
 
 def perform_ci_test(num_cycles, render=False, performance=False):
