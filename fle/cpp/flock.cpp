@@ -173,7 +173,7 @@ struct Flock{
         //If the bird has crashed, we consider it done and punish it for crashing.
         if (self.crashed(bird)){
             done = true;
-            //reward = self.crash_reward;
+            reward += self.crash_reward;
         }
 
         //This can be changed depending on your goals.
