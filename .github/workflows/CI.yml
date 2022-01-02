@@ -26,4 +26,7 @@ jobs:
     - name: "Run tests"
       run: |
         python tests/energy_meter.py
+        python tests/energy-curve.py
+        python tests/Vortex-Ring.py
+
 
