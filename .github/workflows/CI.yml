@@ -17,10 +17,7 @@ jobs:
       with: 
         python-version: '3.9'
 
-    - name: "Build C code into Python file"
-      run: pip install -e .
-
-    - name: "Remove the magent import from the build"
+    - name: "Build and remove the magent import"
       run: ./build_no_magent.sh
 
     - name: "Run tests"
@@ -28,5 +25,6 @@ jobs:
         python tests/energy_meter.py
         python tests/energy-curve.py
         python tests/Vortex-Ring.py
+        python tests/test_flocking_api.py
 
 
