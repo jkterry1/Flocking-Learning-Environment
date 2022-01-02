@@ -10,7 +10,7 @@ from pettingzoo.utils import random_demo
 
 import time
 
-import flocking_env
+from fle import flocking_env
 import random
 import numpy as np
 
