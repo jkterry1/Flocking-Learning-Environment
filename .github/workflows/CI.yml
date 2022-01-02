@@ -1,0 +1,22 @@
+name: CI test
+on: 
+  pull_request:
+    branches: [ main, learning, actions_for_CI ]
+  push:
+    branches: [ main, learning, actions_for_CI ]
+
+jobs:
+  testbuild:
+    runs-on: ubuntu-latest
+    steps:
+    - name: "Checkout"
+      uses: actions/checkout@v2
+
+    - name: "Setup Python"
+      uses: actions/setup-python@v2
+      with: 
+        python-version: '3.9'
+
+    - name: "Build C code into Python file"
+      run: pip install -e .
+
