@@ -21,6 +21,9 @@ jobs:
       run: pip install -e .
 
     - name: "Remove the magent import from the build"
-      # run: chmod +x build_no_magent.sh
       run: ./build_no_magent.sh
+
+    - name: "Run tests"
+      run: |
+        python tests/energy_meter.py
 
