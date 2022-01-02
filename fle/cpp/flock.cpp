@@ -128,6 +128,9 @@ struct Flock{
         self.limits.push_back(100.0); //26
         self.limits.push_back(100.0); //27
         self.limits.push_back(100.0); //28
+
+        // seed random number generator for noise()
+        srand(42);
     }
 
     //Restores birds to their initial conditions
