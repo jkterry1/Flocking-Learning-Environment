@@ -20,3 +20,7 @@ jobs:
     - name: "Build C code into Python file"
       run: pip install -e .
 
+    - name: "Remove the magent import from the build"
+      run: chmod +x build_no_magent.sh
+      run: ./build_no_magent.sh
+
