@@ -9,6 +9,7 @@ import magent  # test to throw error if I screw up virtual env config during exp
 from . import plotting
 import csv
 import flocking_cpp
+import random
 
 
 def env(**kwargs):
@@ -45,7 +46,7 @@ class raw_env(AECEnv, EzPickle):
                  thrust_limit=100.0,
                  wing_action_limit_beta=0.08,
                  wing_action_limit_alpha=0.01,
-                 random_seed=42
+                 random_seed=None
                  ):
         EzPickle.__init__(self,
                           N,
@@ -86,7 +87,7 @@ class raw_env(AECEnv, EzPickle):
         random_seed: The random seed for noise
         '''
 
-        self.random_seed = random_seed
+        self.seed(random_seed)
 
         # default birds are spaced 3m apart, 50m up,
         # and have an initial velocity of 5 m/s forward
@@ -337,5 +338,6 @@ class raw_env(AECEnv, EzPickle):
     def observation_space(self, agent):
         return self.observation_spaces[agent]
 
-    def seed(self, random_seed):
-        self.random_seed = random_seed
+    def seed(self, seed=None):
+        # C++ unsigned int size is 4 bytes
+        self.random_seed = seeding.create_seed(seed, max_bytes=4)

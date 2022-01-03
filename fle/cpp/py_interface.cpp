@@ -22,7 +22,7 @@ PYBIND11_MODULE(flocking_cpp, m) {
 
     m.def("add", &add, "A function which adds two numbers");
     py::class_<Flock>(m, "Flock")
-        .def(py::init<int,double,double,double,double,double,BirdInits,bool,bool,double,double,double,double>())
+        .def(py::init<int,double,double,double,double,double,BirdInits,bool,bool,double,double,double,unsigned int>())
         .def("reset",&Flock::reset)
         .def("update_bird",&Flock::update_bird)
         .def("get_done_reward",&Flock::get_done_reward)

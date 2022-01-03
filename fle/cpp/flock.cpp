@@ -29,7 +29,7 @@ struct Flock{
     double wing_action_limit_alpha;
     double wing_action_limit_beta;
     double height_limit;
-    double random_seed;
+    unsigned int random_seed;
     std::vector<double> limits;
     Flock(  int N,
             double h,
@@ -43,7 +43,7 @@ struct Flock{
             double thrust_limit,
             double wing_action_limit_alpha,
             double wing_action_limit_beta,
-            double random_seed
+            unsigned int random_seed
          ){
         Flock & self = *this;
 
