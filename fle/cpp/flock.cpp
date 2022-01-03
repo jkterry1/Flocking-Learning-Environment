@@ -29,6 +29,7 @@ struct Flock{
     double wing_action_limit_alpha;
     double wing_action_limit_beta;
     double height_limit;
+    unsigned int random_seed;
     std::vector<double> limits;
     Flock(  int N,
             double h,
@@ -41,7 +42,8 @@ struct Flock{
             bool derivatives,
             double thrust_limit,
             double wing_action_limit_alpha,
-            double wing_action_limit_beta
+            double wing_action_limit_beta,
+            unsigned int random_seed
          ){
         Flock & self = *this;
 
@@ -61,6 +63,7 @@ struct Flock{
         self.wing_action_limit_alpha = wing_action_limit_alpha;
         self.wing_action_limit_beta = wing_action_limit_beta;
 
+        self.random_seed = random_seed;
 
         for (size_t i : range(N)){
             self.birds.emplace_back(init_vals[i]);
@@ -128,6 +131,9 @@ struct Flock{
         self.limits.push_back(100.0); //26
         self.limits.push_back(100.0); //27
         self.limits.push_back(100.0); //28
+
+        // seed random number generator for noise()
+        srand(random_seed);
     }
 
     //Restores birds to their initial conditions
