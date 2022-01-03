@@ -45,6 +45,7 @@ class raw_env(AECEnv, EzPickle):
                  thrust_limit=100.0,
                  wing_action_limit_beta=0.08,
                  wing_action_limit_alpha=0.01,
+                 random_seed=42
                  ):
         EzPickle.__init__(self,
                           N,
@@ -63,6 +64,7 @@ class raw_env(AECEnv, EzPickle):
                           thrust_limit,
                           wing_action_limit_beta,
                           wing_action_limit_alpha,
+                          random_seed
                           )
         '''
         N: number of birds (if bird_inits is None)
@@ -81,7 +83,10 @@ class raw_env(AECEnv, EzPickle):
         derivatives_in_obs: True if derivatives should be included in the observation.
         thrust_limit: The forward thrust limit of the bird (in Newtons)
         wing_action_limit: The limit on how far a wing can rotate (in degrees)
+        random_seed: The random seed for noise
         '''
+
+        self.random_seed = random_seed
 
         # default birds are spaced 3m apart, 50m up,
         # and have an initial velocity of 5 m/s forward
@@ -227,7 +232,7 @@ class raw_env(AECEnv, EzPickle):
                                             self.crash_reward, self.bird_inits,
                                             self.LIA, self.derivatives_in_obs,
                                             self.thrust_limit, self.wing_action_limit_alpha,
-                                            self.wing_action_limit_beta)
+                                            self.wing_action_limit_beta, self.random_seed)
 
         self.agents = self.possible_agents[:]
         self._agent_selector.reinit(self.agents)
@@ -331,3 +336,6 @@ class raw_env(AECEnv, EzPickle):
 
     def observation_space(self, agent):
         return self.observation_spaces[agent]
+
+    def seed(self, random_seed):
+        self.random_seed = random_seed
