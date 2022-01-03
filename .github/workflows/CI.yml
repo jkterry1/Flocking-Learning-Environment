@@ -1,0 +1,31 @@
+name: CI test
+on: 
+  pull_request:
+    branches: [ main, learning, actions_for_CI ]
+  push:
+    branches: [ main, learning, actions_for_CI ]
+
+jobs:
+  testbuild:
+    runs-on: ubuntu-latest
+    steps:
+    - name: "Checkout"
+      uses: actions/checkout@v2
+
+    - name: "Setup Python"
+      uses: actions/setup-python@v2
+      with: 
+        python-version: '3.9'
+
+    - name: "Build and remove the magent import"
+      run: ./build_no_magent.sh
+
+    - name: "Run tests"
+      run: |
+        python tests/energy_meter.py
+        python tests/energy-curve.py
+        python tests/Vortex-Ring.py
+        python tests/test_flocking_api.py
+        python tests/pettingzoo-tests.py
+
+
