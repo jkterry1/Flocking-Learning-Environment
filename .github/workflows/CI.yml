@@ -26,5 +26,6 @@ jobs:
         python tests/energy-curve.py
         python tests/Vortex-Ring.py
         python tests/test_flocking_api.py
+        python tests/pettingzoo-tests
 
 
