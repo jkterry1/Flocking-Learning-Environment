@@ -1,9 +1,9 @@
 name: CI test
 on: 
   pull_request:
-    branches: [ main, learning, actions_for_CI ]
+    branches: [ master ]
   push:
-    branches: [ main, learning, actions_for_CI ]
+    branches: [ master ]
 
 jobs:
   testbuild:
