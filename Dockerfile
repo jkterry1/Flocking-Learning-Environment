@@ -5,10 +5,10 @@ COPY requirements.txt /
 
 RUN pip3 install -r /requirements.txt
 
-WORKDIR /birdflocking
+WORKDIR /birdflocking/fle
 
 COPY . /birdflocking
 
 RUN ./build.sh
 
-CMD ["python", "test_flocking_api.py"]
+CMD ["python", "train.py"]

@@ -281,3 +281,5 @@ plt.xlabel("Ring Radius (m)")
 plt.ylabel("Forward velocity (m/s)")
 plt.title("Relationship Between Ring Radius and Forward Velocity")
 plt.show()
+
+print("Vortex test passed")
