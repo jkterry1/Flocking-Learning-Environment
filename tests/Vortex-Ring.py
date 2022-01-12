@@ -4,7 +4,6 @@ import math
 from numpy.linalg import norm
 import matplotlib.pyplot as plt
 
-
 class Vortex:
     def __init__(self, x, y, z, phi, theta, psi, sign):
         self.sign = sign;
@@ -158,8 +157,8 @@ def plot_vortices(vortices):
         Xnew.append(vortex.pos[0])
         Ynew.append(vortex.pos[1])
         Znew.append(vortex.pos[2])
-    print("a: ", np.sqrt((Xnew[0]-Xnew[len(Xnew)//2])**2 + (Ynew[0]-Ynew[len(Xnew)//2])**2))
-    plt.plot(Xnew, Ynew)
+    #print("a: ", np.sqrt((Xnew[0]-Xnew[len(Xnew)//2])**2 + (Ynew[0]-Ynew[len(Xnew)//2])**2))
+    #plt.plot(Xnew, Ynew)
 
 
 locs = [(np.sqrt(3.0)/2.0, 0.5), (np.sqrt(2.0)/2.0, np.sqrt(2.0)/2.0), (0.5, np.sqrt(3.0)/2.0)]
@@ -272,6 +271,13 @@ for i in range(s):
     plot_vortices(vortices)
 legend = [str(i) + " seconds" for i in range(0, s+1)]
 
+Vs = [vortices,vortices2,vortices3,vortices4,vortices5,
+        vortices6,vortices7,vortices8,vortices9,vortices10]
+x = [1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5]
+for i in range(1, 10):
+    assert abs(Vs[i-1][0].B[0]/Vs[i][0].B[0] - x[i]/x[i-1]) < 0.1
+
+'''
 plt.show()
 X = [1,1.5,2,2.5,3,3.5,4,4.5,5, 5.5]
 Y = [vortices[0].B[0],vortices2[0].B[0],vortices3[0].B[0],vortices4[0].B[0],vortices5[0].B[0],
@@ -281,5 +287,5 @@ plt.xlabel("Ring Radius (m)")
 plt.ylabel("Forward velocity (m/s)")
 plt.title("Relationship Between Ring Radius and Forward Velocity")
 plt.show()
-
+'''
 print("Vortex test passed")
