@@ -1,87 +1,73 @@
 import numpy as np
-import matplotlib.pyplot as plt
+import fle.flocking_env as flocking_env
 
 '''
-The energy function will calculate the energy to travel one meter in the forward direction
-for any velocity (V given as a 3-vector of velocity) and default wing positions and orientations.
-This doesn't account for thrust, vortices, or orientation and is just an estimate.
+this calculates the energy spent flying for 60s.
 '''
 
-m = 5.0        #goose is ~5kg
-Cl_max = 1.6   #experimental value
-Cd = 0.3       #experimental value
+t = 60.0
+hz = 1000
+h=1/hz
+n = (int)(t/h)
+LIA = False
 
-Xl = 0.80     #approximate dimensions
-Yl = 0.35
-Zl = 0.8
-rho = 1.225
-alpha_l = 0.0
-alpha_r = 0.0
-beta_l = 0.0
-beta_r = 0.0
+distance_reward_per_m = 0
+energy_reward_per_j = 1
+crash_reward = 0
 
-def energy(V):
-    F = [0.0, 0.0, 0.0]
-    u, v, w = V
-    F[0] = Fu(u)
-    F[1] = Fv(u,v)
-    F[2] = Fw(u,w)
+def run():
+    #gliding - birds = [solver.make_bird(z=200.0, u=18.0)]
+    u = 5.0
+    z = 2000.0
 
-    #time to travel one meter
-    t = 1.0/u
+    birds = [
+            flocking_env.make_bird(y = 0.0, z=z, u = u),
+            flocking_env.make_bird(y = 1.25, x = 0.5, z=z, u = u),
+            flocking_env.make_bird(y = 2.5, z=z, u = u)]
+    #birds = None
+    #birds = [flocking_env.make_bird(y = 0.0, z=z, u = u)]
 
-    return abs(F[0] * u * t) + abs(F[1] * v * t) + abs(F[2] * w * t)
+    env = flocking_env.raw_env(N = 3,
+                                t=60.0,
+                                h= 1/hz,
+                                energy_reward=energy_reward_per_j,
+                                forward_reward=distance_reward_per_m,
+                                crash_reward=crash_reward,
+                                bird_inits = birds,
+                                LIA=True,
+                                action_logging=True,
+                                include_vortices=False)
 
 
+    env.reset()
+    done = False
+    obs, reward, done, info = env.last()
+    steps = 0
 
-def Fu(u):
-    #Calculate F[0] (forward direction)
-    #Area of the wing that is perpendicular to the forwad direction of motion.
-    A = Xl * Zl + Xl * Yl * np.sin(alpha_l) + Xl * Yl * np.sin(alpha_r)
-    D = -np.sign(u) * Cd * A * (rho * u**2/2.0)
-    return D
+    energies = {i:0.0 for i in env.agents}
+    dists = {i:0.0 for i in env.agents}
+    agent = env.agents[0]
 
-def Fv(u,v):
-    #calculate F[1] (sideways direction)
-    F = 0.0
-    A = Xl * Yl
-    cl = 10.0 * Cl_max / 25.0
-    cr = 10.0 * Cl_max / 25.0
+    for j in range(1):
+        env.reset()
+        dists[env.agent_selection] = 0
+        for agent in env.agent_iter():
+            obs, reward, done, info = env.last()
+            dists[env.agent_selection] += obs[15] * h
+            energies[env.agent_selection] += reward
+            a = None
+            if not done:
+                w = obs[16]
+                a = [0.0, 0.5, 0.5, 0.5, 0.5]
+                if w < 0.5:
+                    a = [1.0, 0.5, 0.5, 0.5, 0.5]
+                a = np.array(a)
+            env.step(a)
+        energies[env.agent_selection] += reward
+        dists[env.agent_selection] += obs[15] * h
 
-    #Lift on the left and right wongs
-    L_left = cl * A * (rho * v**2)/2.0
-    L_right = cr * A * (rho * v**2)/2.0
+    print("Energy spent in 60s in hardcoded V: ", energies[agent], "J")
+    print("Distance travelled in 60s in hardcoded V: ", dists[agent], "m")
 
-    A = Yl * Zl;
-    #Drag on the bird
-    D = -np.sign(v) * Cd * A * (rho * v**2/2.0);
-
-    #If the bird is moving forward, there is a lift contribution to the force
-    #from each wing.
-    if (u > 0.0):
-        F += L_left * np.sin(beta_l);
-        F += -L_right * np.sin(beta_r);
-
-    F += D
-    return F
-
-def Fw(u,w):
-    F = 0.0
-    A = Xl * Yl;
-    cl = 10.0 * Cl_max / 25.0
-    cr = 10.0 * Cl_max / 25.0
-
-    #Lift due to left and right wing
-    L_left = cl * A * (rho * u**2)/2.0
-    L_right = cr * A * (rho * u**2)/2.0
-
-    #Drag force on the bird
-    D = -np.sign(w) * Cd * A * (rho * w**2)/2.0
-
-    #There is only lift if the bird is flying forwards.
-    if (u > 0.0):
-        F += L_left * np.cos(beta_l);
-        F += L_right * np.cos(beta_r);
-
-    F += D;
-    return F;
+if __name__ == "__main__":
+    run()

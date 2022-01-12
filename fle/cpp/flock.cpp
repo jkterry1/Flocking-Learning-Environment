@@ -30,6 +30,7 @@ struct Flock{
     double wing_action_limit_beta;
     double height_limit;
     unsigned int random_seed;
+    bool include_vortices;
     std::vector<double> limits;
     Flock(  int N,
             double h,
@@ -43,7 +44,8 @@ struct Flock{
             double thrust_limit,
             double wing_action_limit_alpha,
             double wing_action_limit_beta,
-            unsigned int random_seed
+            unsigned int random_seed,
+            bool include_vortices
          ){
         Flock & self = *this;
 
@@ -52,6 +54,7 @@ struct Flock{
         self.t = t;
         self.N = N;
         self.LIA = LIA;
+        self.include_vortices = include_vortices;
 
         self.max_r = 1.0;
 
@@ -152,7 +155,10 @@ struct Flock{
 
         //Update the wing positions, then make the calculations for the next timestep.
         self.update_angles(action, agent);
-        Vorticies vortices = self.get_vortices(bird);
+        Vorticies vortices;
+        if (self.include_vortices){
+          vortices = self.get_vortices(bird);
+        }
         bird.update(thrust, self.h, vortices);
     }
 

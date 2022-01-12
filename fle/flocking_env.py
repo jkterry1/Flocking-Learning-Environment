@@ -46,7 +46,8 @@ class raw_env(AECEnv, EzPickle):
                  thrust_limit=100.0,
                  wing_action_limit_beta=0.08,
                  wing_action_limit_alpha=0.01,
-                 random_seed=None
+                 random_seed=None,
+                 include_vortices=True
                  ):
         EzPickle.__init__(self,
                           N,
@@ -65,7 +66,8 @@ class raw_env(AECEnv, EzPickle):
                           thrust_limit,
                           wing_action_limit_beta,
                           wing_action_limit_alpha,
-                          random_seed
+                          random_seed,
+                          include_vortices
                           )
         '''
         N: number of birds (if bird_inits is None)
@@ -101,6 +103,7 @@ class raw_env(AECEnv, EzPickle):
         self.energy_reward = energy_reward
         self.forward_reward = forward_reward
         self.crash_reward = crash_reward
+        self.include_vortices = include_vortices
 
         self.bird_inits = bird_inits
         if self.bird_inits is not None:
@@ -212,7 +215,8 @@ class raw_env(AECEnv, EzPickle):
         '''
         if self.agent_selection == self.agents[-1]:
             if self.steps % self.vortex_update_frequency == 0:
-                self.simulation.update_vortices(self.vortex_update_frequency)
+                if self.include_vortices:
+                    self.simulation.update_vortices(self.vortex_update_frequency)
                 if(self.log):
                     self.log_vortices(self.vortex_filename)
             self.steps += 1
@@ -233,7 +237,7 @@ class raw_env(AECEnv, EzPickle):
                                             self.crash_reward, self.bird_inits,
                                             self.LIA, self.derivatives_in_obs,
                                             self.thrust_limit, self.wing_action_limit_alpha,
-                                            self.wing_action_limit_beta, self.random_seed)
+                                            self.wing_action_limit_beta, self.random_seed, self.include_vortices)
 
         self.agents = self.possible_agents[:]
         self._agent_selector.reinit(self.agents)
