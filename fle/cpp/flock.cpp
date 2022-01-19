@@ -77,7 +77,7 @@ struct Flock{
 
         self.max_dist = 0.0;
 
-        self.height_limit = 4000.0;
+        self.height_limit = 200.0;
 
         //force limit
         self.limits.push_back(20.0*9.8*birds[0].m); //0

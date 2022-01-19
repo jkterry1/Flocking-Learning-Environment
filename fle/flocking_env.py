@@ -94,7 +94,7 @@ class raw_env(AECEnv, EzPickle):
         # default birds are spaced 3m apart, 50m up,
         # and have an initial velocity of 5 m/s forward
         if bird_inits is None:
-            bird_inits = [make_bird(z=2000.0, y=3.0*i, u=5.0) for i in range(N)]
+            bird_inits = [make_bird(z=100.0, y=3.0*i, u=15.0) for i in range(N)]
 
         self.t = t
         self.h = h
@@ -205,7 +205,9 @@ class raw_env(AECEnv, EzPickle):
         # End this episode if it has exceeded the maximum time allowed.
         if self.steps >= self.max_frames:
             done = True
-        self.done = done or self.done
+            self.dones = {agent:True for agent in self.agents}
+
+        self.dones = {agent: done for agent in self.agents}
 
         '''
         If we have cycled through all of the birds for one time step,
@@ -220,7 +222,6 @@ class raw_env(AECEnv, EzPickle):
                 if(self.log):
                     self.log_vortices(self.vortex_filename)
             self.steps += 1
-            self.dones = {agent: done for agent in self.agents}
 
         # move on to the next bird
         self.agent_selection = self._agent_selector.next()
