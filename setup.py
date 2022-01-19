@@ -39,7 +39,7 @@ setup(
     install_requires=[
         "pettingzoo>=1.11.1",
         "pybind11",
-        "matplotlib>=3.5"
+        "matplotlib>=3.3"
     ],
     setup_requires=['pybind11>=2.2'],
     cmdclass={"build_ext": build_ext},
