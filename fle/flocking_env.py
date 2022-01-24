@@ -205,9 +205,10 @@ class raw_env(AECEnv, EzPickle):
         # End this episode if it has exceeded the maximum time allowed.
         if self.steps >= self.max_frames:
             done = True
-            self.dones = {agent:True for agent in self.agents}
+            self.dones = {agent:True for agent in self.dones}
 
-        self.dones = {agent: done for agent in self.agents}
+        self.dones = {agent: done for agent in self.dones}
+        self.done = done
 
         '''
         If we have cycled through all of the birds for one time step,
