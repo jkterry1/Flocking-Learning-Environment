@@ -205,10 +205,7 @@ class raw_env(AECEnv, EzPickle):
         # End this episode if it has exceeded the maximum time allowed.
         if self.steps >= self.max_frames:
             done = True
-            self.dones = {agent:True for agent in self.dones}
-
-        self.dones = {agent: done for agent in self.dones}
-        self.done = done
+        self.done = done or self.done
 
         '''
         If we have cycled through all of the birds for one time step,
@@ -223,6 +220,7 @@ class raw_env(AECEnv, EzPickle):
                 if(self.log):
                     self.log_vortices(self.vortex_filename)
             self.steps += 1
+            self.dones = {agent: done or self.done for agent in self.agents}
 
         # move on to the next bird
         self.agent_selection = self._agent_selector.next()
