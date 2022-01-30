@@ -2,6 +2,7 @@ from pettingzoo import AECEnv
 from pettingzoo.utils import agent_selector
 from pettingzoo.utils import wrappers
 from pettingzoo.utils.conversions import parallel_wrapper_fn
+from pettingzoo.utils import aec_to_parallel, parallel_to_aec
 from gym import spaces
 import numpy as np
 from gym.utils import seeding, EzPickle
@@ -23,7 +24,7 @@ def make_bird(x=0., y=0., z=0., u=0., v=0., w=0., p=0., q=0., r=0., theta=0., ph
     return flocking_cpp.BirdInit(x, y, z, u, v, w, p, q, r, theta, phi, psi)
 
 
-parallel_env = parallel_wrapper_fn(env)
+parallel_env = aec_to_parallel(env)
 
 
 class raw_env(AECEnv, EzPickle):
