@@ -27,7 +27,7 @@ parallel_env = parallel_wrapper_fn(env)
 
 
 class raw_env(AECEnv, EzPickle):
-    metadata = {'render.modes': ['human']}
+    metadata = {'render.modes': ['human'], 'is_parallelizable':True}
 
     def __init__(self,
                  N=10,
@@ -90,6 +90,7 @@ class raw_env(AECEnv, EzPickle):
         '''
 
         self.seed(random_seed)
+
 
         # default birds are spaced 3m apart, 50m up,
         # and have an initial velocity of 5 m/s forward

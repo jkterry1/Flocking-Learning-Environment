@@ -208,6 +208,12 @@ struct Flock{
             return true;
         }
 
+        //velocity limit of 40 m/s
+        double v_lim = 40.0;
+        if (abs(bird.u) > v_lim || abs(bird.v) > v_lim ||  abs(bird.w) > v_lim){
+            return true;
+        }
+
         //This is the rotation speed limit.
         //If the bird starts rotating too quickly,
         //it is considered to have crashed.
