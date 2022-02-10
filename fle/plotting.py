@@ -12,7 +12,7 @@ Plot 2: angular velocity
 Plot 3: angle
 Plot 4: velocity
 '''
-def plot_values(birds):
+def plot_values(birds, show: bool = True):
     fig = plt.figure()
     plt1 = fig.add_subplot(411)
     plt2 = fig.add_subplot(412)
@@ -65,7 +65,8 @@ def plot_values(birds):
         for _ in birds:
             leg += ['u', 'v', 'w']
         plt4.legend(leg)
-    plt.show()
+    if show:
+        plt.show()
 
 '''
 Creates a 3d plot of the path of all birds through space.
@@ -75,7 +76,7 @@ Red points represent the centers of active vortices.
 If plot_vortices is true, arrows will be plotted to show the rotation of air
 around the vortices.
 '''
-def plot_birds(birds, plot_vortices=False):
+def plot_birds(birds, plot_vortices: bool = False, show: bool = True):
     first = plot_vortices
     fig = plt.figure(1)
     plt.clf()
@@ -96,7 +97,8 @@ def plot_birds(birds, plot_vortices=False):
                     [v.pos[2] for v in bird.VORTICES_RIGHT],
                     color='red', s=.5)
         ax.scatter([bird.X[0]], [bird.Y[0]], [bird.Z[0]], 'blue')
-    plt.show()
+    if show:
+        plt.show()
     x = []; y = []; z = []
     u = []; v = []; w = []
     r = 0.25
