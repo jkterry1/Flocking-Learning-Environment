@@ -12,10 +12,9 @@ NOTE: need to compile before running python code
 
 Python:
 
-* `flocking_env.py`: The PettingZoo environment.
-* `plotting.py`: Plot utilities
-* `solver_tester.py`: Tests bird flocking
-* `test_flocking_api.py`: Tests the PettingZoo environment API (unmaintained as of Mar 7)
+* `fle/`: All of the code used to run the simulation
+* `tests/`: Has API, functionality, and physical accuracy tests for the fle
+* `example_run.py`: shows how to use the fle by running and plotting a basic example.
 
 C++:
 
@@ -26,16 +25,18 @@ C++:
 * `py_interface.cpp`: Python interface for environment
 * `vortex.cpp`: Vortex data structure
 
+Unity Animation:
+This folder contains the unity files necessary for rendering animations of bird flight from logs. This is a work in progress.
+
 ### Environment Parameters
 - **N**: number of birds (if bird_inits is None)
 - **h**: seconds per frame (step size)
 - **t**: maximum seconds per episode
-- **energy_reward**: the reward for a bird using energy (negative to -incentivize limiting energy use)
-- **forward_reward**: the reward for a bird moving forward
+- **energy_reward**: the reward per Joule for a bird using energy,
+- **forward_reward**: the reward per meter for a bird moving forward
 - **crash_reward**: the reward for a bird crashing into another bird or the ground
-- **max_observable_birds**: the number of neighboring birds a bird can see
-- **bird_inits**: initial positions of the birds (None for default random sphere)
-- **LIA**: boolean choice to include Local approximation for vortice movement
+- **bird_inits**: initialized list of birds (None for default uniformly spaced line)
+- **LIA**: boolean choice to include Local Induction Approximation for vortex movement. Set to False to save computation time.
 - **bird_filename**: the file you want to log the bird states in
 - **vortex_filename**: the file you want to log the vortex states in
 - **vortex_update_frequency**: Period of adding new points on the vortex line.
@@ -69,7 +70,7 @@ Observation space is a vector with
  Following this, starting at observation 20, there will be
  9-dimension vectors for each bird the current bird can observe.
 Each of these vectors contains:
-- 0-2:    Relative position to the current bird
+- 0-2:    Relative position to the current bird (x, y, z)
 - 3-5:   Other bird's orientation (phi, theta, psi)
 
 The following velocity observation is only included if derivative_in_obs is set to True.
