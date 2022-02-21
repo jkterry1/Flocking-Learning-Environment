@@ -169,9 +169,9 @@ struct Flock{
         self.limits.push_back(limit_beta_high); //13
 
         //velocity limit, 50 m/s
-        self.limits.push_back(40.0); //14
-        self.limits.push_back(40.0); //15
-        self.limits.push_back(40.0); //16
+        self.limits.push_back(50.0); //14
+        self.limits.push_back(50.0); //15
+        self.limits.push_back(50.0); //16
 
         //angular velocity limits,rad/s
         self.limits.push_back(8.0); //17
@@ -179,9 +179,9 @@ struct Flock{
         self.limits.push_back(8.0); //19
 
         //other bird relative position
-        self.limits.push_back(10.0); //20
-        self.limits.push_back(10.0); //21
-        self.limits.push_back(10.0); //22
+        self.limits.push_back(50.0); //20
+        self.limits.push_back(50.0); //21
+        self.limits.push_back(50.0); //22
 
         //other bird's relative orientation
         self.limits.push_back(2.0 * 3.14); //23
@@ -189,9 +189,9 @@ struct Flock{
         self.limits.push_back(2.0 * 3.14); //25
 
         //other bird's relative velocity
-        self.limits.push_back(10.0); //26
-        self.limits.push_back(10.0); //27
-        self.limits.push_back(10.0); //28
+        self.limits.push_back(40.0); //26
+        self.limits.push_back(40.0); //27
+        self.limits.push_back(40.0); //28
 
         // seed random number generator for noise()
         srand(random_seed);
