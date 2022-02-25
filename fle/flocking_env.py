@@ -163,10 +163,10 @@ class raw_env(AECEnv, EzPickle):
         6-8:    Relative velocity to the current bird
         '''
         if self.derivatives_in_obs:
-            low = np.zeros(20 + 9*min(self.N-1, self.num_neighbors),).astype(np.float32)
+            low = -1 * np.ones(20 + 9*min(self.N-1, self.num_neighbors),).astype(np.float32)
             high = np.ones(20 + 9*min(self.N-1, self.num_neighbors),).astype(np.float32)
         else:
-            low = np.zeros(14 + 6*min(self.N-1, self.num_neighbors),).astype(np.float32)
+            low = -1 * np.ones(14 + 6*min(self.N-1, self.num_neighbors),).astype(np.float32)
             high = np.ones(14 + 6*min(self.N-1, self.num_neighbors),).astype(np.float32)
         observation_space = spaces.Box(low=low, high=high, dtype=np.float32)
         self.observation_spaces = {i: observation_space for i in self.agents}
