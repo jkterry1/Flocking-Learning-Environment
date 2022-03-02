@@ -11,14 +11,18 @@ h=1/hz
 n = (int)(t/h)
 LIA = False
 
-distance_reward_per_m = 0
-energy_reward_per_j = 1
-crash_reward = 0
+
+v_max = 50.0
 
 def run():
+
+    distance_reward_per_m = 0
+    energy_reward_per_j = 1
+    crash_reward = 0
+
     #gliding - birds = [solver.make_bird(z=200.0, u=18.0)]
     u = 5.0
-    z = 2000.0
+    z = 100.0
 
     birds = [
             flocking_env.make_bird(y = 0.0, z=z, u = u),
@@ -48,23 +52,49 @@ def run():
     dists = {i:0.0 for i in env.agents}
     agent = env.agents[0]
 
-    for j in range(1):
-        env.reset()
-        dists[env.agent_selection] = 0
-        for agent in env.agent_iter():
-            obs, reward, done, info = env.last()
-            dists[env.agent_selection] += obs[15] * h
-            energies[env.agent_selection] += reward
-            a = None
-            if not done:
-                w = obs[16]
-                a = [0.0, 0.5, 0.5, 0.5, 0.5]
-                if w < 0.5:
-                    a = [1.0, 0.5, 0.5, 0.5, 0.5]
-                a = np.array(a)
-            env.step(a)
+    #Calculate Energies
+    env.reset()
+    dists[env.agent_selection] = 0
+    for agent in env.agent_iter():
+        obs, reward, done, info = env.last()
         energies[env.agent_selection] += reward
-        dists[env.agent_selection] += obs[15] * h
+        a = None
+        if not done:
+            w = obs[16]
+            a = [0.0, 0.5, 0.5, 0.5, 0.5]
+            if w < 0.0:
+                a = [1.0, 0.5, 0.5, 0.5, 0.5]
+            a = np.array(a)
+        env.step(a)
+    energies[env.agent_selection] += reward
+
+    #Calculate Distances
+    distance_reward_per_m = 1
+    energy_reward_per_j = 0
+    env = flocking_env.raw_env(N = 3,
+                                t=60.0,
+                                h= 1/hz,
+                                energy_reward=energy_reward_per_j,
+                                forward_reward=distance_reward_per_m,
+                                crash_reward=crash_reward,
+                                bird_inits = birds,
+                                LIA=True,
+                                action_logging=True,
+                                include_vortices=False)
+    env.reset()
+    dists[env.agent_selection] = 0
+    for agent in env.agent_iter():
+        obs, reward, done, info = env.last()
+        dists[env.agent_selection] += reward
+        a = None
+        if not done:
+            w = obs[16]
+            a = [0.0, 0.5, 0.5, 0.5, 0.5]
+            if w < 0.0:
+                a = [1.0, 0.5, 0.5, 0.5, 0.5]
+            a = np.array(a)
+        env.step(a)
+    dists[env.agent_selection] += reward
 
     print("Energy spent in 60s in hardcoded V: ", energies[agent], "J")
     print("Distance travelled in 60s in hardcoded V: ", dists[agent], "m")
