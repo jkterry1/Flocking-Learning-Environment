@@ -253,7 +253,7 @@ class raw_env(AECEnv, EzPickle):
         self.done = False
         self.steps = 0
 
-    def render(self, mode='human', plot_vortices=False):
+    def render(self, mode='rgb_array', plot_vortices=False):
         # replace with something functional or entirely remove for log based rendering
         if mode == 'rgb_array':
             plotting.plt.ioff()
