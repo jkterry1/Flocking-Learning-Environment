@@ -27,7 +27,7 @@ parallel_env = parallel_wrapper_fn(env)
 
 
 class raw_env(AECEnv, EzPickle):
-    metadata = {'render.modes': ['human'], 'is_parallelizable':True}
+    metadata = {'render.modes': ['human', 'rgb_array'], 'is_parallelizable':True}
 
     def __init__(self,
                  N=10,
@@ -255,9 +255,17 @@ class raw_env(AECEnv, EzPickle):
 
     def render(self, mode='human', plot_vortices=False):
         # replace with something functional or entirely remove for log based rendering
-        birds = self.simulation.get_birds()
-        plotting.plot_values(birds, show=True)
-        plotting.plot_birds(birds, plot_vortices=plot_vortices, show=True)
+        if mode == 'rgb_array':
+            plotting.plt.ioff()
+            birds = self.simulation.get_birds()
+            plotting.plot_values(birds, show=True)
+            plotting.plot_birds(birds, plot_vortices=plot_vortices, show=True)
+        elif mode == 'human':
+            plotting.plt.ion()
+            birds = self.simulation.get_birds()
+            plotting.plot_birds(birds, plot_vortices=plot_vortices, show=True)
+            plotting.plt.pause(1e-1)
+
 
     def close(self):
         plotting.close()
