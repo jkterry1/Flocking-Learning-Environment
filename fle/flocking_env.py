@@ -10,6 +10,7 @@ from . import plotting
 import csv
 import flocking_cpp
 import random
+import time
 
 
 def env(**kwargs):
@@ -27,7 +28,7 @@ parallel_env = parallel_wrapper_fn(env)
 
 
 class raw_env(AECEnv, EzPickle):
-    metadata = {'render.modes': ['human'], 'is_parallelizable':True}
+    metadata = {'render.modes': ['human', 'rgb_array'], 'is_parallelizable':True}
 
     def __init__(self,
                  N=10,
@@ -253,11 +254,25 @@ class raw_env(AECEnv, EzPickle):
         self.done = False
         self.steps = 0
 
-    def render(self, mode='human', plot_vortices=False):
-        # replace with something functional or entirely remove for log based rendering
-        birds = self.simulation.get_birds()
-        plotting.plot_values(birds, show=True)
-        plotting.plot_birds(birds, plot_vortices=plot_vortices, show=True)
+    def render(self, mode='rgb_array', plot_vortices=False):
+        if mode == 'rgb_array':
+            plotting.plt.ioff()
+            birds = self.simulation.get_birds()
+            plotting.plot_values(birds, show=True)
+            plotting.plot_birds(birds, plot_vortices=plot_vortices, show=True)
+        elif mode == 'human':
+            # check if we have an old timestamp
+            try:
+                _ = self.old_timestamp
+            except:
+                self.old_timestamp = time.time()
+
+            if time.time() - self.old_timestamp > 1. / 24.0:
+                plotting.plt.ion()
+                birds = self.simulation.get_birds()
+                plotting.plot_birds(birds, plot_vortices=plot_vortices, show=True)
+                plotting.plt.pause(1e-10)
+                self.old_timestamp = time.time()
 
     def close(self):
         plotting.close()
