@@ -232,7 +232,7 @@ class raw_env(AECEnv, EzPickle):
     def observe(self, agent):
         return self.simulation.get_observation(self._agent_idxs[agent], self.num_neighbors)
 
-    def reset(self):
+    def reset(self, seed=None):
         # creates c++ environment with initial birds
         self.simulation = flocking_cpp.Flock(self.N, self.h, self.t,
                                             self.energy_reward, self.forward_reward,

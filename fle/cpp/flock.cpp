@@ -417,7 +417,7 @@ struct Flock{
             extend(obs, {(other.x - bird.x)/self.limits[20],//20
                           (other.y - bird.y)/self.limits[21],//21
                           (other.z - bird.z)/self.limits[22]});//22
-            extend(obs, {(other.phi - bird.psi)/self.limits[23],//23
+            extend(obs, {(other.phi - bird.phi)/self.limits[23],//23
                           (other.theta - bird.theta)/self.limits[24],//24
                           (other.psi - bird.psi)/self.limits[25]});//25
             if(derivatives){
