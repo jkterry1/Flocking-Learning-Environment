@@ -227,18 +227,18 @@ struct Flock{
         bool done = false;
         Bird & bird = self.birds[agent];
 
-        int i_last = len(bird.X)-2;
+        int i_last = len(bird.prev_xyz)-2;
 
         /*
         The bird is rewarded for the distance it has travelled.
         */
-        reward += self.forward_reward * (bird.x - bird.X[i_last]);
+        reward += self.forward_reward * (bird.xyz[0] - bird.prev_xyz[i_last][0]);
 
         /*
         Energy used by the bird is proportional to the birds thrust and the net force on the bird
          times the distance it traveled (work = force * distance)
         */
-        reward += self.energy_reward * action[0] * self.h * abs(bird.u);
+        reward += self.energy_reward * action[0] * self.h * abs(bird.uvw[0]);
 
         //If the bird has crashed, we consider it done and punish it for crashing.
         if (self.crashed(bird)){
@@ -262,13 +262,13 @@ struct Flock{
         Flock & self = *this;
 
         //Checks if bird ahs hit the ground, or gone too high
-        if (bird.z <= 0 || bird.z > self.height_limit){
+        if (bird.xyz[2] <= 0 || bird.xyz[2] > self.height_limit){
             return true;
         }
 
         //velocity limit of 40 m/s
         double v_lim = 40.0;
-        if (abs(bird.u) > v_lim || abs(bird.v) > v_lim ||  abs(bird.w) > v_lim){
+        if (abs(bird.uvw[0]) > v_lim || abs(bird.uvw[1]) > v_lim ||  abs(bird.uvw[2]) > v_lim){
             return true;
         }
 
@@ -276,7 +276,7 @@ struct Flock{
         //If the bird starts rotating too quickly,
         //it is considered to have crashed.
         double lim = 2*PI;
-        if (abs(bird.p) > lim || abs(bird.q) > lim ||  abs(bird.r) > lim){
+        if (abs(bird.pqr[0]) > lim || abs(bird.pqr[1]) > lim ||  abs(bird.pqr[2]) > lim){
             return true;
         }
 
@@ -288,7 +288,7 @@ struct Flock{
         for (int b : range(len(self.birds))){
             const Bird & other = self.birds[b];
             if (&other != &bird){
-                double dist = (bird.xyz() - other.xyz()).norm();
+                double dist = (bird.xyz - other.xyz).norm();
                 if (dist < bird.Xl/2.0){
                     crash = true;
                 }
@@ -321,17 +321,17 @@ struct Flock{
                     not within max_r distance from the center of the vortex,
                     it is not considered.
                     */
-                    while (i < len(vorts) && vorts[i].x() < curr.x){
+                    while (i < len(vorts) && vorts[i].x() < curr.xyz[0]){
                         i = i+1;
                     }
                     const Vortex & v = vorts[i];
 
                     //Move through vortices until the first vortex that is in
                     //front of the current bird.
-                    if (i < len(vorts) && v.x() >= curr.x){
+                    if (i < len(vorts) && v.x() >= curr.xyz[0]){
                         //Determine if the bird is too far from the
                         //center of this vortex to be affected.
-                        double r = sqrt(sqr(curr.y - v.y()) + sqr(curr.z - v.z()));
+                        double r = sqrt(sqr(curr.xyz[1] - v.y()) + sqr(curr.xyz[2] - v.z()));
                         if (r < self.max_r){
                             vortices.push_back(v);
                         }
@@ -395,35 +395,35 @@ struct Flock{
         */
         extend(obs, ((force)/self.limits[0])); //0,1,2
         extend(obs, (torque/self.limits[3]));//3,4,5
-        extend(obs, {(bird.z)/self.limits[6]});//6
-        extend(obs, {(bird.phi)/self.limits[7],//7
-                      (bird.theta)/self.limits[8],//8
-                      (bird.psi)/self.limits[9]});//9
+        extend(obs, {(bird.xyz[2])/self.limits[6]});//6
+        extend(obs, {(bird.ang[0])/self.limits[7],//7
+                      (bird.ang[1])/self.limits[8],//8
+                      (bird.ang[2])/self.limits[9]});//9
         extend(obs, {((bird.alpha_l) - self.limits[10])/(self.limits[11] - self.limits[10]),//10
                       ((bird.beta_l) - self.limits[12])/(self.limits[13] - self.limits[12]),//11
                       ((bird.alpha_r) - self.limits[10])/(self.limits[11] - self.limits[10]),//12
                       ((bird.beta_r) - self.limits[12])/(self.limits[13] - self.limits[12])});//13
         if(derivatives){
-          extend(obs, {bird.u/self.limits[14],//14
-                        (bird.v)/self.limits[15],//15
-                        (bird.w)/self.limits[16]});//16
-          extend(obs, {bird.p/self.limits[17],//17
-                        bird.q/self.limits[18],//18
-                        bird.r/self.limits[19]});//19
+          extend(obs, {bird.uvw[0]/self.limits[14],//14
+                        (bird.uvw[1])/self.limits[15],//15
+                        (bird.uvw[2])/self.limits[16]});//16
+          extend(obs, {bird.pqr[0]/self.limits[17],//17
+                        bird.pqr[1]/self.limits[18],//18
+                        bird.pqr[2]/self.limits[19]});//19
         }
         std::vector<Bird *> nearest = bird.n_nearest(self.birds, max_observable_birds);
         for (Bird * otherp : nearest){
           Bird & other = *otherp;
-            extend(obs, {(other.x - bird.x)/self.limits[20],//20
-                          (other.y - bird.y)/self.limits[21],//21
-                          (other.z - bird.z)/self.limits[22]});//22
-            extend(obs, {(other.phi - bird.phi)/self.limits[23],//23
-                          (other.theta - bird.theta)/self.limits[24],//24
-                          (other.psi - bird.psi)/self.limits[25]});//25
+            extend(obs, {(other.xyz[0] - bird.xyz[0])/self.limits[20],//20
+                          (other.xyz[1] - bird.xyz[1])/self.limits[21],//21
+                          (other.xyz[2] - bird.xyz[2])/self.limits[22]});//22
+            extend(obs, {(other.ang[0] - bird.ang[0])/self.limits[23],//23
+                          (other.ang[1] - bird.ang[1])/self.limits[24],//24
+                          (other.ang[2] - bird.ang[2])/self.limits[25]});//25
             if(derivatives){
-              extend(obs, {(other.u - bird.u)/self.limits[26],//26
-                            (other.v - bird.v)/self.limits[27],//27
-                            (other.w - bird.w)/self.limits[28]});//28
+              extend(obs, {(other.uvw[0] - bird.uvw[0])/self.limits[26],//26
+                            (other.uvw[1] - bird.uvw[1])/self.limits[27],//27
+                            (other.uvw[2] - bird.uvw[2])/self.limits[28]});//28
             }
         }
         return obs;

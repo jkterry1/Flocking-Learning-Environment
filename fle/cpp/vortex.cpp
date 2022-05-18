@@ -52,9 +52,9 @@ Vortex::Vortex(Bird & bird, double sign){
       -psi represents the angle rotated around the w axis,
         the axis that points up through the center of the bird.
     */
-    self.phi = bird.phi;
-    self.theta = bird.theta;
-    self.psi = bird.psi;
+    self.phi = bird.ang[0];
+    self.theta = bird.ang[1];
+    self.psi = bird.ang[2];
 
     /*
       The angle of the vortex depends on the angle of the bird that produces
@@ -77,12 +77,12 @@ Vortex::Vortex(Bird & bird, double sign){
     //end_of_wing is the coordinate of the right wing tip in the bird's frame.
     Vector3d end_of_wing = Vector3d(0.0, bird.Xl, 0.0);
     if (sign == 1) // right wing
-	     self.pos = bird.xyz() -  matmul(mat, end_of_wing);
+	     self.pos = bird.xyz -  matmul(mat, end_of_wing);
     else //left wing
-	     self.pos = bird.xyz() +  matmul(mat, end_of_wing);
+	     self.pos = bird.xyz +  matmul(mat, end_of_wing);
 
     //velocity of the vortex
-    double vel = bird.uvw().norm();
+    double vel = bird.uvw.norm();
     /*
       If the bird is moving too slowly, it's will not produce a vortex.
       If it does produce a vortex, it's strength is inversely proportional
@@ -126,11 +126,11 @@ Vector3d Vortex::earth_vel(double x, double y, double z){
 // velocity in the bird's frame
 std::pair<Vector3d,Vector3d> Vortex::bird_vel(Bird & bird){
     Vortex & self = *this;
-    Matrix3d mat = self.get_transform(bird.phi, bird.theta, bird.psi);
+    Matrix3d mat = self.get_transform(bird.ang[0], bird.ang[1], bird.ang[2]);
     Vector3d add = Vector3d(0.0, bird.Xl/2.0, 0.0);
 
-    Vector3d pos_right = bird.xyz() +  matmul(mat, add);
-    Vector3d pos_left = bird.xyz() -  matmul(mat, add);
+    Vector3d pos_right = bird.xyz +  matmul(mat, add);
+    Vector3d pos_left = bird.xyz -  matmul(mat, add);
 
     double r_right = sqrt(sqr(pos_right[1] - self.pos[1]) + sqr(pos_right[2] - self.pos[2]));
     double r_left = sqrt(sqr(pos_left[1] - self.pos[1]) + sqr(pos_left[2] - self.pos[2]));
@@ -144,9 +144,9 @@ std::pair<Vector3d,Vector3d> Vortex::bird_vel(Bird & bird){
     Vector3d tan_vec_left = v_tan_l * Vector3d(0.0, -r_vec_left[2], r_vec_left[1]);
     Vector3d tan_vec_right = v_tan_r * Vector3d(0.0, -r_vec_right[2], r_vec_right[1]);
 
-    double phi = bird.phi - self.phi;
-    double theta = bird.theta - self.theta;
-    double psi = bird.psi - self.psi;
+    double phi = bird.ang[0] - self.phi;
+    double theta = bird.ang[1] - self.theta;
+    double psi = bird.ang[2] - self.psi;
     mat = self.get_transform(phi, theta, psi);
 
     Vector3d left = matmul(mat, tan_vec_left);
