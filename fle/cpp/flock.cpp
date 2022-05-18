@@ -465,10 +465,10 @@ struct Flock{
 
         //The limits for wing rotation in radians
         //Starling:
-        double limit_alpha_low = -25.0 * PI/180.0;
-        double limit_alpha_high = 15.0 * PI/180.0;
-        double limit_beta_low = -30.0 * PI/180.0;
-        double limit_beta_high = 40.0 * PI/180.0;
+        constexpr double limit_alpha_low = -25.0 * PI/180.0;
+        constexpr double limit_alpha_high = 15.0 * PI/180.0;
+        constexpr double limit_beta_low = -30.0 * PI/180.0;
+        constexpr double limit_beta_high = 40.0 * PI/180.0;
 
         //Geese
         /*
@@ -484,34 +484,10 @@ struct Flock{
         and if an action tries to exceed these values, the wings will just
         remain at the max or min value.
         */
-        double new_al = bird.alpha_l + action[1];
-        if (new_al > limit_alpha_high)
-            new_al = limit_alpha_high;
-        if (new_al < limit_alpha_low)
-            new_al = limit_alpha_low;
-        bird.alpha_l = new_al;
-
-        double new_bl = bird.beta_l + action[2];
-        if (new_bl > limit_beta_high)
-            new_bl = limit_beta_high;
-        if (new_bl < limit_beta_low)
-            new_bl = limit_beta_low;
-        bird.beta_l = new_bl;
-
-        double new_ar = bird.alpha_r + action[3];
-        if (new_ar > limit_alpha_high)
-            new_ar = limit_alpha_high;
-        if (new_ar < limit_alpha_low)
-            new_ar = limit_alpha_low;
-        bird.alpha_r = new_ar;
-
-        double new_br = bird.beta_r + action[4];
-        if (new_br > limit_beta_high)
-            new_br = limit_beta_high;
-        if (new_br < limit_beta_low)
-            new_br = limit_beta_low;
-        bird.beta_r = new_br;
-
+        bird.alpha_l = clamp(bird.alpha_l + action[1], limit_alpha_low, limit_alpha_high);
+        bird.beta_l = clamp(bird.beta_l + action[2], limit_beta_low, limit_beta_high);
+        bird.alpha_r = clamp(bird.alpha_r + action[3], limit_alpha_low, limit_alpha_high);
+        bird.beta_r = clamp(bird.beta_r + action[4], limit_beta_low, limit_beta_high);
     }
 
 
