@@ -28,7 +28,7 @@ parallel_env = parallel_wrapper_fn(env)
 
 
 class raw_env(AECEnv, EzPickle):
-    metadata = {'render.modes': ['human', 'rgb_array'], 'is_parallelizable':True}
+    metadata = {'render_modes': ['human', 'rgb_array'], 'is_parallelizable':True}
 
     def __init__(self,
                  N=10,
