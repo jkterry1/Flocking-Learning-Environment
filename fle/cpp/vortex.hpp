@@ -23,14 +23,15 @@ struct Vortex{
     bool decaying;
     double t;
     double core;
+
   Vortex(Bird & bird, double sign);
   Vortex(double x, double y, double z, double phi, double theta, double psi, double sign);
   Vortex()=default;
-    // vlocity of the vortex in the earth's frame
+  // velocity of the vortex in the earth's frame
   Vector3d earth_vel(double x, double y, double z);
 
-    // velocity in the bird's frame
+  // velocity in the bird's frame
   std::pair<Vector3d,Vector3d> bird_vel(Bird & bird);
-  /* Matrix3d get_transform(double phi,double theta,double psi); */
   Matrix3d get_transform(Vector3d ang);
+  Matrix3d get_transform(double phi,double theta,double psi);
 };

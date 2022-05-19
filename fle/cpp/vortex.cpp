@@ -11,8 +11,8 @@ Vortex::Vortex(double x, double y, double z, double phi, double theta, double ps
     self.ang = Vector3d(phi, theta, psi);
     self.pos = Vector3d(x,y,z);
 
-    //velocity of the vortex
-    //double vel = 0.0;
+    // velocity of the vortex
+    // double vel = 0.0;
 
     self.gamma_0 = 5.0;
     self.gamma = self.gamma_0;
@@ -22,8 +22,8 @@ Vortex::Vortex(double x, double y, double z, double phi, double theta, double ps
     self.t_decay = 0.0;
     self.t = 0.0;
 
-    //core represents the radius of the vortex's "core", the center of the
-    //vortex where no air is moving to prevent divide by zero issue.
+    // core represents the radius of the vortex's "core", the center of the
+    // vortex where no air is moving to prevent divide by zero issue.
     self.core = 0.05;
 }
 
@@ -50,12 +50,12 @@ Vortex::Vortex(Bird & bird, double sign){
       The angle of the vortex depends on the angle of the bird that produces
       it, and also the angle of the bird's wing.
     */
-    if (sign == 1) // right wing
+    if (sign == 1) //  right wing
        self.ang[0] += bird.beta_r;
-    else //left wing
+    else // left wing
        self.ang[0] -= bird.beta_l;
 
-    //mat transforms vectors from the bird's frame to the earth's frame.
+    // mat transforms vectors from the bird's frame to the earth's frame.
     Matrix3d mat = self.get_transform(self.ang);
 
     /*
@@ -64,14 +64,14 @@ Vortex::Vortex(Bird & bird, double sign){
       First we find where the vortex is dropped, from the left or right wing,
       then use the frame change transformation.
     */
-    //end_of_wing is the coordinate of the right wing tip in the bird's frame.
+    // end_of_wing is the coordinate of the right wing tip in the bird's frame.
     Vector3d end_of_wing = Vector3d(0.0, bird.Xl, 0.0);
     if (sign == 1) // right wing
 	     self.pos = bird.xyz - matmul(mat, end_of_wing);
-    else //left wing
+    else // left wing
 	     self.pos = bird.xyz + matmul(mat, end_of_wing);
 
-    //velocity of the vortex
+    // velocity of the vortex
     double vel = bird.uvw.norm();
     /*
       If the bird is moving too slowly, it's will not produce a vortex.
@@ -83,8 +83,8 @@ Vortex::Vortex(Bird & bird, double sign){
     else
 	   self.gamma = 0.0;
 
-    //core represents the radius of the vortex's "core", the center of the
-    //vortex where no air is moving to prevent divide by zero issue.
+    // core represents the radius of the vortex's "core", the center of the
+    // vortex where no air is moving to prevent divide by zero issue.
     self.core = 0.05 * bird.Xl;
 }
 
@@ -158,16 +158,16 @@ Matrix3d Vortex::get_transform(Vector3d ang){
     return mat;
 }
 
-/* Matrix3d Vortex::get_transform(double phi, double theta, double psi){ */
-/*     double sphi = sin(phi); */
-/*     double cphi = cos(phi); */
-/*     double stheta = sin(theta); */
-/*     double ctheta = cos(theta); */
-/*     double spsi = sin(psi); */
-/*     double cpsi = cos(psi); */
+Matrix3d Vortex::get_transform(double phi, double theta, double psi){
+    double sphi = sin(phi);
+    double cphi = cos(phi);
+    double stheta = sin(theta);
+    double ctheta = cos(theta);
+    double spsi = sin(psi);
+    double cpsi = cos(psi);
 
-/*     Matrix3d mat = matrix(cphi * ctheta, -spsi * cphi + cpsi * stheta * sphi, spsi * sphi + cpsi * cphi * stheta, */
-/* 			  spsi * ctheta, cpsi * cphi + sphi * stheta * spsi, -cpsi * sphi + stheta * spsi * cphi, */
-/* 			  -stheta, ctheta * sphi, ctheta * cphi); */
-/*     return mat; */
-/* } */
+    Matrix3d mat = matrix(cphi * ctheta, -spsi * cphi + cpsi * stheta * sphi, spsi * sphi + cpsi * cphi * stheta,
+			  spsi * ctheta, cpsi * cphi + sphi * stheta * spsi, -cpsi * sphi + stheta * spsi * cphi,
+			  -stheta, ctheta * sphi, ctheta * cphi);
+    return mat;
+}
