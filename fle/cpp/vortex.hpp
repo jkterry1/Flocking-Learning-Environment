@@ -23,12 +23,6 @@ struct Vortex{
     bool decaying;
     double t;
     double core;
-    double x()const{return pos[0];}
-    double y()const{return pos[1];}
-    double z()const{return pos[2];}
-    double X;
-    double Y;
-    double Z;
   Vortex(Bird & bird, double sign);
   Vortex(double x, double y, double z, double phi, double theta, double psi, double sign);
   Vortex()=default;

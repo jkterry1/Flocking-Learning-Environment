@@ -314,10 +314,10 @@ class raw_env(AECEnv, EzPickle):
         time = self.steps * self.h
         for bird in birds:
             for vortex in bird.VORTICES_LEFT:
-                state = [time, vortex.pos[0], vortex.pos[1], vortex.pos[2], vortex.theta, vortex.phi, vortex.psi, vortex.gamma]
+                state = [time, *vortex.pos, *vortex.ang, vortex.gamma]
                 wr.writerow(state)
             for vortex in bird.VORTICES_RIGHT:
-                state = [time, vortex.pos[0], vortex.pos[1], vortex.pos[2], vortex.theta, vortex.phi, vortex.psi, vortex.gamma]
+                state = [time, *vortex.pos, *vortex.ang, vortex.gamma]
                 wr.writerow(state)
 
     '''
@@ -336,10 +336,10 @@ class raw_env(AECEnv, EzPickle):
         birds = self.simulation.get_birds()
         for ID, bird in enumerate(birds):
             state = []
-            for i in range(len(bird.X)):
+            for i in range(len(bird.prev_xyz)):
                 if i % 10 == 0:
                     time = i*self.h
-                    state = [ID, time, bird.X[i], bird.Y[i], bird.Z[i], bird.PHI[i], bird.THETA[i], bird.PSI[i], bird.ALPHA_L[i], bird.ALPHA_R[i], bird.BETA_L[i], bird.BETA_R[i]]
+                    state = [ID, time, *bird.prev_xyz[i], *bird.prev_ang[i], bird.ALPHA_L[i], bird.ALPHA_R[i], bird.BETA_L[i], bird.BETA_R[i]]
                     wr.writerow(state)
 
     def log_actions(self, file_name):

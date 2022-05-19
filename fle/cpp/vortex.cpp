@@ -9,13 +9,7 @@ Vortex::Vortex(double x, double y, double z, double phi, double theta, double ps
     self.dist_travelled = 0.0;
 
     self.ang = Vector3d(phi, theta, psi);
-
-    //mat transforms vectors from the bird's frame to the earth's frame.
-
     self.pos = Vector3d(x,y,z);
-    self.X = pos[0];
-    self.Y = pos[1];
-    self.Z = pos[2];
 
     //velocity of the vortex
     //double vel = 0.0;
@@ -107,7 +101,7 @@ Vector3d Vortex::earth_vel(double x, double y, double z){
 	return Vector3d(0.0, 0.0, 0.0);
 
     double v_tan = self.gamma * sqr(r) / (2 * PI * r * (sqr(r) + sqr(self.core)));
-    Vector3d r_vec = Vector3d(0.0, y - self.y(), z - self.z())/r;
+    Vector3d r_vec = Vector3d(0.0, y - self.pos[1], z - self.pos[2])/r;
     Vector3d tan_vec = v_tan * Vector3d(0.0, -r_vec[2], r_vec[1]);
 
     Matrix3d mat = self.get_transform(self.ang);
@@ -131,8 +125,8 @@ std::pair<Vector3d,Vector3d> Vortex::bird_vel(Bird & bird){
     double v_tan_l = self.gamma * sqr(r_left) / (2 * PI * r_left * (sqr(r_left) + sqr(self.core)));
     double v_tan_r = self.gamma * sqr(r_right) / (2 * PI * r_right * (sqr(r_right) + sqr(self.core)));
 
-    Vector3d r_vec_right = Vector3d(0.0, pos_right[1] - self.y(), pos_right[2] - self.z())/r_right;
-    Vector3d r_vec_left = Vector3d(0.0, pos_left[1] - self.y(), pos_left[2] - self.z())/r_left;
+    Vector3d r_vec_right = Vector3d(0.0, pos_right[1] - self.pos[1], pos_right[2] - self.pos[2])/r_right;
+    Vector3d r_vec_left = Vector3d(0.0, pos_left[1] - self.pos[1], pos_left[2] - self.pos[2])/r_left;
 
     Vector3d tan_vec_left = v_tan_l * Vector3d(0.0, -r_vec_left[2], r_vec_left[1]);
     Vector3d tan_vec_right = v_tan_r * Vector3d(0.0, -r_vec_right[2], r_vec_right[1]);
