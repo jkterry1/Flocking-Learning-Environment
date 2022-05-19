@@ -164,8 +164,6 @@ struct Bird{
     */
     Vector3d vortex_fuvw = Vector3d(0, 0, 0);
     Vector3d vortex_tuvw = Vector3d(0, 0, 0);
-    /* double vortex_force_u = 0, vortex_force_v = 0, vortex_force_w = 0; */
-    /* double vortex_torque_u = 0, vortex_torque_v = 0, vortex_torque_w = 0; */
 
     //The bird's thrust, which comes entirely from the bird's chosen action
     double thrust;
@@ -244,12 +242,6 @@ struct Bird{
         VortexForces vf = self.vortex_forces(vortices);
         self.vortex_fuvw = vf[0];
         self.vortex_tuvw = vf[1];
-        /* self.vortex_force_u = vf[0]; */
-        /* self.vortex_force_v = vf[1]; */
-        /* self.vortex_force_w = vf[2]; */
-        /* self.vortex_torque_u = vf[3]; */
-        /* self.vortex_torque_v = vf[4]; */
-        /* self.vortex_torque_w = vf[5]; */
 
         //Calculate and update velocities for the next time step using the diffeq solver
         Vector3d uvw = self.take_time_step(duvwdt, self.uvw, h);
@@ -386,10 +378,8 @@ struct Bird{
     VortexForces vortex_forces(Vorticies & vortices){
         Bird & self = *this;
         //forces in each direction
-        /* double fu=0, fv=0, fw=0; */
         Vector3d fuvw;
         //torques in each direction
-        /* double tu=0, tv=0, tw=0; */
         Vector3d tuvw;
         //drag and areas
         double D, A;
@@ -484,7 +474,6 @@ struct Bird{
     bool operator < (const Bird & other)const{
         const Bird & self = *this;
         return self.xyz[0] < other.xyz[0];
-        /* return self.x < other.x; */
     }
 };
 using Birds = std::vector<Bird>;
