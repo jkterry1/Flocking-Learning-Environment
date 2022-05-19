@@ -56,7 +56,7 @@ Vortex::Vortex(Bird & bird, double sign){
        self.ang[0] -= bird.beta_l;
 
     // mat transforms vectors from the bird's frame to the earth's frame.
-    Matrix3d mat = self.get_transform(self.ang);
+    Matrix3d mat = self.vec_get_transform(self.ang);
 
     /*
       We need to transform the position of the vortex produced from the bird's
@@ -104,7 +104,7 @@ Vector3d Vortex::earth_vel(double x, double y, double z){
     Vector3d r_vec = Vector3d(0.0, y - self.pos[1], z - self.pos[2])/r;
     Vector3d tan_vec = v_tan * Vector3d(0.0, -r_vec[2], r_vec[1]);
 
-    Matrix3d mat = self.get_transform(self.ang);
+    Matrix3d mat = self.vec_get_transform(self.ang);
 
     Vector3d a = matmul(mat, tan_vec);
     return -self.sign * a;
@@ -113,7 +113,7 @@ Vector3d Vortex::earth_vel(double x, double y, double z){
 // velocity in the bird's frame
 std::pair<Vector3d,Vector3d> Vortex::bird_vel(Bird & bird){
     Vortex & self = *this;
-    Matrix3d mat = self.get_transform(bird.ang);
+    Matrix3d mat = self.vec_get_transform(bird.ang);
     Vector3d add = Vector3d(0.0, bird.Xl/2.0, 0.0);
 
     Vector3d pos_right = bird.xyz +  matmul(mat, add);
@@ -131,7 +131,7 @@ std::pair<Vector3d,Vector3d> Vortex::bird_vel(Bird & bird){
     Vector3d tan_vec_left = v_tan_l * Vector3d(0.0, -r_vec_left[2], r_vec_left[1]);
     Vector3d tan_vec_right = v_tan_r * Vector3d(0.0, -r_vec_right[2], r_vec_right[1]);
 
-    mat = self.get_transform(bird.ang - self.ang);
+    mat = self.vec_get_transform(bird.ang - self.ang);
     Vector3d left = matmul(mat, tan_vec_left);
     Vector3d right = matmul(mat, tan_vec_right);
 
@@ -144,7 +144,7 @@ std::pair<Vector3d,Vector3d> Vortex::bird_vel(Bird & bird){
     return ret;
 }
 
-Matrix3d Vortex::get_transform(Vector3d ang){
+Matrix3d Vortex::vec_get_transform(Vector3d ang){
     double sphi = sin(ang[0]);
     double cphi = cos(ang[0]);
     double stheta = sin(ang[1]);
@@ -152,9 +152,11 @@ Matrix3d Vortex::get_transform(Vector3d ang){
     double spsi = sin(ang[2]);
     double cpsi = cos(ang[2]);
 
-    Matrix3d mat = matrix(cphi * ctheta, -spsi * cphi + cpsi * stheta * sphi, spsi * sphi + cpsi * cphi * stheta,
-			  spsi * ctheta, cpsi * cphi + sphi * stheta * spsi, -cpsi * sphi + stheta * spsi * cphi,
-			  -stheta, ctheta * sphi, ctheta * cphi);
+    Matrix3d mat = matrix(
+            cphi * ctheta   , cpsi * stheta * sphi - spsi * cphi    , spsi * sphi + cpsi * cphi * stheta,
+            spsi * ctheta   , cpsi * cphi + sphi * stheta * spsi    , stheta * spsi * cphi - cpsi * sphi,
+            -stheta         , ctheta * sphi                         , ctheta * cphi
+            );
     return mat;
 }
 
@@ -166,8 +168,10 @@ Matrix3d Vortex::get_transform(double phi, double theta, double psi){
     double spsi = sin(psi);
     double cpsi = cos(psi);
 
-    Matrix3d mat = matrix(cphi * ctheta, -spsi * cphi + cpsi * stheta * sphi, spsi * sphi + cpsi * cphi * stheta,
-			  spsi * ctheta, cpsi * cphi + sphi * stheta * spsi, -cpsi * sphi + stheta * spsi * cphi,
-			  -stheta, ctheta * sphi, ctheta * cphi);
+    Matrix3d mat = matrix(
+            cphi * ctheta   , cpsi * stheta * sphi - spsi * cphi    , spsi * sphi + cpsi * cphi * stheta,
+            spsi * ctheta   , cpsi * cphi + sphi * stheta * spsi    , stheta * spsi * cphi - cpsi * sphi,
+            -stheta         , ctheta * sphi                         , ctheta * cphi
+            );
     return mat;
 }

@@ -32,6 +32,6 @@ struct Vortex{
 
   // velocity in the bird's frame
   std::pair<Vector3d,Vector3d> bird_vel(Bird & bird);
-  Matrix3d get_transform(Vector3d ang);
+  Matrix3d vec_get_transform(Vector3d ang);
   Matrix3d get_transform(double phi,double theta,double psi);
 };

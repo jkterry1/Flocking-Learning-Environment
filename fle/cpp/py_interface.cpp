@@ -9,7 +9,7 @@ int add(int i, int j) {
     return i + j;
 }
 py::array_t<double> return_vec(Vector3d & vec){
-    int size = 3;
+    constexpr int size = 3;
 
     return py::array_t<double>(
         {size}, // shape
@@ -70,10 +70,11 @@ PYBIND11_MODULE(flocking_cpp, m) {
         .def_property_readonly("vortex_fuvw",[](Bird & bird){return return_vec(bird.vortex_fuvw);})
         .def_property_readonly("F",[](Bird & bird){return return_vec(bird.F);})
         .def_property_readonly("T",[](Bird & bird){return return_vec(bird.T);})
-        .def_property_readonly("prev_xyz",[](Bird & bird){return return_vec(bird.prev_xyz);})
-        .def_property_readonly("prev_uvw",[](Bird & bird){return return_vec(bird.prev_uvw);})
-        .def_property_readonly("prev_ang",[](Bird & bird){return return_vec(bird.prev_ang);})
-        .def_property_readonly("prev_pqr",[](Bird & bird){return return_vec(bird.prev_pqr);})
+        // I have NO idea if the below four lines work
+        .expose_bird_var(prev_xyz)
+        .expose_bird_var(prev_uvw)
+        .expose_bird_var(prev_ang)
+        .expose_bird_var(prev_pqr)
         .expose_bird_var(ALPHA_L)
         .expose_bird_var(ALPHA_R)
         .expose_bird_var(BETA_L)
