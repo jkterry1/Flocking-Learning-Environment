@@ -16,26 +16,14 @@ Vector3d drdt(double gamma, double epsilon, Vector3d b, double theta){
   This is equivalent to calculating the acceleration.
 */
 Vector3d duvwdt(Vector3d uvw, Bird & bird){
-    Vector3d pqr = bird.pqr;
-    Vector3d A;
-    double u, v, w;
-    double p, q, r;
-    p = bird.pqr[0];
-    q = bird.pqr[1];
-    r = bird.pqr[2];
-    up(u, v, w) = uvw;
-    double m = bird.m;
-    double g = bird.g;
-
     //F contains the force vector due to all other forces (drag, thrust, etc.)
-    Vector3d F = Vector3d(Fu(u, bird), Fv(v, bird), Fw(w, bird));
+    Vector3d F = Vector3d(Fu(uvw[0], bird), Fv(uvw[1], bird), Fw(uvw[2], bird));
 
-    Vector3d grav = Vector3d(-g * sin(bird.ang[0]),
-                      g * cos(bird.ang[0]) * sin(bird.ang[1]),
-                      g * cos(bird.ang[0]) * cos(bird.ang[1]));
+    Vector3d grav = Vector3d(-bird.g * sin(bird.ang[0]),
+                      bird.g * cos(bird.ang[0]) * sin(bird.ang[1]),
+                      bird.g * cos(bird.ang[0]) * cos(bird.ang[1]));
 
-    return (1.0/m)*F - cross(pqr, uvw) + grav;
-
+    return (1.0 / bird.m) * F - cross(bird.pqr, uvw) + grav;
 }
 
 /*
@@ -44,26 +32,24 @@ Vector3d duvwdt(Vector3d uvw, Bird & bird){
   This is equivalent to calculatig the velocity.
 */
 Vector3d dxyzdt(Vector3d xyz, Bird & bird){
-    double theta, phi, psi;
-    theta = bird.ang[0];
-    phi = bird.ang[1];
-    psi = bird.ang[2];
     /*
     These three matricies are rotations that converts the velocity values
     from the bird's frame to the earth frame
     */
-    Matrix3d R3 = matrix(cos(psi), -sin(psi), 0.0,
-			                   sin(psi), cos(psi), 0.0,
-			                   0.0, 0.0, 1.0);
-    Matrix3d R2 = matrix(cos(theta), 0.0, sin(theta),
-			                   0.0, 1.0, 0.0,
-			                   -sin(theta), 0.0, cos(theta));
-    Matrix3d R1 = matrix(1.0, 0.0, 0.0,
-			                   0.0, cos(phi), -sin(phi),
-			                   0.0, sin(phi), cos(phi));
-    //Apply all 3 rotations
-    Vector3d output = matmul(R3, matmul(R2, matmul(R1, bird.uvw)));
-    return output;
+    double sphi = sin(bird.ang[0]);
+    double cphi = cos(bird.ang[0]);
+    double stheta = sin(bird.ang[1]);
+    double ctheta = cos(bird.ang[1]);
+    double spsi = sin(bird.ang[2]);
+    double cpsi = cos(bird.ang[2]);
+
+    Matrix3d mat = matrix(
+            cphi * ctheta   , cpsi * stheta * sphi - spsi * cphi    , spsi * sphi + cpsi * cphi * stheta,
+            spsi * ctheta   , cpsi * cphi + sphi * stheta * spsi    , stheta * spsi * cphi - cpsi * sphi,
+            -stheta         , ctheta * sphi                         , ctheta * cphi
+            );
+
+    return matmul(mat, bird.uvw);
 }
 
 /*
@@ -72,25 +58,20 @@ Vector3d dxyzdt(Vector3d xyz, Bird & bird){
   This is equivalent to the angular acceleration.
 */
 Vector3d dpqrdt(Vector3d pqr, Bird & bird){
-    double p, q, r;
-    Vector3d pqr_earth;
-    up(p, q, r) = pqr;
-    Matrix3d inertia = bird.inertia;
+    Vector3d LMN = Vector3d(TL(bird, pqr[0]), TM(bird, pqr[1]), TN(bird, pqr[2]));
 
-    Vector3d LMN = Vector3d(TL(bird, p), TM(bird, q), TN(bird, r));
+    Matrix3d mat = matrix(0.0, -pqr[2], pqr[1],
+                 pqr[2], 0.0, -pqr[0],
+                 -pqr[1], pqr[0], 0.0);
 
-    Matrix3d mat = matrix(0.0, -r, q,
-                 r, 0.0, -p,
-                 -q, p, 0.0);
-
-    Vector3d rhs = LMN - matmul(mat, matmul(inertia, pqr));
+    Vector3d rhs = LMN - matmul(mat, matmul(bird.inertia, pqr));
 
     /*
       Right hand side of the matrix equation that is used to
       calculate p-dot, q-dot, and r-dot.
       This needs to be inverted to find the final (p-dot, q-dot, and r-dot).
     */
-    return matmul(inertia.inverse(), rhs);
+    return matmul(bird.inertia.inverse(), rhs);
 }
 
 /*
@@ -98,15 +79,11 @@ Vector3d dpqrdt(Vector3d pqr, Bird & bird){
   (phi, theta, psi).
   This is equivalent to calculating the angular velocity.
 */
-Vector3d danglesdt(Vector3d angles, Bird & bird){
-    double phi, theta, psi;
-    up(phi, theta, psi) = angles;
-    Vector3d pqr = bird.pqr;
-
-    Matrix3d mat = matrix(1.0, sin(phi)*tan(theta), cos(phi)*tan(theta),
-                      0.0, cos(phi), -sin(phi),
-                      0.0, sin(phi)*(1.0/cos(theta)), cos(phi)*(1.0/cos(theta)));
-    Vector3d output = matmul(mat, pqr);
+Vector3d danglesdt(Vector3d ang, Bird & bird){
+    Matrix3d mat = matrix(1.0, sin(ang[0])*tan(ang[1]), cos(ang[0])*tan(ang[1]),
+                      0.0, cos(ang[0]), -sin(ang[0]),
+                      0.0, sin(ang[0])*(1.0/cos(ang[1])), cos(ang[0])*(1.0/cos(ang[1])));
+    Vector3d output = matmul(mat, bird.pqr);
     return output;
 }
 
@@ -395,7 +372,9 @@ Vector2d C_lift(Bird & bird){
     double aoa_r = degrees(bird.alpha_r + d);
 
     //The maximum coefficient, this is a constant.
-    double c_max = bird.Cl_max;
+    // use reference instead to prevent copying the variable twice
+    // and so we don't have to do bird.Cl_max everywhere
+    const double &c_max = bird.Cl_max;
     double cl, cr;
 
     //If the angle of attack is too small or too large, there is no lift.
