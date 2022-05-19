@@ -8,9 +8,7 @@ Vortex::Vortex(double x, double y, double z, double phi, double theta, double ps
     self.max_r = 1.0;
     self.dist_travelled = 0.0;
 
-    self.phi = phi;
-    self.theta = theta;
-    self.psi = psi;
+    self.ang = Vector3d(phi, theta, psi);
 
     //mat transforms vectors from the bird's frame to the earth's frame.
 
@@ -52,21 +50,19 @@ Vortex::Vortex(Bird & bird, double sign){
       -psi represents the angle rotated around the w axis,
         the axis that points up through the center of the bird.
     */
-    self.phi = bird.ang[0];
-    self.theta = bird.ang[1];
-    self.psi = bird.ang[2];
+    self.ang = bird.ang;
 
     /*
       The angle of the vortex depends on the angle of the bird that produces
       it, and also the angle of the bird's wing.
     */
     if (sign == 1) // right wing
-       self.phi += bird.beta_r;
+       self.ang[0] += bird.beta_r;
     else //left wing
-       self.phi -= bird.beta_l;
+       self.ang[0] -= bird.beta_l;
 
     //mat transforms vectors from the bird's frame to the earth's frame.
-    Matrix3d mat = self.get_transform(self.phi, self.theta, self.psi);
+    Matrix3d mat = self.get_transform(self.ang);
 
     /*
       We need to transform the position of the vortex produced from the bird's
@@ -77,9 +73,9 @@ Vortex::Vortex(Bird & bird, double sign){
     //end_of_wing is the coordinate of the right wing tip in the bird's frame.
     Vector3d end_of_wing = Vector3d(0.0, bird.Xl, 0.0);
     if (sign == 1) // right wing
-	     self.pos = bird.xyz -  matmul(mat, end_of_wing);
+	     self.pos = bird.xyz - matmul(mat, end_of_wing);
     else //left wing
-	     self.pos = bird.xyz +  matmul(mat, end_of_wing);
+	     self.pos = bird.xyz + matmul(mat, end_of_wing);
 
     //velocity of the vortex
     double vel = bird.uvw.norm();
@@ -114,10 +110,7 @@ Vector3d Vortex::earth_vel(double x, double y, double z){
     Vector3d r_vec = Vector3d(0.0, y - self.y(), z - self.z())/r;
     Vector3d tan_vec = v_tan * Vector3d(0.0, -r_vec[2], r_vec[1]);
 
-    double phi = self.phi;
-    double theta = self.theta;
-    double psi = self.psi;
-    Matrix3d mat = self.get_transform(phi, theta, psi);
+    Matrix3d mat = self.get_transform(self.ang);
 
     Vector3d a = matmul(mat, tan_vec);
     return -self.sign * a;
@@ -126,7 +119,7 @@ Vector3d Vortex::earth_vel(double x, double y, double z){
 // velocity in the bird's frame
 std::pair<Vector3d,Vector3d> Vortex::bird_vel(Bird & bird){
     Vortex & self = *this;
-    Matrix3d mat = self.get_transform(bird.ang[0], bird.ang[1], bird.ang[2]);
+    Matrix3d mat = self.get_transform(bird.ang);
     Vector3d add = Vector3d(0.0, bird.Xl/2.0, 0.0);
 
     Vector3d pos_right = bird.xyz +  matmul(mat, add);
@@ -144,11 +137,7 @@ std::pair<Vector3d,Vector3d> Vortex::bird_vel(Bird & bird){
     Vector3d tan_vec_left = v_tan_l * Vector3d(0.0, -r_vec_left[2], r_vec_left[1]);
     Vector3d tan_vec_right = v_tan_r * Vector3d(0.0, -r_vec_right[2], r_vec_right[1]);
 
-    double phi = bird.ang[0] - self.phi;
-    double theta = bird.ang[1] - self.theta;
-    double psi = bird.ang[2] - self.psi;
-    mat = self.get_transform(phi, theta, psi);
-
+    mat = self.get_transform(bird.ang - self.ang);
     Vector3d left = matmul(mat, tan_vec_left);
     Vector3d right = matmul(mat, tan_vec_right);
 
@@ -161,16 +150,30 @@ std::pair<Vector3d,Vector3d> Vortex::bird_vel(Bird & bird){
     return ret;
 }
 
-Matrix3d Vortex::get_transform(double phi, double theta, double psi){
-    double sphi = sin(phi);
-    double cphi = cos(phi);
-    double stheta = sin(theta);
-    double ctheta = cos(theta);
-    double spsi = sin(psi);
-    double cpsi = cos(psi);
+Matrix3d Vortex::get_transform(Vector3d ang){
+    double sphi = sin(ang[0]);
+    double cphi = cos(ang[0]);
+    double stheta = sin(ang[1]);
+    double ctheta = cos(ang[1]);
+    double spsi = sin(ang[2]);
+    double cpsi = cos(ang[2]);
 
     Matrix3d mat = matrix(cphi * ctheta, -spsi * cphi + cpsi * stheta * sphi, spsi * sphi + cpsi * cphi * stheta,
 			  spsi * ctheta, cpsi * cphi + sphi * stheta * spsi, -cpsi * sphi + stheta * spsi * cphi,
 			  -stheta, ctheta * sphi, ctheta * cphi);
     return mat;
 }
+
+/* Matrix3d Vortex::get_transform(double phi, double theta, double psi){ */
+/*     double sphi = sin(phi); */
+/*     double cphi = cos(phi); */
+/*     double stheta = sin(theta); */
+/*     double ctheta = cos(theta); */
+/*     double spsi = sin(psi); */
+/*     double cpsi = cos(psi); */
+
+/*     Matrix3d mat = matrix(cphi * ctheta, -spsi * cphi + cpsi * stheta * sphi, spsi * sphi + cpsi * cphi * stheta, */
+/* 			  spsi * ctheta, cpsi * cphi + sphi * stheta * spsi, -cpsi * sphi + stheta * spsi * cphi, */
+/* 			  -stheta, ctheta * sphi, ctheta * cphi); */
+/*     return mat; */
+/* } */
