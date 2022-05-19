@@ -16,7 +16,7 @@ Vector3d drdt(double gamma, double epsilon, Vector3d b, double theta){
   This is equivalent to calculating the acceleration.
 */
 Vector3d duvwdt(Vector3d uvw, Bird & bird){
-    //F contains the force vector due to all other forces (drag, thrust, etc.)
+    // F contains the force vector due to all other forces (drag, thrust, etc.)
     Vector3d F = Vector3d(Fu(uvw[0], bird), Fv(uvw[1], bird), Fw(uvw[2], bird));
 
     Vector3d grav = Vector3d(-bird.g * sin(bird.ang[0]),
@@ -99,41 +99,41 @@ double TL(Bird & bird, double P){
 
     cd = 1.5;
 
-    //Finds the coefficient of lift for the bird.
-    //This depends on angle of attack from the bird's wing orientation.
+    // Finds the coefficient of lift for the bird.
+    // This depends on angle of attack from the bird's wing orientation.
     up(cl, cr) = C_lift(bird);
 
-    //torque due to upward lift on left wing
-    //Lift = Cl * (rho * v^2)/2 * A
-    //There is only upward lift if the bird is moving forward.
+    // torque due to upward lift on left wing
+    // Lift = Cl * (rho * v^2)/2 * A
+    // There is only upward lift if the bird is moving forward.
     if (bird.uvw[0] > 0){
-        //velocity
+        // velocity
         v = bird.uvw[0];
-        //Approximate area of left wing
+        // Approximate area of left wing
         A = bird.Xl * bird.Yl * cos(bird.alpha_l);
-        //Verifies the area of the wing.
+        // Verifies the area of the wing.
         check_A(bird, A, bird.alpha_r);
-        //distance at which the force is applied
+        // distance at which the force is applied
         r = bird.Xl/2.0;
         Tl = cos(bird.beta_l) * r * cl * A * (bird.rho * sqr(v))/2.0;
         T += Tl;
 
 
-        //torque due to upward lift on right wing
+        // torque due to upward lift on right wing
         A = bird.Xl * bird.Yl * cos(bird.alpha_r);
         check_A(bird, A, bird.alpha_r);
         r = bird.Xl/2.0;
         Tr = -cos(bird.beta_r) * r * cr * A * (bird.rho * sqr(v))/2.0;
         T += Tr;
 
-        //torque due to lift in v direction from left wing
+        // torque due to lift in v direction from left wing
         A = bird.Xl * bird.Yl * cos(bird.alpha_l);
         check_A(bird, A, bird.alpha_l);
         r = abs(sin(bird.beta_l)) * bird.Xl/2.0;
         Tl = abs(sin(bird.beta_l)) * r * cl * A * (bird.rho * sqr(v))/2.0;
         T += Tl;
 
-        //torque due to lift in v direction from right wing
+        // torque due to lift in v direction from right wing
         A = bird.Xl * bird.Yl * cos(bird.alpha_r);
         check_A(bird, A, bird.alpha_r);
         r = abs(sin(bird.beta_r)) * bird.Xl/2.0;
@@ -141,9 +141,9 @@ double TL(Bird & bird, double P){
         T += Tr;
     }
 
-    //drag torque due to rotation on left wing
-    //Td = cd * A * (rho * v^2)/2 * r
-    //v = omega * r
+    // drag torque due to rotation on left wing
+    // Td = cd * A * (rho * v^2)/2 * r
+    // v = omega * r
     v = P * bird.Xl/2.0;
     r = bird.Xl/2.0;
     A = bird.Xl * bird.Yl;
@@ -151,16 +151,16 @@ double TL(Bird & bird, double P){
     Tl = -sign(P) * r * A * cd * (bird.rho * sqr(v))/2.0;
     T += Tl;
 
-    //drag due to rotation on right wing
+    // drag due to rotation on right wing
     v = P * bird.Xl/2.0;
     r = bird.Xl/2.0;
     A = bird.Xl * bird.Yl;
     Tr = -sign(P) * r * A * cd * (bird.rho * sqr(v))/2.0;
     T += Tr;
 
-    //cout<<"TL: "<<T<<" TL left wing: "<<Tl<<" right wing: "<<Tr<<"\n";
+    // cout<<"TL: "<<T<<" TL left wing: "<<Tl<<" right wing: "<<Tr<<"\n";
 
-    //torque due to vortices, this is pre calculated
+    // torque due to vortices, this is pre calculated
     T += bird.vortex_tuvw[0];
     bird.T[0] = T;
     return T;
@@ -173,22 +173,22 @@ double TL(Bird & bird, double P){
 */
 double TM(Bird & bird, double Q){
     double T = 0;
-    //Distance at which the force acts.
+    // Distance at which the force acts.
     double r = bird.Yl/4.0;
-    //The tangential velocity of the air is (omega * r),
-    //where omega is the angular velocity.
+    // The tangential velocity of the air is (omega * r),
+    // where omega is the angular velocity.
     double v = (Q * r)/2.0;
     double A = (bird.Xl * bird.Yl);
 
-    //Drag force due to rotation
+    // Drag force due to rotation
     double D = -sign(v) * r * bird.Cd * A * (bird.rho * sqr(v))/2.0;
 
-    //Both wings contribute D drag
+    // Both wings contribute D drag
     T += 2.0 * D;
     T += bird.vortex_tuvw[1];
     bird.T[1] = T;
 
-    //cout<< "TM: "<<D<<" Q: "<<Q<<"\n";
+    // cout<< "TM: "<<D<<" Q: "<<Q<<"\n";
     return T;
 }
 
@@ -202,52 +202,52 @@ double TN(Bird & bird, double R){
     double T = 0;
     double v,r,A,Tdl,Tdr;
 
-    //drag from left wing (this comes from any alpha rotation of the wing)
+    // drag from left wing (this comes from any alpha rotation of the wing)
     v = bird.uvw[1];
     r = bird.Xl/2.0;
-    //Area of the wing that is perpendicular to the forward motion.
-    //If there is no alpha rotation, then there is no area of the wing
-    //affected by drag.
+    // Area of the wing that is perpendicular to the forward motion.
+    // If there is no alpha rotation, then there is no area of the wing
+    // affected by drag.
     A = bird.Xl * abs(sin(bird.alpha_l)) * bird.Yl;
     check_A(bird, A, bird.alpha_l);
-    //Torque due to drag on the left wing
+    // Torque due to drag on the left wing
     Tdl = sign(bird.uvw[0]) * r * bird.Cd * A * (bird.rho * sqr(v))/2.0;
     T += Tdl;
 
-    //drag on right wing (this comes from any alpha rotation of the wing)
+    // drag on right wing (this comes from any alpha rotation of the wing)
     v = bird.uvw[0];
     r = bird.Xl/2.0;
-    //Area of the wing that is perpendicular to the forward motion.
-    //If there is no alpha rotation, then there is no area of the wing
-    //affected by drag.
+    // Area of the wing that is perpendicular to the forward motion.
+    // If there is no alpha rotation, then there is no area of the wing
+    // affected by drag.
     A = bird.Xl * abs(sin(bird.alpha_r)) * bird.Yl;
     check_A(bird, A, bird.alpha_r);
-    //Torque due to drag on the right wing
+    // Torque due to drag on the right wing
     Tdr = -sign(bird.uvw[0]) * r * bird.Cd * A * (bird.rho * sqr(v))/2.0;
     T += Tdr;
 
-    //drag from rotation on left wing
-    //Tangential velocity is (angular velocity) * r
+    // drag from rotation on left wing
+    // Tangential velocity is (angular velocity) * r
     v = R * bird.Xl/2.0;
     r = bird.Xl/2.0;
-    //Area of the left wing that is perpendicular to the direction of rotation.
+    // Area of the left wing that is perpendicular to the direction of rotation.
     A = bird.Xl * bird.Yl * abs(sin(bird.alpha_l)) + bird.Yl * bird.Zl * cos(bird.alpha_r);
     check_A(bird, A, bird.alpha_r);
-    //Torque due to drag from rotation
+    // Torque due to drag from rotation
     Tdl = -sign(bird.pqr[2]) * r * bird.Cd * (bird.rho * sqr(v))/2.0;
     T += Tdl;
 
-    //drag from rotation on right wing
-    //Tangential velocity is (angular velocity) * r
+    // drag from rotation on right wing
+    // Tangential velocity is (angular velocity) * r
     v = R * bird.Xl/2.0;
     r = bird.Xl/2.0;
-    //Area of the right wing that is perpendicular to the direction of rotation.
+    // Area of the right wing that is perpendicular to the direction of rotation.
     A = bird.Xl * bird.Yl * abs(sin(bird.alpha_r)) + bird.Yl * bird.Zl * cos(bird.alpha_r);
     check_A(bird, A, bird.alpha_r);
     Tdr = -sign(bird.pqr[2]) * r * bird.Cd * (bird.rho * sqr(v))/2.0;
     T += Tdr;
 
-    //torque due to drag from vortices
+    // torque due to drag from vortices
     T += bird.vortex_tuvw[2];
 
     bird.T[2] = T;
@@ -263,16 +263,16 @@ double Fu(double u, Bird & bird){
     double alpha_l = abs(bird.alpha_l);
     double alpha_r = abs(bird.alpha_r);
 
-    //Area of the wing that is perpendicular to the forwad direction of motion.
+    // Area of the wing that is perpendicular to the forwad direction of motion.
     double A = bird.Xl * bird.Zl + bird.Xl * bird.Yl * sin(alpha_l) +\
         bird.Xl * bird.Yl * sin(alpha_r);
     double D = -sign(u) * bird.Cd * A * (bird.rho * sqr(u))/2.0;
-    //bird.Fd[0] = D;
+    // bird.Fd[0] = D;
 
     F += D;
-    //Force due to vortices. This is pre-calculated
+    // Force due to vortices. This is pre-calculated
     F += bird.vortex_fuvw[0];
-    //Force from the thrust. Thrust is determined solely by the action taken.
+    // Force from the thrust. Thrust is determined solely by the action taken.
     F += bird.thrust;
 
     bird.F[0] = F;
@@ -289,25 +289,25 @@ double Fv(double v, Bird & bird){
     double cl, cr;
     up(cl, cr) = C_lift(bird);
 
-    //Lift on the left and right wongs
+    // Lift on the left and right wongs
     double L_left = cl * A * (bird.rho * sqr(v))/2.0;
     double L_right = cr * A * (bird.rho * sqr(v))/2.0;
 
     A = bird.Yl * bird.Zl;
-    //Drag on the bird
+    // Drag on the bird
     double D = -sign(v) * bird.Cd * A * (bird.rho * sqr(v))/2.0;
-    //bird.Fd[1] = D;
+    // bird.Fd[1] = D;
 
-    //If the bird is moving forward, there is a lift contribution to the force
-    //from each wing.
+    // If the bird is moving forward, there is a lift contribution to the force
+    // from each wing.
     if (bird.uvw[0] > 0.0){
-        //cout<<"lift v \n";
+        // cout<<"lift v \n";
         F += L_left * sin(bird.beta_l);
         F += -L_right * sin(bird.beta_r);
     }
     F += D;
     F += bird.vortex_fuvw[1];
-    //cout<<"vortex force v: "<<bird.vortex_force_v<<'\n';
+    // cout<<"vortex force v: "<<bird.vortex_force_v<<'\n';
     bird.F[1] = F;
     return F;
 }
@@ -322,20 +322,20 @@ double Fw(double w, Bird & bird){
     double A = bird.Xl * bird.Yl;
     double cl, cr;
 
-    //Coefficient of lift for the left and right wing.
-    //This depends on the orientaion (alpha, beta) of each wing
-    //(which changes the angle of attack)
+    // Coefficient of lift for the left and right wing.
+    // This depends on the orientaion (alpha, beta) of each wing
+    // (which changes the angle of attack)
     up(cl, cr) = C_lift(bird);
 
-    //Lift due to left and right wing
+    // Lift due to left and right wing
     double L_left = cl * A * (bird.rho * sqr(bird.uvw[0]))/2.0;
     double L_right = cr * A * (bird.rho * sqr(bird.uvw[0]))/2.0;
 
-    //Drag force on the bird
+    // Drag force on the bird
     double D = -sign(w) * bird.Cd * A * (bird.rho * sqr(w))/2.0;
-    //bird.Fd[2] = D;
+    // bird.Fd[2] = D;
 
-    //There is only lift if the bird is flying forwards.
+    // There is only lift if the bird is flying forwards.
     if (bird.uvw[0] > 0.0){
         F += L_left * cos(bird.beta_l);
         F += L_right * cos(bird.beta_r);
@@ -367,11 +367,11 @@ Vector2d C_lift(Bird & bird){
         d = 0.0;
     }
 
-    //Angle of attack on the left and right wings.
+    // Angle of attack on the left and right wings.
     double aoa_l = degrees(bird.alpha_l + d);
     double aoa_r = degrees(bird.alpha_r + d);
 
-    //The maximum coefficient, this is a constant.
+    // The maximum coefficient, this is a constant.
     // use reference instead to prevent copying the variable twice
     // and so we don't have to do bird.Cl_max everywhere
     const double &c_max = bird.Cl_max;
@@ -397,7 +397,7 @@ Vector2d C_lift(Bird & bird){
         cl = ((-c_max/25.0) * aoa_l) + (c_max + (20.0 * c_max / 25.0));
     }
 
-    //Same rules as above for the right wing.
+    // Same rules as above for the right wing.
     if (aoa_r < -10 || aoa_r > 25){
         cr = 0;
     }
