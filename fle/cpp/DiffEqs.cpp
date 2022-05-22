@@ -230,8 +230,9 @@ double TN(Bird & bird, double R){
     // Tangential velocity is (angular velocity) * r
     v = R * bird.Xl/2.0;
     r = bird.Xl/2.0;
-    // Area of the left wing that is perpendicular to the direction of rotation.
-    A = bird.Xl * bird.Yl * abs(sin(bird.alpha_l)) + bird.Yl * bird.Zl * cos(bird.alpha_r);
+
+    //Area of the left wing that is perpendicular to the direction of rotation.
+    A = bird.Xl * bird.Yl * abs(sin(bird.alpha_l)) + bird.Yl * bird.Zl * cos(bird.alpha_l);
     check_A(bird, A, bird.alpha_r);
     // Torque due to drag from rotation
     Tdl = -sign(bird.pqr[2]) * r * bird.Cd * (bird.rho * sqr(v))/2.0;
