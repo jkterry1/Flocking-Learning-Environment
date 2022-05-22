@@ -86,7 +86,7 @@ PYBIND11_MODULE(flocking_cpp, m) {
     #define expose_vortex_var(var) def_readonly(#var, &Vortex::var)
     py::class_<Vortex>(m, "Vortex")
         .def(py::init<double, double, double, double, double, double, double>())
-        .def_property_readonly("pos",[](Vortex & vortex){return return_vec(vortex.pos);})
+        .def_property_readonly("xyz",[](Vortex & vortex){return return_vec(vortex.xyz);})
         .def_property_readonly("ang",[](Vortex & vortex){return return_vec(vortex.ang);})
         .expose_vortex_var(sign)
         .expose_vortex_var(C)

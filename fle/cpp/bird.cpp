@@ -38,7 +38,7 @@ struct BirdInit{
         BirdInit & self = *this;
         self.xyz = Vector3d(x, y, z);
         self.uvw = Vector3d(u, v, w);
-        self.ang = Vector3d(theta, phi, psi);
+        self.ang = Vector3d(phi, theta, psi);
         self.pqr = Vector3d(p, q, r);
     }
 };
@@ -266,9 +266,9 @@ struct Bird{
           and angular velocities to 0 (bird no longer moving)
         */
         if(self.xyz[2] <= 0){
-            self.xyz = Vector3d(0, 0, 0);
+            self.xyz[2] = 0;
             self.uvw = Vector3d(0, 0, 0);
-            self.ang = Vector3d(0, 0, 0);
+            /* self.ang = Vector3d(0, 0, 0); */
             self.pqr = Vector3d(0, 0, 0);
         }
 
@@ -304,8 +304,8 @@ struct Bird{
         for (size_t i : range(1, len(vortices)-2)){
 
             // tangent vectors
-            Vector3d t_minus = vortices[i].pos - vortices[i-1].pos;
-            Vector3d t = vortices[i+1].pos - vortices[i].pos;
+            Vector3d t_minus = vortices[i].xyz - vortices[i-1].xyz;
+            Vector3d t = vortices[i+1].xyz - vortices[i].xyz;
 
             // length of tangent vectors
             double l_t_minus = t_minus.norm();
@@ -356,11 +356,11 @@ struct Bird{
             double epsilon = l_t_minus;
 
             // vortex's new position after LIA calculation
-            Vector3d pos = self.take_vortex_time_step(vortices[i].pos, gamma, epsilon, b, theta, h);
+            Vector3d pos = self.take_vortex_time_step(vortices[i].xyz, gamma, epsilon, b, theta, h);
 
             // update distance travelled and position for this time step
-            vortices[i].dist_travelled += (vortices[i].pos - pos).norm();
-            vortices[i].pos = pos;
+            vortices[i].dist_travelled += (vortices[i].xyz - pos).norm();
+            vortices[i].xyz = pos;
         }
     }
 

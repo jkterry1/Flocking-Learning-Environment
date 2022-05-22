@@ -13,7 +13,7 @@ struct Vortex{
     double max_r;
     double dist_travelled;
     Vector3d ang;
-    Vector3d pos;
+    Vector3d xyz;
     double gamma;
     double gamma_0;
     double decay_std_dev;

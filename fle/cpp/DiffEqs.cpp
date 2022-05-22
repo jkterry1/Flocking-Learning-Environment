@@ -203,7 +203,7 @@ double TN(Bird & bird, double R){
     double v,r,A,Tdl,Tdr;
 
     // drag from left wing (this comes from any alpha rotation of the wing)
-    v = bird.uvw[1];
+    v = bird.uvw[0];
     r = bird.Xl/2.0;
     // Area of the wing that is perpendicular to the forward motion.
     // If there is no alpha rotation, then there is no area of the wing

@@ -321,17 +321,17 @@ struct Flock{
                     not within max_r distance from the center of the vortex,
                     it is not considered.
                     */
-                    while (i < len(vorts) && vorts[i].pos[0] < curr.xyz[0]){
+                    while (i < len(vorts) && vorts[i].xyz[0] < curr.xyz[0]){
                         i = i+1;
                     }
                     const Vortex & v = vorts[i];
 
                     // Move through vortices until the first vortex that is in
                     // front of the current bird.
-                    if (i < len(vorts) && v.pos[0] >= curr.xyz[0]){
+                    if (i < len(vorts) && v.xyz[0] >= curr.xyz[0]){
                         // Determine if the bird is too far from the
                         // center of this vortex to be affected.
-                        double r = sqrt(sqr(curr.xyz[1] - v.pos[1]) + sqr(curr.xyz[2] - v.pos[2]));
+                        double r = sqrt(sqr(curr.xyz[1] - v.xyz[1]) + sqr(curr.xyz[2] - v.xyz[2]));
                         if (r < self.max_r){
                             vortices.push_back(v);
                         }

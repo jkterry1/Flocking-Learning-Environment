@@ -9,7 +9,7 @@ Vortex::Vortex(double x, double y, double z, double phi, double theta, double ps
     self.dist_travelled = 0.0;
 
     self.ang = Vector3d(phi, theta, psi);
-    self.pos = Vector3d(x,y,z);
+    self.xyz = Vector3d(x,y,z);
 
     // velocity of the vortex
     // double vel = 0.0;
@@ -67,9 +67,9 @@ Vortex::Vortex(Bird & bird, double sign){
     // end_of_wing is the coordinate of the right wing tip in the bird's frame.
     Vector3d end_of_wing = Vector3d(0.0, bird.Xl, 0.0);
     if (sign == 1) // right wing
-	     self.pos = bird.xyz - matmul(mat, end_of_wing);
+	     self.xyz = bird.xyz - matmul(mat, end_of_wing);
     else // left wing
-	     self.pos = bird.xyz + matmul(mat, end_of_wing);
+	     self.xyz = bird.xyz + matmul(mat, end_of_wing);
 
     // velocity of the vortex
     double vel = bird.uvw.norm();
@@ -96,12 +96,12 @@ Vortex::Vortex(Bird & bird, double sign){
 */
 Vector3d Vortex::earth_vel(double x, double y, double z){
     Vortex & self = *this;
-    double r = sqrt(sqr(y - self.pos[1]) + sqr(z - self.pos[2]));
+    double r = sqrt(sqr(y - self.xyz[1]) + sqr(z - self.xyz[2]));
     if (r < self.core || r > self.max_r)
 	return Vector3d(0.0, 0.0, 0.0);
 
     double v_tan = self.gamma * sqr(r) / (2 * PI * r * (sqr(r) + sqr(self.core)));
-    Vector3d r_vec = Vector3d(0.0, y - self.pos[1], z - self.pos[2])/r;
+    Vector3d r_vec = Vector3d(0.0, y - self.xyz[1], z - self.xyz[2])/r;
     Vector3d tan_vec = v_tan * Vector3d(0.0, -r_vec[2], r_vec[1]);
 
     Matrix3d mat = self.vec_get_transform(self.ang);
@@ -119,14 +119,14 @@ std::pair<Vector3d,Vector3d> Vortex::bird_vel(Bird & bird){
     Vector3d pos_right = bird.xyz +  matmul(mat, add);
     Vector3d pos_left = bird.xyz -  matmul(mat, add);
 
-    double r_right = sqrt(sqr(pos_right[1] - self.pos[1]) + sqr(pos_right[2] - self.pos[2]));
-    double r_left = sqrt(sqr(pos_left[1] - self.pos[1]) + sqr(pos_left[2] - self.pos[2]));
+    double r_right = sqrt(sqr(pos_right[1] - self.xyz[1]) + sqr(pos_right[2] - self.xyz[2]));
+    double r_left = sqrt(sqr(pos_left[1] - self.xyz[1]) + sqr(pos_left[2] - self.xyz[2]));
 
     double v_tan_l = self.gamma * sqr(r_left) / (2 * PI * r_left * (sqr(r_left) + sqr(self.core)));
     double v_tan_r = self.gamma * sqr(r_right) / (2 * PI * r_right * (sqr(r_right) + sqr(self.core)));
 
-    Vector3d r_vec_right = Vector3d(0.0, pos_right[1] - self.pos[1], pos_right[2] - self.pos[2])/r_right;
-    Vector3d r_vec_left = Vector3d(0.0, pos_left[1] - self.pos[1], pos_left[2] - self.pos[2])/r_left;
+    Vector3d r_vec_right = Vector3d(0.0, pos_right[1] - self.xyz[1], pos_right[2] - self.xyz[2])/r_right;
+    Vector3d r_vec_left = Vector3d(0.0, pos_left[1] - self.xyz[1], pos_left[2] - self.xyz[2])/r_left;
 
     Vector3d tan_vec_left = v_tan_l * Vector3d(0.0, -r_vec_left[2], r_vec_left[1]);
     Vector3d tan_vec_right = v_tan_r * Vector3d(0.0, -r_vec_right[2], r_vec_right[1]);

@@ -314,10 +314,10 @@ class raw_env(AECEnv, EzPickle):
         time = self.steps * self.h
         for bird in birds:
             for vortex in bird.VORTICES_LEFT:
-                state = [time, *vortex.pos, *vortex.ang, vortex.gamma]
+                state = [time, *vortex.xyz, *vortex.ang, vortex.gamma]
                 wr.writerow(state)
             for vortex in bird.VORTICES_RIGHT:
-                state = [time, *vortex.pos, *vortex.ang, vortex.gamma]
+                state = [time, *vortex.xyz, *vortex.ang, vortex.gamma]
                 wr.writerow(state)
 
     '''
