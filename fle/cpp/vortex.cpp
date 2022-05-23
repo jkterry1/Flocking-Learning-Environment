@@ -8,7 +8,7 @@ Vortex::Vortex(double x, double y, double z, double phi, double theta, double ps
     self.max_r = 1.0;
     self.dist_travelled = 0.0;
 
-    self.ang = Vector3d(phi, theta, psi);
+    self.rpy = Vector3d(phi, theta, psi);
     self.xyz = Vector3d(x,y,z);
 
     // velocity of the vortex
@@ -44,19 +44,19 @@ Vortex::Vortex(Bird & bird, double sign){
       -psi represents the angle rotated around the w axis,
         the axis that points up through the center of the bird.
     */
-    self.ang = bird.ang;
+    self.rpy = bird.rpy;
 
     /*
       The angle of the vortex depends on the angle of the bird that produces
       it, and also the angle of the bird's wing.
     */
     if (sign == 1) //  right wing
-       self.ang[0] += bird.beta_r;
+       self.rpy[0] += bird.beta_r;
     else // left wing
-       self.ang[0] -= bird.beta_l;
+       self.rpy[0] -= bird.beta_l;
 
     // mat transforms vectors from the bird's frame to the earth's frame.
-    Matrix3d mat = self.vec_get_transform(self.ang);
+    Matrix3d mat = self.vec_get_transform(self.rpy);
 
     /*
       We need to transform the position of the vortex produced from the bird's
@@ -104,7 +104,7 @@ Vector3d Vortex::earth_vel(double x, double y, double z){
     Vector3d r_vec = Vector3d(0.0, y - self.xyz[1], z - self.xyz[2])/r;
     Vector3d tan_vec = v_tan * Vector3d(0.0, -r_vec[2], r_vec[1]);
 
-    Matrix3d mat = self.vec_get_transform(self.ang);
+    Matrix3d mat = self.vec_get_transform(self.rpy);
 
     Vector3d a = matmul(mat, tan_vec);
     return -self.sign * a;
@@ -113,7 +113,7 @@ Vector3d Vortex::earth_vel(double x, double y, double z){
 // velocity in the bird's frame
 std::pair<Vector3d,Vector3d> Vortex::bird_vel(Bird & bird){
     Vortex & self = *this;
-    Matrix3d mat = self.vec_get_transform(bird.ang);
+    Matrix3d mat = self.vec_get_transform(bird.rpy);
     Vector3d add = Vector3d(0.0, bird.Xl/2.0, 0.0);
 
     Vector3d pos_right = bird.xyz +  matmul(mat, add);
@@ -131,7 +131,7 @@ std::pair<Vector3d,Vector3d> Vortex::bird_vel(Bird & bird){
     Vector3d tan_vec_left = v_tan_l * Vector3d(0.0, -r_vec_left[2], r_vec_left[1]);
     Vector3d tan_vec_right = v_tan_r * Vector3d(0.0, -r_vec_right[2], r_vec_right[1]);
 
-    mat = self.vec_get_transform(bird.ang - self.ang);
+    mat = self.vec_get_transform(bird.rpy - self.rpy);
     Vector3d left = matmul(mat, tan_vec_left);
     Vector3d right = matmul(mat, tan_vec_right);
 
@@ -144,13 +144,13 @@ std::pair<Vector3d,Vector3d> Vortex::bird_vel(Bird & bird){
     return ret;
 }
 
-Matrix3d Vortex::vec_get_transform(Vector3d ang){
-    double sphi = sin(ang[0]);
-    double cphi = cos(ang[0]);
-    double stheta = sin(ang[1]);
-    double ctheta = cos(ang[1]);
-    double spsi = sin(ang[2]);
-    double cpsi = cos(ang[2]);
+Matrix3d Vortex::vec_get_transform(Vector3d rpy){
+    double sphi = sin(rpy[0]);
+    double cphi = cos(rpy[0]);
+    double stheta = sin(rpy[1]);
+    double ctheta = cos(rpy[1]);
+    double spsi = sin(rpy[2]);
+    double cpsi = cos(rpy[2]);
 
     Matrix3d mat = matrix(
             cphi * ctheta   , cpsi * stheta * sphi - spsi * cphi    , spsi * sphi + cpsi * cphi * stheta,

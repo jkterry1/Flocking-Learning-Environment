@@ -24,7 +24,7 @@ struct BirdInit{
     Vector3d uvw;
 
     // angle bird is rotated around the inertial x, y, and z axes
-    Vector3d ang;
+    Vector3d rpy;
 
     // angular velocities around the u, v, and w axes
     Vector3d pqr;
@@ -32,13 +32,13 @@ struct BirdInit{
     BirdInit(
             double x, double y, double z,
             double u, double v, double w,
-            double theta, double phi, double psi,
+            double phi, double theta, double psi,
             double p, double q, double r
             ){
         BirdInit & self = *this;
         self.xyz = Vector3d(x, y, z);
         self.uvw = Vector3d(u, v, w);
-        self.ang = Vector3d(phi, theta, psi);
+        self.rpy = Vector3d(phi, theta, psi);
         self.pqr = Vector3d(p, q, r);
     }
 };
@@ -89,39 +89,22 @@ struct Bird{
     double Ixz;
     Matrix3d inertia;
 
-    /*
-    position
-        x, y, z
-    */
+    /* linear position, */
+    /* x points out the front of the bird */
+    /* y points out the right wing of the bird */
+    /* z points up toward the sky */
     Vector3d xyz;
 
-    // fixed body frame variables:
-    /*
-    velocity:
-        u points out the front of the bird
-        v points out of the right wing
-        w points up through the center of the bird
-    */
+    /* linear velocity */
     Vector3d uvw;
 
-    /*
-    angular velocity:
-        p is the rotation about the axis coming out the front of the bird
-        q is the rotation about teh axis coming out the right wing of the bird
-        r is the rotation about the axis coming out the top of the bird
-    */
+    /* angular position, PHI THETA PSI */
+    Vector3d rpy;
+
+    /* angular velocity: */
     Vector3d pqr;
 
-    // intertial frame variables
-    /*
-    euler angles:
-        theta is the rotated angle about the intertial x axis
-        phi is the rotated angle about the intertial y axis
-        psi is the rotated angle about the intertial z axis
-    */
-    Vector3d ang;
-
-    // velocity in earth frame
+    /* ground linear velocity */
     Vector3d vxyz;
 
     /*
@@ -171,7 +154,7 @@ struct Bird{
     /*
     keep track of old values
     */
-    PrevVectors prev_xyz, prev_uvw, prev_ang, prev_pqr;
+    PrevVectors prev_xyz, prev_uvw, prev_rpy, prev_pqr;
 
     PrevValues ALPHA_L;
     PrevValues ALPHA_R;
@@ -185,7 +168,7 @@ struct Bird{
         Bird & self = *this;
         self.xyz = init.xyz;
         self.uvw = init.uvw;
-        self.ang = init.ang;
+        self.rpy = init.rpy;
         self.pqr = init.pqr;
 
         double alpha_l = 0.0, beta_l = 0.0, alpha_r = 0.0, beta_r = 0.0;
@@ -244,21 +227,16 @@ struct Bird{
         self.vortex_tuvw = vf[1];
 
         // Calculate and update velocities for the next time step using the diffeq solver
-        Vector3d uvw = self.take_time_step(duvwdt, self.uvw, h);
+        self.uvw = self.take_time_step(duvwdt, self.uvw, h);
         // Calculate and update angular velocities for the next time step
-        Vector3d pqr = self.take_time_step(dpqrdt, self.pqr, h);
+        self.pqr = self.take_time_step(dpqrdt, self.pqr, h);
         // calculate and update position for the next time step
-        Vector3d xyz = self.take_time_step(dxyzdt, self.xyz, h);
+        self.xyz = self.take_time_step(dxyzdt, self.xyz, h);
         // calculate and update orientation for the next time step
-        Vector3d angles = self.take_time_step(danglesdt, self.ang, h);
-        angles[0] = fmod(angles[0], (2.0*self.pi));
-        angles[1] = fmod(angles[1], (2.0*self.pi));
-        angles[2] = fmod(angles[2], (2.0*self.pi));
-
-        self.xyz = xyz;
-        self.uvw = uvw;
-        self.ang = angles;
-        self.pqr = pqr;
+        self.rpy = self.take_time_step(danglesdt, self.rpy, h);
+        self.rpy[0] = fmod(self.rpy[0], (2.0*self.pi));
+        self.rpy[1] = fmod(self.rpy[1], (2.0*self.pi));
+        self.rpy[2] = fmod(self.rpy[2], (2.0*self.pi));
 
         /*
           Check if the bird has crashed into the ground.
@@ -268,7 +246,7 @@ struct Bird{
         if(self.xyz[2] <= 0){
             self.xyz[2] = 0;
             self.uvw = Vector3d(0, 0, 0);
-            /* self.ang = Vector3d(0, 0, 0); */
+            /* self.rpy = Vector3d(0, 0, 0); */
             self.pqr = Vector3d(0, 0, 0);
         }
 
@@ -285,7 +263,7 @@ struct Bird{
         Bird & self = *this;
         self.prev_xyz.push_back(b.xyz);
         self.prev_uvw.push_back(b.uvw);
-        self.prev_ang.push_back(b.ang);
+        self.prev_rpy.push_back(b.rpy);
         self.prev_pqr.push_back(b.pqr);
 
         self.ALPHA_L.push_back(b.alpha_l);
@@ -356,11 +334,11 @@ struct Bird{
             double epsilon = l_t_minus;
 
             // vortex's new position after LIA calculation
-            Vector3d pos = self.take_vortex_time_step(vortices[i].xyz, gamma, epsilon, b, theta, h);
+            Vector3d xyz = self.take_vortex_time_step(vortices[i].xyz, gamma, epsilon, b, theta, h);
 
             // update distance travelled and position for this time step
-            vortices[i].dist_travelled += (vortices[i].xyz - pos).norm();
-            vortices[i].xyz = pos;
+            vortices[i].dist_travelled += (vortices[i].xyz - xyz).norm();
+            vortices[i].xyz = xyz;
         }
     }
 
@@ -462,13 +440,13 @@ struct Bird{
     /*
       This is the RK4 solver for the LIA for motion of the vortices
     */
-    Vector3d take_vortex_time_step(Vector3d pos,double gamma, double epsilon, Vector3d b,double theta,double h){
+    Vector3d take_vortex_time_step(Vector3d xyz, double gamma, double epsilon, Vector3d b, double theta, double h){
         Vector3d k1 = h * drdt(gamma, epsilon, b, theta);
         Vector3d k2 = h * drdt(gamma, epsilon, b, theta);
         Vector3d k3 = h * drdt(gamma, epsilon, b, theta);
         Vector3d k4 = h * drdt(gamma, epsilon, b, theta);
 
-        return pos + (1.0 / 6.0)*(k1 + (2.0 * k2) + (2.0 * k3) + k4);
+        return xyz + (1.0 / 6.0)*(k1 + (2.0 * k2) + (2.0 * k3) + k4);
     }
 
     bool operator < (const Bird & other)const{

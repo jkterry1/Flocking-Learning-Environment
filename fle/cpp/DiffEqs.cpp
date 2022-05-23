@@ -4,6 +4,22 @@
 
 using namespace Eigen;
 
+Matrix3d vec_get_transform(Vector3d rpy){
+    double sphi = sin(rpy[0]);
+    double cphi = cos(rpy[0]);
+    double stheta = sin(rpy[1]);
+    double ctheta = cos(rpy[1]);
+    double spsi = sin(rpy[2]);
+    double cpsi = cos(rpy[2]);
+
+    Matrix3d mat = matrix(
+            cphi * ctheta   , cpsi * stheta * sphi - spsi * cphi    , spsi * sphi + cpsi * cphi * stheta,
+            spsi * ctheta   , cpsi * cphi + sphi * stheta * spsi    , stheta * spsi * cphi - cpsi * sphi,
+            -stheta         , ctheta * sphi                         , ctheta * cphi
+            );
+    return mat;
+}
+
 /*
   dr/dt describes the time evolution of the position of the vortex center.
 */
@@ -19,9 +35,10 @@ Vector3d duvwdt(Vector3d uvw, Bird & bird){
     // F contains the force vector due to all other forces (drag, thrust, etc.)
     Vector3d F = Vector3d(Fu(uvw[0], bird), Fv(uvw[1], bird), Fw(uvw[2], bird));
 
-    Vector3d grav = Vector3d(-bird.g * sin(bird.ang[0]),
-                      bird.g * cos(bird.ang[0]) * sin(bird.ang[1]),
-                      bird.g * cos(bird.ang[0]) * cos(bird.ang[1]));
+    // fix this hacky thing to use a proper matrix function
+    Vector3d grav = Vector3d(-bird.g * sin(bird.rpy[0]),
+                      bird.g * cos(bird.rpy[0]) * sin(bird.rpy[1]),
+                      bird.g * cos(bird.rpy[0]) * cos(bird.rpy[1]));
 
     return (1.0 / bird.m) * F - cross(bird.pqr, uvw) + grav;
 }
@@ -36,19 +53,7 @@ Vector3d dxyzdt(Vector3d xyz, Bird & bird){
     These three matricies are rotations that converts the velocity values
     from the bird's frame to the earth frame
     */
-    double sphi = sin(bird.ang[0]);
-    double cphi = cos(bird.ang[0]);
-    double stheta = sin(bird.ang[1]);
-    double ctheta = cos(bird.ang[1]);
-    double spsi = sin(bird.ang[2]);
-    double cpsi = cos(bird.ang[2]);
-
-    Matrix3d mat = matrix(
-            cphi * ctheta   , cpsi * stheta * sphi - spsi * cphi    , spsi * sphi + cpsi * cphi * stheta,
-            spsi * ctheta   , cpsi * cphi + sphi * stheta * spsi    , stheta * spsi * cphi - cpsi * sphi,
-            -stheta         , ctheta * sphi                         , ctheta * cphi
-            );
-
+    Matrix3d mat = vec_get_transform(bird.rpy);
     return matmul(mat, bird.uvw);
 }
 
@@ -60,6 +65,7 @@ Vector3d dxyzdt(Vector3d xyz, Bird & bird){
 Vector3d dpqrdt(Vector3d pqr, Bird & bird){
     Vector3d LMN = Vector3d(TL(bird, pqr[0]), TM(bird, pqr[1]), TN(bird, pqr[2]));
 
+    // fix this hacky thing
     Matrix3d mat = matrix(0.0, -pqr[2], pqr[1],
                  pqr[2], 0.0, -pqr[0],
                  -pqr[1], pqr[0], 0.0);
@@ -79,10 +85,11 @@ Vector3d dpqrdt(Vector3d pqr, Bird & bird){
   (phi, theta, psi).
   This is equivalent to calculating the angular velocity.
 */
-Vector3d danglesdt(Vector3d ang, Bird & bird){
-    Matrix3d mat = matrix(1.0, sin(ang[0])*tan(ang[1]), cos(ang[0])*tan(ang[1]),
-                      0.0, cos(ang[0]), -sin(ang[0]),
-                      0.0, sin(ang[0])*(1.0/cos(ang[1])), cos(ang[0])*(1.0/cos(ang[1])));
+Vector3d danglesdt(Vector3d rpy, Bird & bird){
+    // is this correct? What is it doing? Why does it have tan?
+    Matrix3d mat = matrix(1.0, sin(rpy[0])*tan(rpy[1]), cos(rpy[0])*tan(rpy[1]),
+                      0.0, cos(rpy[0]), -sin(rpy[0]),
+                      0.0, sin(rpy[0])*(1.0/cos(rpy[1])), cos(rpy[0])*(1.0/cos(rpy[1])));
     Vector3d output = matmul(mat, bird.pqr);
     return output;
 }

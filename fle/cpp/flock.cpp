@@ -284,17 +284,16 @@ struct Flock{
         Checks if the current bird is within a certain radius of another bird.
         This is considered crashing into the other bird.
         */
-        bool crash = false;
         for (int b : range(len(self.birds))){
             const Bird & other = self.birds[b];
             if (&other != &bird){
                 double dist = (bird.xyz - other.xyz).norm();
                 if (dist < bird.Xl/2.0){
-                    crash = true;
+                    return true;
                 }
             }
         }
-        return crash;
+        return false;
     }
 
     /*
@@ -396,9 +395,9 @@ struct Flock{
         extend(obs, ((force)/self.limits[0])); // 0,1,2
         extend(obs, (torque/self.limits[3]));// 3,4,5
         extend(obs, {(bird.xyz[2])/self.limits[6]});// 6
-        extend(obs, {(bird.ang[0])/self.limits[7],// 7
-                      (bird.ang[1])/self.limits[8],// 8
-                      (bird.ang[2])/self.limits[9]});// 9
+        extend(obs, {(bird.rpy[0])/self.limits[7],// 7
+                      (bird.rpy[1])/self.limits[8],// 8
+                      (bird.rpy[2])/self.limits[9]});// 9
         extend(obs, {((bird.alpha_l) - self.limits[10])/(self.limits[11] - self.limits[10]),// 10
                       ((bird.beta_l) - self.limits[12])/(self.limits[13] - self.limits[12]),// 11
                       ((bird.alpha_r) - self.limits[10])/(self.limits[11] - self.limits[10]),// 12
@@ -417,9 +416,9 @@ struct Flock{
             extend(obs, {(other.xyz[0] - bird.xyz[0])/self.limits[20],// 20
                           (other.xyz[1] - bird.xyz[1])/self.limits[21],// 21
                           (other.xyz[2] - bird.xyz[2])/self.limits[22]});// 22
-            extend(obs, {(other.ang[0] - bird.ang[0])/self.limits[23],// 23
-                          (other.ang[1] - bird.ang[1])/self.limits[24],// 24
-                          (other.ang[2] - bird.ang[2])/self.limits[25]});// 25
+            extend(obs, {(other.rpy[0] - bird.rpy[0])/self.limits[23],// 23
+                          (other.rpy[1] - bird.rpy[1])/self.limits[24],// 24
+                          (other.rpy[2] - bird.rpy[2])/self.limits[25]});// 25
             if(derivatives){
               extend(obs, {(other.uvw[0] - bird.uvw[0])/self.limits[26],// 26
                             (other.uvw[1] - bird.uvw[1])/self.limits[27],// 27
