@@ -46,7 +46,7 @@ Vector3d duvwdt(Vector3d uvw, Bird & bird){
 /*
   d(x, y, z)/dt describes the time evolution of the position vector (x, y, z)
   of the center of the bird.
-  This is equivalent to calculatig the velocity.
+  This is equivalent to calculating the velocity.
 */
 Vector3d dxyzdt(Vector3d xyz, Bird & bird){
     /*
@@ -65,7 +65,6 @@ Vector3d dxyzdt(Vector3d xyz, Bird & bird){
 Vector3d dpqrdt(Vector3d pqr, Bird & bird){
     Vector3d LMN = Vector3d(TL(bird, pqr[0]), TM(bird, pqr[1]), TN(bird, pqr[2]));
 
-    // fix this hacky thing
     Matrix3d mat = matrix(0.0, -pqr[2], pqr[1],
                  pqr[2], 0.0, -pqr[0],
                  -pqr[1], pqr[0], 0.0);
@@ -114,6 +113,7 @@ double TL(Bird & bird, double P){
     // Lift = Cl * (rho * v^2)/2 * A
     // There is only upward lift if the bird is moving forward.
     if (bird.uvw[0] > 0){
+        // TODO: this should be flippped?
         // velocity
         v = bird.uvw[0];
         // Approximate area of left wing
@@ -126,6 +126,7 @@ double TL(Bird & bird, double P){
         T += Tl;
 
 
+        // TODO: this should be flippped?
         // torque due to upward lift on right wing
         A = bird.Xl * bird.Yl * cos(bird.alpha_r);
         check_A(bird, A, bird.alpha_r);
@@ -133,6 +134,7 @@ double TL(Bird & bird, double P){
         Tr = -cos(bird.beta_r) * r * cr * A * (bird.rho * sqr(v))/2.0;
         T += Tr;
 
+        // TODO: this should be flippped?
         // torque due to lift in v direction from left wing
         A = bird.Xl * bird.Yl * cos(bird.alpha_l);
         check_A(bird, A, bird.alpha_l);
@@ -140,6 +142,7 @@ double TL(Bird & bird, double P){
         Tl = abs(sin(bird.beta_l)) * r * cl * A * (bird.rho * sqr(v))/2.0;
         T += Tl;
 
+        // TODO: this should be flippped?
         // torque due to lift in v direction from right wing
         A = bird.Xl * bird.Yl * cos(bird.alpha_r);
         check_A(bird, A, bird.alpha_r);
@@ -148,6 +151,7 @@ double TL(Bird & bird, double P){
         T += Tr;
     }
 
+    // TODO: this should be flippped?
     // drag torque due to rotation on left wing
     // Td = cd * A * (rho * v^2)/2 * r
     // v = omega * r
@@ -158,6 +162,7 @@ double TL(Bird & bird, double P){
     Tl = -sign(P) * r * A * cd * (bird.rho * sqr(v))/2.0;
     T += Tl;
 
+    // TODO: this should be flippped?
     // drag due to rotation on right wing
     v = P * bird.Xl/2.0;
     r = bird.Xl/2.0;
@@ -187,6 +192,7 @@ double TM(Bird & bird, double Q){
     double v = (Q * r)/2.0;
     double A = (bird.Xl * bird.Yl);
 
+    // TODO: this should be flippped?
     // Drag force due to rotation
     double D = -sign(v) * r * bird.Cd * A * (bird.rho * sqr(v))/2.0;
 
@@ -209,6 +215,7 @@ double TN(Bird & bird, double R){
     double T = 0;
     double v,r,A,Tdl,Tdr;
 
+    // TODO: this should be flippped?
     // drag from left wing (this comes from any alpha rotation of the wing)
     v = bird.uvw[0];
     r = bird.Xl/2.0;
@@ -221,6 +228,7 @@ double TN(Bird & bird, double R){
     Tdl = sign(bird.uvw[0]) * r * bird.Cd * A * (bird.rho * sqr(v))/2.0;
     T += Tdl;
 
+    // TODO: this should be flippped?
     // drag on right wing (this comes from any alpha rotation of the wing)
     v = bird.uvw[0];
     r = bird.Xl/2.0;
@@ -233,11 +241,13 @@ double TN(Bird & bird, double R){
     Tdr = -sign(bird.uvw[0]) * r * bird.Cd * A * (bird.rho * sqr(v))/2.0;
     T += Tdr;
 
+    // TODO: this should be flippped?
     // drag from rotation on left wing
     // Tangential velocity is (angular velocity) * r
     v = R * bird.Xl/2.0;
     r = bird.Xl/2.0;
 
+    // TODO: this should be flippped?
     //Area of the left wing that is perpendicular to the direction of rotation.
     A = bird.Xl * bird.Yl * abs(sin(bird.alpha_l)) + bird.Yl * bird.Zl * cos(bird.alpha_l);
     check_A(bird, A, bird.alpha_r);
@@ -245,6 +255,7 @@ double TN(Bird & bird, double R){
     Tdl = -sign(bird.pqr[2]) * r * bird.Cd * (bird.rho * sqr(v))/2.0;
     T += Tdl;
 
+    // TODO: this should be flippped?
     // drag from rotation on right wing
     // Tangential velocity is (angular velocity) * r
     v = R * bird.Xl/2.0;
@@ -255,6 +266,7 @@ double TN(Bird & bird, double R){
     Tdr = -sign(bird.pqr[2]) * r * bird.Cd * (bird.rho * sqr(v))/2.0;
     T += Tdr;
 
+    // TODO: this should be flippped?
     // torque due to drag from vortices
     T += bird.vortex_tuvw[2];
 
