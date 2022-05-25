@@ -46,6 +46,7 @@ Vortex::Vortex(Bird & bird, double sign){
     */
     self.rpy = bird.rpy;
 
+    // TODO: is this correct or does this need to be flipped?
     /*
       The angle of the vortex depends on the angle of the bird that produces
       it, and also the angle of the bird's wing.
