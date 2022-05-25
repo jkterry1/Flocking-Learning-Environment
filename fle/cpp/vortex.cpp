@@ -117,8 +117,8 @@ std::pair<Vector3d,Vector3d> Vortex::bird_vel(Bird & bird){
     Matrix3d mat = self.vec_get_transform(bird.rpy);
     Vector3d add = Vector3d(0.0, bird.Xl/2.0, 0.0);
 
-    Vector3d pos_right = bird.xyz +  matmul(mat, add);
-    Vector3d pos_left = bird.xyz -  matmul(mat, add);
+    Vector3d pos_right = bird.xyz + matmul(mat, add);
+    Vector3d pos_left = bird.xyz - matmul(mat, add);
 
     double r_right = sqrt(sqr(pos_right[1] - self.xyz[1]) + sqr(pos_right[2] - self.xyz[2]));
     double r_left = sqrt(sqr(pos_left[1] - self.xyz[1]) + sqr(pos_left[2] - self.xyz[2]));
