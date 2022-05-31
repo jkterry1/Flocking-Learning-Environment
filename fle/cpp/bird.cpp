@@ -9,42 +9,37 @@
 #include <cmath>
 
 using PrevValues = std::vector<double>;
-using VortexForces = std::array<double,6>;
+using PrevVectors = std::vector<Vector3d>;
+using VortexForces = std::array<Vector3d,2>;
 using Vorticies = std::vector<Vortex>;
-typedef Vector3d (DiffEqType)(Vector3d uvw, Bird & bird);
+typedef Vector3d (DiffEqType)(Vector3d abc, Bird & bird);
 
 using namespace std;
 
 struct BirdInit{
-    //velocities in the u (forward), v (out from the right wing), and w (up) directions
-    double u,v,w;
+    // position along x, y, and z axes
+    Vector3d xyz;
 
-    //angular velocities around the u, v, and w axes
-    double p,q,r;
+    // velocities in the u (forward), v (out from the right wing), and w (up) directions
+    Vector3d uvw;
 
-    //position along x, y, and z axes
-    double x,y,z;
+    // angle bird is rotated around the inertial x, y, and z axes
+    Vector3d rpy;
 
-    //angle bird is rotated around the inertial x, y, and z axes
-    double theta;
-    double phi;
-    double psi;
+    // angular velocities around the u, v, and w axes
+    Vector3d pqr;
 
-    using dbl = double;
-    BirdInit(dbl x, dbl y, dbl z, dbl u, dbl v, dbl w, dbl p, dbl q, dbl r, dbl theta, dbl phi, dbl psi){
+    BirdInit(
+            double x, double y, double z,
+            double u, double v, double w,
+            double phi, double theta, double psi,
+            double p, double q, double r
+            ){
         BirdInit & self = *this;
-        self.x = x;
-        self.y = y;
-        self.z = z;
-        self.u = u;
-        self.v = v;
-        self.w = w;
-        self.p = p;
-        self.q = q;
-        self.r = r;
-        self.theta = theta;
-        self.phi = phi;
-        self.psi = psi;
+        self.xyz = Vector3d(x, y, z);
+        self.uvw = Vector3d(u, v, w);
+        self.rpy = Vector3d(phi, theta, psi);
+        self.pqr = Vector3d(p, q, r);
     }
 };
 using BirdInits = std::vector<BirdInit>;
@@ -67,11 +62,11 @@ struct Bird{
         Yl, wing width
         Zl, wing height
     */
-    static constexpr double m = 5.0;        //goose is ~5kg
-    static constexpr double Cl_max = 1.6;   //experimental value
-    static constexpr double Cd = 0.3;       //experimental value
+    static constexpr double m = 5.0;        // goose is ~5kg
+    static constexpr double Cl_max = 1.6;   // experimental value
+    static constexpr double Cd = 0.3;       // experimental value
     static constexpr double S = 0.62;
-    static constexpr double Xl = 0.80;     //approximate dimensions
+    static constexpr double Xl = 0.80;     // approximate dimensions
     static constexpr double Yl = 0.35;
     static constexpr double Zl = 0.8;
 
@@ -94,46 +89,23 @@ struct Bird{
     double Ixz;
     Matrix3d inertia;
 
-    // fixed body frame variables:
-    /*
-    velocity:
-        u points out the front of the bird
-        v points out of the right wing
-        w points up through the center of the bird
-    */
-    double u,v,w;
-    Vector3d uvw()const{return Vector3d(u,v,w);}
+    /* linear position, */
+    /* x points out the front of the bird */
+    /* y points out the right wing of the bird */
+    /* z points up toward the sky */
+    Vector3d xyz;
 
-    /*
-    angular velocity:
-        p is the rotation about the axis coming out the front of the bird
-        q is the rotation about teh axis coming out the right wing of the bird
-        r is the rotation about the axis coming out the top of the bird
-    */
-    double p,q,r;
-    Vector3d pqr()const{return Vector3d(p,q,r);}
+    /* linear velocity */
+    Vector3d uvw;
 
-    // intertial frame variables
-    /*
-    euler angles:
-        theta is the rotated angle about the intertial x axis
-        phi is the rotated angle about the intertial y axis
-        psi is the rotated angle about the intertial z axis
-    */
-    double theta;
-    double phi;
-    double psi;
-    Vector3d angles()const{return Vector3d(phi, theta, psi);}
+    /* angular position, PHI THETA PSI */
+    Vector3d rpy;
 
-    /*
-    position
-        x, y, z
-    */
-    double x,y,z;
-    Vector3d xyz()const{return Vector3d(x,y,z);}
+    /* angular velocity: */
+    Vector3d pqr;
 
-    //velocity in earth frame
-    double vx, vy, vz;
+    /* ground linear velocity */
+    Vector3d vxyz;
 
     /*
       wing orientation,
@@ -152,7 +124,7 @@ struct Bird{
         T, net torque
     */
     Vector3d F;
-    //Vector3d Fd;
+    // Vector3d Fd;
     Vector3d T;
 
     /*
@@ -173,30 +145,16 @@ struct Bird{
       The forces  and torques due to vortices (produced by other birds)
       on the current bird in each of the 3 main directions.
     */
-    double vortex_force_u = 0, vortex_force_v = 0, vortex_force_w = 0;
-    double vortex_torque_u = 0, vortex_torque_v = 0, vortex_torque_w = 0;
+    Vector3d vortex_fuvw = Vector3d(0, 0, 0);
+    Vector3d vortex_tuvw = Vector3d(0, 0, 0);
 
-    //The bird's thrust, which comes entirely from the bird's chosen action
+    // The bird's thrust, which comes entirely from the bird's chosen action
     double thrust;
 
     /*
     keep track of old values
     */
-    PrevValues U;
-    PrevValues V;
-    PrevValues W;
-
-    PrevValues X;
-    PrevValues Y;
-    PrevValues Z;
-
-    PrevValues P;
-    PrevValues Q;
-    PrevValues R;
-
-    PrevValues THETA;
-    PrevValues PHI;
-    PrevValues PSI;
+    PrevVectors prev_xyz, prev_uvw, prev_rpy, prev_pqr;
 
     PrevValues ALPHA_L;
     PrevValues ALPHA_R;
@@ -208,18 +166,10 @@ struct Bird{
     Bird() = default;
     Bird(const BirdInit & init){
         Bird & self = *this;
-        self.x = init.x;
-        self.y = init.y;
-        self.z = init.z;
-        self.u = init.u;
-        self.v = init.v;
-        self.w = init.w;
-        self.p = init.p;
-        self.q = init.q;
-        self.r = init.r;
-        self.theta = init.theta;
-        self.phi = init.phi;
-        self.psi = init.psi;
+        self.xyz = init.xyz;
+        self.uvw = init.uvw;
+        self.rpy = init.rpy;
+        self.pqr = init.pqr;
 
         double alpha_l = 0.0, beta_l = 0.0, alpha_r = 0.0, beta_r = 0.0;
 
@@ -229,19 +179,19 @@ struct Bird{
         self.Ixx = self.m * sqr(self.Xl);
         self.Iyy = self.m * sqr(self.Yl);
         self.Izz = self.m * sqr(self.Zl);
-        self.Ixz = 0.5 * self.m * sqr(self.Zl);    //approximation
-        //self.Ixz = 0.0;
+        self.Ixz = 0.5 * self.m * sqr(self.Zl);    // approximation
+        // self.Ixz = 0.0;
         self.inertia = matrix(self.Ixx, 0.0, self.Ixz,
                                     0.0, self.Iyy, 0.0,
                                     self.Ixz, 0.0, self.Izz);
 
 
-        //Total force and torque on this bird
+        // Total force and torque on this bird
         self.F = Vector3d(0.0, 0.0, 0.0);
       	self.T = Vector3d(0.0, 0.0, 0.0);
 
-        //Drag Force for use in reward calculation
-        //self.Fd = Vector3d(0.0, 0.0, 0.0);
+        // Drag Force for use in reward calculation
+        // self.Fd = Vector3d(0.0, 0.0, 0.0);
 
         /*
         wing orientation angles alpha and beta for the left and right wings,
@@ -273,71 +223,48 @@ struct Bird{
           bird is interacting with
         */
         VortexForces vf = self.vortex_forces(vortices);
-        self.vortex_force_u = vf[0];
-        self.vortex_force_v = vf[1];
-        self.vortex_force_w = vf[2];
-        self.vortex_torque_u = vf[3];
-        self.vortex_torque_v = vf[4];
-        self.vortex_torque_w = vf[5];
+        self.vortex_fuvw = vf[0];
+        self.vortex_tuvw = vf[1];
 
-        //Calculate and update velocities for the next time step using the diffeq solver
-        Vector3d uvw = self.take_time_step(duvwdt, self.uvw(), h);
-        //Calculate and update angular velocities for the next time step
-        Vector3d pqr = self.take_time_step(dpqrdt, self.pqr(), h);
-        //calculate and update position for the next time step
-        Vector3d xyz = self.take_time_step(dxyzdt, self.xyz(), h);
-        //calculate and update orientation for the next time step
-        Vector3d angles = self.take_time_step(danglesdt, self.angles(), h);
-        angles[0] = fmod(angles[0], (2.0*self.pi));
-        angles[1] = fmod(angles[1], (2.0*self.pi));
-        angles[2] = fmod(angles[2], (2.0*self.pi));
-
-        up(self.phi, self.theta, self.psi) = angles;
-        up(self.u,self.v,self.w) = uvw;
-        up(self.p,self.q,self.r) = pqr;
-        up(self.x,self.y,self.z) = xyz;
+        // Calculate and update velocities for the next time step using the diffeq solver
+        self.uvw = self.take_time_step(duvwdt, self.uvw, h);
+        // Calculate and update angular velocities for the next time step
+        self.pqr = self.take_time_step(dpqrdt, self.pqr, h);
+        // calculate and update position for the next time step
+        self.xyz = self.take_time_step(dxyzdt, self.xyz, h);
+        // calculate and update orientation for the next time step
+        self.rpy = self.take_time_step(danglesdt, self.rpy, h);
+        self.rpy[0] = fmod(self.rpy[0], (2.0*self.pi));
+        self.rpy[1] = fmod(self.rpy[1], (2.0*self.pi));
+        self.rpy[2] = fmod(self.rpy[2], (2.0*self.pi));
 
         /*
           Check if the bird has crashed into the ground.
           If so, set vertical position, all velocities,
           and angular velocities to 0 (bird no longer moving)
         */
-        if(self.z <= 0){
-            self.z = 0;
-            u = 0;
-            v = 0;
-            w = 0;
-            p = 0;
-            q = 0;
-            r = 0;
+        if(self.xyz[2] <= 0){
+            self.xyz[2] = 0;
+            self.uvw = Vector3d(0, 0, 0);
+            /* self.rpy = Vector3d(0, 0, 0); */
+            self.pqr = Vector3d(0, 0, 0);
         }
 
-        //Save this timestep's values for logging purposes
+        // Save this timestep's values for logging purposes
         self.update_history(self);
 
-        //Calculate and store the vortex produced by this bird on this time step
+        // Calculate and store the vortex produced by this bird on this time step
         self.vortex_buffer_left = Vortex(self, -1);
         self.vortex_buffer_right = Vortex(self, 1);
     }
 
-    //Save values for logging and plotting
+    // Save values for logging and plotting
     void update_history(const Bird & b){
         Bird & self = *this;
-        self.U.push_back(b.u);
-        self.V.push_back(b.v);
-        self.W.push_back(b.w);
-
-        self.X.push_back(b.x);
-        self.Y.push_back(b.y);
-        self.Z.push_back(b.z);
-
-        self.P.push_back(b.p);
-        self.Q.push_back(b.q);
-        self.R.push_back(b.r);
-
-        self.THETA.push_back(b.theta);
-        self.PHI.push_back(b.phi);
-        self.PSI.push_back(b.psi);
+        self.prev_xyz.push_back(b.xyz);
+        self.prev_uvw.push_back(b.uvw);
+        self.prev_rpy.push_back(b.rpy);
+        self.prev_pqr.push_back(b.pqr);
 
         self.ALPHA_L.push_back(b.alpha_l);
         self.ALPHA_R.push_back(b.alpha_r);
@@ -354,17 +281,17 @@ struct Bird{
         Bird & self = *this;
         for (size_t i : range(1, len(vortices)-2)){
 
-            //tangent vectors
-            Vector3d t_minus = vortices[i].pos - vortices[i-1].pos;
-            Vector3d t = vortices[i+1].pos - vortices[i].pos;
+            // tangent vectors
+            Vector3d t_minus = vortices[i].xyz - vortices[i-1].xyz;
+            Vector3d t = vortices[i+1].xyz - vortices[i].xyz;
 
-            //length of tangent vectors
+            // length of tangent vectors
             double l_t_minus = t_minus.norm();
             double l_t = t.norm();
 
             double theta;
 
-            //checking the limits of arccos
+            // checking the limits of arccos
             if (dot(t_minus, t)/(l_t_minus * l_t) <= -1.0){
                 theta = arccos(-1.0);
             }
@@ -376,13 +303,13 @@ struct Bird{
                 theta = arccos(dot(t_minus, t)/(l_t_minus * l_t));
             }
 
-            //normal vector
+            // normal vector
             Vector3d n = (t - t_minus);
             n = n/n.norm();
-            //binormal vector
+            // binormal vector
             Vector3d b = cross(t, n);
 
-            //normalize n and b, (protecting against divide by zero)
+            // normalize n and b, (protecting against divide by zero)
             if (n.norm() > 0.0){
                 n = n/n.norm();
             }
@@ -390,28 +317,28 @@ struct Bird{
                 b = b/b.norm();
             }
 
-            //Update vortex strength based on decay equation
+            // Update vortex strength based on decay equation
             Vortex vor = vortices[i];
             vor.t ++;
             if(vor.decaying){
               vor.gamma = vor.gamma_0 * pow((vor.t_decay/vor.t), vor.decay_exponent);
             }
-            //Replace with probability if we decide not to make it deterministic
+            // Replace with probability if we decide not to make it deterministic
             else{
               if(vor.t > vor.t_decay){
                 vor.decaying = true;
               }
             }
             double gamma = vor.gamma;
-            //distance from last point
+            // distance from last point
             double epsilon = l_t_minus;
 
-            //vortex's new position after LIA calculation
-            Vector3d pos = self.take_vortex_time_step(vortices[i].pos, gamma, epsilon, b, theta, h);
+            // vortex's new position after LIA calculation
+            Vector3d xyz = self.take_vortex_time_step(vortices[i].xyz, gamma, epsilon, b, theta, h);
 
-            //update distance travelled and position for this time step
-            vortices[i].dist_travelled += (vortices[i].pos - pos).norm();
-            vortices[i].pos = pos;
+            // update distance travelled and position for this time step
+            vortices[i].dist_travelled += (vortices[i].xyz - xyz).norm();
+            vortices[i].xyz = xyz;
         }
     }
 
@@ -425,46 +352,41 @@ struct Bird{
         self.VORTICES_LEFT.push_back(self.vortex_buffer_left);
     }
 
-    //return forces and torques on this bird due to vortices it interacts with
+    // return forces and torques on this bird due to vortices it interacts with
     VortexForces vortex_forces(Vorticies & vortices){
         Bird & self = *this;
-        //forces in each direction
-        double fu=0, fv=0, fw=0;
-        //torques in each direction
-        double tu=0, tv=0, tw=0;
-        //drag and areas
+        // forces in each direction
+        Vector3d fuvw;
+        // torques in each direction
+        Vector3d tuvw;
+        // drag and areas
         double D, A;
-        //velocities in each direction
-        double u,v,w;
 
         for (Vortex & vortex : vortices){
-            //get velocity of moving vortex air in the bird's frame for the
-            //left and right wing.
+            // get velocity of moving vortex air in the bird's frame for the
+            // left and right wing.
             auto bird_pair = vortex.bird_vel(self);
             Vector3d L = bird_pair.first;
             Vector3d R = bird_pair.second;
 
-            //calculate up and down forces
-            //left wing
-            up(u, v, w) = L;
-            //Approximate area of left wing
+            // calculate up and down forces for left wing
+            // Approximate area of left wing
             A = self.Xl * self.Yl;
-            //Calculate drag in the w direction
-            D = sign(w) * self.Cd * A * (self.rho * sqr(w))/2.0;
-            fw += D;
-            tu -= D * self.Xl/2.0;
+            // Calculate drag in the w direction
+            D = sign(L[2]) * self.Cd * A * (self.rho * sqr(L[2]))/2.0;
+            fuvw[2] += D;
+            tuvw[0] -= D * self.Xl/2.0;
 
-            //right wing
-            up(u, v, w) = R;
-            //Approximate area of right wing
+            // calculate up and down forces for right wing
+            // Approximate area of right wing
             A = self.Xl * self.Yl;
-            //Calculate drag on right wing
-            D = sign(w) * self.Cd * A * (self.rho * sqr(w))/2.0;
-            fw += D;
-            tu += D * self.Xl/2.0;
+            // Calculate drag on right wing
+            D = sign(R[2]) * self.Cd * A * (self.rho * sqr(R[2]))/2.0;
+            fuvw[2] += D;
+            tuvw[0] += D * self.Xl/2.0;
         }
-        //return forces and torques in each direction
-        return VortexForces{fu, fv, fw, tu, tv, tw};
+        // return forces and torques in each direction
+        return VortexForces{fuvw, tuvw};
     }
 
     /*
@@ -478,21 +400,22 @@ struct Bird{
             arange.at(i) = i;
         }
 
-        //Calculate distances from this bird to all other birds
+        // Calculate distances from this bird to all other birds
         std::vector<double> dists(arange.size());
         for(size_t i = 0; i < arange.size(); i++){
             Bird & other = birds[arange[i]];
-            dists[i] = sqrt(sqr(self.x - other.x) + sqr(self.y - other.y) + sqr(self.z - other.z));
+            dists[i] = (self.xyz - other.xyz).norm();
+            /* dists[i] = sqrt(sqr(self.x - other.x) + sqr(self.y - other.y) + sqr(self.z - other.z)); */
         }
 
-        //Sort these in order of nearest to farthest from this bird
+        // Sort these in order of nearest to farthest from this bird
         std::stable_sort(arange.begin(),arange.end(), [&](int b1, int b2){
             return dists[b1] < dists[b2];
         });
         assert(dists[arange[0]] == 0 && "the smallest distance should be zero");
         std::vector<Bird *> result;
 
-        //Collect and return the n nearest birds from the sorted list
+        // Collect and return the n nearest birds from the sorted list
         for(size_t i = 1; i < std::min(max_observable_birds + 1, arange.size()); i++){
             result.push_back(&birds[arange[i]]);
         }
@@ -517,18 +440,18 @@ struct Bird{
     /*
       This is the RK4 solver for the LIA for motion of the vortices
     */
-    Vector3d take_vortex_time_step(Vector3d pos,double gamma, double epsilon, Vector3d b,double theta,double h){
+    Vector3d take_vortex_time_step(Vector3d xyz, double gamma, double epsilon, Vector3d b, double theta, double h){
         Vector3d k1 = h * drdt(gamma, epsilon, b, theta);
         Vector3d k2 = h * drdt(gamma, epsilon, b, theta);
         Vector3d k3 = h * drdt(gamma, epsilon, b, theta);
         Vector3d k4 = h * drdt(gamma, epsilon, b, theta);
 
-        return pos + (1.0 / 6.0)*(k1 + (2.0 * k2) + (2.0 * k3) + k4);
+        return xyz + (1.0 / 6.0)*(k1 + (2.0 * k2) + (2.0 * k3) + k4);
     }
 
     bool operator < (const Bird & other)const{
         const Bird & self = *this;
-        return self.x < other.x;
+        return self.xyz[0] < other.xyz[0];
     }
 };
 using Birds = std::vector<Bird>;
